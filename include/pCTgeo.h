@@ -63,20 +63,16 @@ public:
     fpgaLyr[9] = 2;
     fpgaLyr[10] = 3;
     fpgaLyr[11] = 3;
-    for (int i = 0; i < 12; i++)
-      geoLogFile << "pCTgeo.h: FPGA number " << i << " is located in layer "
-           << fpgaLyr[i] << endl;
+    for (int i = 0; i < 12; i++) geoLogFile << "pCTgeo.h: FPGA number " << i << " is located in layer " << fpgaLyr[i] << endl;
 
     rotationSpeed = 6.0; // The stage velocity is 1 rpm or 6 deg/s
     timeStampRes = 1.0e-8;
-    geoLogFile << "pCTgeo.h: stage rotation speed is assumed to equal "
-         << rotationSpeed << " degrees/s" << endl;
-    geoLogFile << "pCTgeo.h: time-stamp resolution is assumed to equal "
-         << timeStampRes << " seconds" << endl;
-    double beamZV = -3000; //-1850.;   // Average value for CPC, from Mark
-                           //Pankuch, Sept 2018
-    double beamZT = -3000; //-1850.; // NEW MEASURED DISTANCE GIVES WORSE
-                           //RESULTS FOR WHATEVER REASON
+    geoLogFile << "pCTgeo.h: stage rotation speed is assumed to equal " << rotationSpeed << " degrees/s" << endl;
+    geoLogFile << "pCTgeo.h: time-stamp resolution is assumed to equal " << timeStampRes << " seconds" << endl;
+	       
+    double beamZV = -3000; //-1850.;   // Average value for CPC, from Mark Pankuch, Sept 2018
+    double beamZT = -3000; //-1850.; // NEW MEASURED DISTANCE GIVES WORSE RESULTS FOR WHATEVER REASON
+                           
     double beamX = 0.;
     double beamY = 0.;
     BeamVtxV.push_back(beamX);
@@ -85,16 +81,11 @@ public:
     BeamVtxT.push_back(beamX);
     BeamVtxT.push_back(beamY);
     BeamVtxT.push_back(beamZT);
-    geoLogFile << "pCTgeo.h: the V-view beam origin is assumed to be at x=" << beamX
-         << " mm, y=" << beamY << " mm, z=" << beamZV << "mm\n";
-    geoLogFile << "pCTgeo.h: the T-view beam origin is assumed to be at x=" << beamX
-         << " mm, y=" << beamY << " mm, z=" << beamZT << "mm\n";
+    geoLogFile << "pCTgeo.h: the V-view beam origin is assumed to be at x=" << beamX << " mm, y=" << beamY << " mm, z=" << beamZV << "mm\n";
+    geoLogFile << "pCTgeo.h: the T-view beam origin is assumed to be at x=" << beamX << " mm, y=" << beamY << " mm, z=" << beamZT << "mm\n";	       
+    uEdet = 216.9 + 40.0; // Approximate location of the energy detector entrance      
+    geoLogFile << "pCTgeo.h: the entrance to the energy detector is assumed to be located at u=" << uEdet << endl;
 
-    uEdet =
-        216.9 + 40.0; // Approximate location of the energy detector entrance
-    geoLogFile << "pCTgeo.h: the entrance to the energy detector is assumed to be "
-            "located at u=" << uEdet << endl;
-    
     uPosV[0] =-217.3; // U positions of the 8 tracker boards in the Phase-II scanner
     uPosV[1] = -167.2;
     uPosV[2] = 167.2;
@@ -139,16 +130,14 @@ public:
           { -43.7193, -43.716 },
           { -43.7193, -43.716 },
           { -43.686, -43.687 } };
-    double fSV_MC[2] = { -43.717, -43.717 }; // V board alignment assumed in the
-                                             // simulation
+    double fSV_MC[2] = { -43.717, -43.717 }; // V board alignment assumed in the simulation
 
     Tpin[0] = 215.168; // T board alignment pin locations, including corrections derived from data analysis
     Tpin[1] = 211.373;
     Tpin[2] = -203.373;
     Tpin[3] = -207.168;
-
-    Tdir[0] = -1.; // T board orientations (front and back trackers are
-                   // reflected in u)
+    
+    Tdir[0] = -1.; // T board orientations (front and back trackers are reflected in u)                   
     Tdir[1] = -1.;
     Tdir[2] = 1.;
     Tdir[3] = 1;
@@ -157,127 +146,94 @@ public:
     TBoard[1] = 4;
     TBoard[2] = 1;
     TBoard[3] = 2;
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 4; i++){
       geoLogFile << "pCTgeo.h: T layer " << i << " is board " << TBoard[i]
-           << " with alignment pin at t=" << Tpin[i] << " mm and direction "
-           << Tdir[i] << endl;
-
+		 << " with alignment pin at t=" << Tpin[i] << " mm and direction "
+		 << Tdir[i] << endl;
+    }
     double fST[7][4] = { // T board internal alignment from optical surveys of
                          // the physical boards
       { -999, -999, -999, -999 }, { 38.60, 126.87, 215.15, 303.42 },
       { 38.48, 126.76, 215.04, 303.32 }, { 38.69, 126.95, 215.23, 303.57 },
       { 38.58, 126.85, 215.11, 303.37 }, { 38.62, 126.90, 215.16, 303.41 },
       { 38.58, 126.85, 215.11, 303.37 } };
-    double fST_MC[4][4] = { // T board alignment assumed in the simulation, from
-                            // Hartmut's ppt file
-      { 38.556, 126.825, 215.111, 303.382 },
-      { 38.63, 126.91, 215.187, 303.474 }, { 38.835, 127.104, 215.38, 303.719 },
-      { 38.542, 126.812, 215.071, 303.331 }, };
-
 
       for (int i = 0; i < 7; i++) {
-        for (int j = 0; j < 4; j++) {
-          if (j < 2)
-            firstStripV[i][j] = fSV[i][j];
-          firstStripT[i][j] = fST[i][j];
-        }
+      for (int j = 0; j < 4; j++) {
+	if (j < 2)
+	  firstStripV[i][j] = fSV[i][j];
+	firstStripT[i][j] = fST[i][j];
+      }
       }
 
-    for (int i = 0; i < 4; i++) {
-      geoLogFile << "pCTgeo.h: V board layer " << i
-           << " first strip locations per ladder:";
-      for (int j = 0; j < 2; j++)
-        geoLogFile << " " << firstStripV[VBoard[i]][j];
-      geoLogFile << endl;
-    }
-    for (int i = 0; i < 4; i++) {
-      geoLogFile << "pCTgeo.h: T board layer " << i
-           << " first strip locations per wafer:";
-      for (int j = 0; j < 4; j++)
-        geoLogFile << " " << firstStripT[TBoard[i]][j];
-      geoLogFile << endl;
-    }
+      for (int i = 0; i < 4; i++) {
+	geoLogFile << "pCTgeo.h: V board layer " << i
+		   << " first strip locations per ladder:";
+	for (int j = 0; j < 2; j++) geoLogFile << " " << firstStripV[VBoard[i]][j];
+	geoLogFile << endl;
+      }
+      for (int i = 0; i < 4; i++) {
+	geoLogFile << "pCTgeo.h: T board layer " << i << " first strip locations per wafer:";
+	for (int j = 0; j < 4; j++)geoLogFile << " " << firstStripT[TBoard[i]][j];
+	geoLogFile << endl;
+      }
 
     // Find the T-layer gap locations, half way between the surrounding strips
     for (int lyr = 0; lyr < 4; lyr++) {
       int brd = TBoard[lyr];
       geoLogFile << "pCTgeo.h: t-layer gap locations for layer " << lyr << ":";
       for (int gap = 0; gap < 3; gap++) {
-        double t1 = Tpin[lyr] + Tdir[lyr] * (firstStripT[brd][gap] +
-                                             (6.0 * 64.0 - 1.0) * stripPitch);
+        double t1 = Tpin[lyr] + Tdir[lyr] * (firstStripT[brd][gap] + (6.0 * 64.0 - 1.0) * stripPitch);
         double t2 = Tpin[lyr] + Tdir[lyr] * firstStripT[brd][gap + 1];
-        // geoLogFile << " t1=" << t1 << " t2=" << t2;
         tGap[gap][lyr] = 0.5 * (t1 + t2);
         geoLogFile << "  " << tGap[gap][lyr];
       }
       geoLogFile << std::endl;
     }
-
-    // Geometry for the wedge phantom, all in mm (INCLUDING 0.1MM SHIFT AND
-    // 0.1MM SLIT between wedges):
+    // Geometry for the wedge phantom, all in mm (INCLUDING 0.1MM SHIFT AND  0.1MM SLIT between wedges):
     TwedgeBreaks[0] = -104.50 + tWedgeOffset; // Start of the wedge slope
-    TwedgeBreaks[1] =
-        -4.75 + tWedgeOffset; // End of the slope, start of the flat
-    TwedgeBreaks[2] =
-        4.75 + tWedgeOffset; // End of the slope, start of the opposite slope
+    TwedgeBreaks[1] = -4.75 + tWedgeOffset; // End of the slope, start of the flat
+    TwedgeBreaks[2] = 4.75 + tWedgeOffset; // End of the slope, start of the opposite slope
     TwedgeBreaks[3] = 104.50 + tWedgeOffset; // End of the opposite slope.
-                                             // Should also be the end of the
-                                             // bricks, if positioned correctly
-    BrickThickness =
-        50.8; // Brick thickness in U; also the wedge maximum thickness
-    geoLogFile << "pCTgeo.h: calibration brick and wedge thickness = "
-         << BrickThickness << endl;
+    // Should also be the end of the bricks, if positioned correctly
+
+    BrickThickness = 50.8; // Brick thickness in U; also the wedge maximum thickness
+      
+    geoLogFile << "pCTgeo.h: calibration brick and wedge thickness = " << BrickThickness << endl;
     geoLogFile << "pCTgeo.h: calibration phantom wedge break locations in t are ";
-    for (int i = 0; i < 4; i++)
-      geoLogFile << TwedgeBreaks[i] << ", ";
+    for (int i = 0; i < 4; i++) geoLogFile << TwedgeBreaks[i] << ", ";
     geoLogFile << endl;
 
     StageThickness = 51.;
-    geoLogFile << "pCTgeo.h: thickness of each energy detector stage = "
-         << StageThickness << " mm" << endl;
+    geoLogFile << "pCTgeo.h: thickness of each energy detector stage = " << StageThickness << " mm" << endl;
     geoLogFile.close();
   };
 
   inline double stageSpeed() { return rotationSpeed; }
-
   inline double timeRes() { return timeStampRes; }
-
   inline int getFPGAlayer(int FPGA) { return fpgaLyr[FPGA]; }
+  
+  // Return the 4 calibration wedge break points in t; n=1,2,3,4 in increasing t
+  inline double getTWedgeBreaks(int n) const { return TwedgeBreaks[n - 1];}  
 
-  inline double getTWedgeBreaks(int n) const { // Return the 4 calibration wedge
-                                               // break points in t; n=1,2,3,4
-                                               // in increasing t
-    return TwedgeBreaks[n - 1];
-  }
+  // Return the calibration brick and wedge thickness
+  inline double getBrickThickness() const { return BrickThickness; }
 
-  inline double getBrickThickness() const { // Return the calibration brick and
-                                            // wedge thickness
-    return BrickThickness;
-  }
+  // stage from 0 through 4
+  inline double energyDetectorU(int stage) const { return uEdet + stage * (StageThickness); }  
 
-  inline double energyDetectorU(int stage) const { // stage from 0 through 4
-    return uEdet + stage * (StageThickness);
-  }
+  // Method to return the t-layer gap locations
+  inline double tBoardGap(int gap, int lyr) const { return tGap[gap][lyr]; }
+  
+  // Method to translate from FPGA to layer number
+  inline int Lyr(int FPGA) const { return fpgaLyr[FPGA]; }
 
-  inline double tBoardGap(int gap, int lyr) const { // Method to return the
-                                                    // t-layer gap locations
-    return tGap[gap][lyr];
-  }
+  // Method to return the U coordinate of V boards
+  inline double uV(int Lyr) const { return uPosV[Lyr]; }
+  
+  // Method to return the U coordinate of T boards
+  inline double uT(int Lyr) const { return uPosT[Lyr];}
 
-  inline int
-  Lyr(int FPGA) const { // Method to translate from FPGA to layer number
-    return fpgaLyr[FPGA];
-  };
-
-  inline double
-  uV(int Lyr) const { // Method to return the U coordinate of V boards
-    return uPosV[Lyr];
-  }
-
-  inline double
-  uT(int Lyr) const { // Method to return the U coordinate of T boards
-    return uPosT[Lyr];
-  }
 
   inline std::vector<double> BeamVertex(int view) const {
     if (view == 0)
@@ -309,10 +265,6 @@ public:
       side = 1;
     }
     int brd = VBoard[fpga];
-    // std::cout << "strip_position_V, fpga " << fpga << " chip " << chip << "
-    // strip " << strip << std::endl;
-    // std::cout << "   brd=" << brd << " 1st strip=" << firstStripV[brd][side]
-    // << " glob=" << global_strip << " Vpin=" << Vpin[fpga] << std::endl;
     return firstStripV[brd][side] + Vpin[fpga] + global_strip * stripPitch;
   }
 
@@ -323,11 +275,6 @@ public:
     double global_strip = 64.0 * chip_in_sensor + (63.0 - strip);
     int lyr = fpgaLyr[fpga];
     int brd = TBoard[lyr];
-    // std::cout << "strip_position_T, fpga " << fpga << " chip " << chip << "
-    // strip " << strip << " layer " << lyr << std::endl;
-    // std::cout << "   brd=" << brd << " 1st strip=" <<
-    // firstStripT[brd][sensor] << " glob=" << global_strip << " Tpin=" <<
-    // Tpin[lyr] << std::endl;
     return Tpin[lyr] +
            Tdir[lyr] * (firstStripT[brd][sensor] + global_strip * stripPitch);
 

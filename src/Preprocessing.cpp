@@ -156,111 +156,6 @@ int Preprocessing::findEvt(FILE *fp) { // Search for the next event header in a
   return 0;
 } // end of Preprocessing::findEvt
 
-
-/*
-// Routine to write out the binary file for image reconstruction [CEO Jan 2016]
-void Preprocessing::WriteBinaryFile2(
-    bool timeStampOutput, bool energyOutput, bool eventIDOutput, float AngleNb,
-    const char OutputFilename[], const char DATA_SOURCE[],
-    const char PHANTOM_NAME[], int study_date, int event_counter, double u[],
-    float V0[], float V1[], float V2[], float V3[], float T0[], float T1[],
-    float T2[], float T3[], float E1[], float E2[], float E3[], float E4[],
-    float E5[], float WetBinary[], float ProjAngle[], unsigned int TimeStamp[],
-    unsigned int EventIDs[]) {
-  cout << "WriteBinaryFile2: saving angle " << float(AngleNb) / 360. << " to "
-       << OutputFilename << endl;
-
-  char magic_number[] = "PCTD";
-  const char *PREPARED_BY = getenv("USER");
-  if (PREPARED_BY == NULL) { // The getenv fails in Windows
-    std::string prdby = "Dolittle";
-    PREPARED_BY = prdby.c_str();
-  }
-  float versionNumber = Version;
-  float projection_angle = (float)AngleNb;
-
-  int version_id = 1;
-  if (energyOutput)
-    version_id += 10;
-  if (timeStampOutput)
-    version_id += 100;
-  int current_time = time(NULL);
-  cout << "WriteBinaryFile2: current time = " << current_time << endl;
-  int phantom_name_size = sizeof(PHANTOM_NAME);
-  int data_source_size = sizeof(DATA_SOURCE);
-  int prepared_by_size = sizeof(PREPARED_BY);
-
-  FILE *fp = fopen(OutputFilename, "w");
-
-  // Write header
-  fwrite(magic_number, sizeof(char), 4, fp);
-  fwrite(&version_id, sizeof(int), 1, fp);
-  fwrite(&event_counter, sizeof(int), 1, fp);
-  fwrite(&projection_angle, sizeof(float), 1, fp);
-  fwrite(&versionNumber, sizeof(float), 1, fp);
-  fwrite(&study_date, sizeof(int), 1, fp);
-  fwrite(&current_time, sizeof(int), 1, fp);
-  fwrite(&phantom_name_size, sizeof(int), 1, fp);
-  fwrite(PHANTOM_NAME, sizeof(char), phantom_name_size, fp);
-  fwrite(&data_source_size, sizeof(int), 1, fp);
-  fwrite(DATA_SOURCE, sizeof(char), data_source_size, fp);
-  fwrite(&prepared_by_size, sizeof(int), 1, fp);
-  fwrite(PREPARED_BY, sizeof(char), prepared_by_size, fp);
-
-  float utemp[4];
-  for (int i = 0; i < 4; i++) {
-    utemp[i] = (float)u[i];
-  }
-
-  // Save all data, event-by-event
-  size_t SIZE_FLOAT = sizeof(float);
-  size_t SIZE_INT = sizeof(int);
-  uint64_t nwords = 14;
-  if (energyOutput)
-    nwords += 5;
-  if (timeStampOutput)
-    ++nwords;
-  if (eventIDOutput)
-    ++nwords;
-  cout << "WriteBinaryFile2: event counter = " << event_counter
-       << " # words = " << nwords << endl;
-  float *event = new float[nwords];
-  for (uint64_t n = 0; n < event_counter; n++) {
-    uint64_t m = 0;
-    memcpy(&event[m++], &utemp[0], SIZE_FLOAT);
-    memcpy(&event[m++], &T0[n], SIZE_FLOAT);
-    memcpy(&event[m++], &V0[n], SIZE_FLOAT);
-    memcpy(&event[m++], &utemp[1], SIZE_FLOAT);
-    memcpy(&event[m++], &T1[n], SIZE_FLOAT);
-    memcpy(&event[m++], &V1[n], SIZE_FLOAT);
-    memcpy(&event[m++], &utemp[2], SIZE_FLOAT);
-    memcpy(&event[m++], &T2[n], SIZE_FLOAT);
-    memcpy(&event[m++], &V2[n], SIZE_FLOAT);
-    memcpy(&event[m++], &utemp[3], SIZE_FLOAT);
-    memcpy(&event[m++], &T3[n], SIZE_FLOAT);
-    memcpy(&event[m++], &V3[n], SIZE_FLOAT);
-    if (energyOutput) {
-      memcpy(&event[m++], &E1[n], SIZE_FLOAT);
-      memcpy(&event[m++], &E2[n], SIZE_FLOAT);
-      memcpy(&event[m++], &E3[n], SIZE_FLOAT);
-      memcpy(&event[m++], &E4[n], SIZE_FLOAT);
-      memcpy(&event[m++], &E5[n], SIZE_FLOAT);
-    }
-    memcpy(&event[m++], &WetBinary[n], SIZE_FLOAT);
-    memcpy(&event[m++], &ProjAngle[n], SIZE_FLOAT);
-    if (timeStampOutput)
-      memcpy(&event[m++], &TimeStamp[n], SIZE_INT);
-    if (eventIDOutput)
-      memcpy(&event[m++], &EventIDs[n], SIZE_INT);
-    fwrite(event, SIZE_FLOAT, nwords, fp);
-  }
-
-  fclose(fp);
-
-  // Clean up
-  delete[] event;
-};
-*/
 // Routine to write out binary file in variable order, instead of event order
 void Preprocessing::WriteBinaryFile3(
     bool timeStampOutput, bool energyOutput, bool eventIDOutput, float AngleNb,
@@ -781,6 +676,8 @@ void pCTevents(stuff2pass stuff, pCTgeo Geometry, UserAnalysis &user,
   return;
 }
 
+
+
 //*********** Driving program for pCT preprocessing **************
 int Preprocessing::ProcessFile(float phantomSize, string partType,
                                float wedgeOffset, float fileFraction,
@@ -1104,10 +1001,8 @@ int Preprocessing::ProcessFile(float phantomSize, string partType,
 
   // [CEO Jan 2016] Buffer to store event data for writing to a temporary file
   //        buff[0:3]          angle
-  //        buff[4:19]         v_hitsV[0:3]    T locations of the T-projection
-  // hits
-  //        buff[20:35]        t_hitsV[0:3]    V locations of the V-projection
-  // hits
+  //        buff[4:19]         v_hitsV[0:3]    T locations of the T-projection hits
+  //        buff[20:35]        t_hitsV[0:3]    V locations of the V-projection hits
   //        buff[36:55]        energy[0:4]     Raw ADC counts from WEPL detector
   //        buff[56]           OTR             ADC out of range indicators
   char outBuff[93]; // Make this extra large, just in case floats are not 4
@@ -1248,36 +1143,26 @@ int Preprocessing::ProcessFile(float phantomSize, string partType,
         long long longTimeStamp = 16 * ((long long)timeStamp);
         double theta2 = ((double)(longTimeStamp + timeStampOffset)) *
                         Geometry.timeRes() * Geometry.stageSpeed();
-        theta = (float)theta2;
+        theta = (float)theta2 + initialAngle;
       } else {
         theta = proj_angle;
       }
       bool debug = EvtNum < stuff.n_debug;
       if (debug) {
-        cout << EvtNum << " Preprocessing.cpp: File position for temp file "
-             << Thread << " = " << ftell(fptmp) << endl;
-        cout << EvtNum << " Reading back event data from the temporary file "
-             << Thread << endl;
-        cout << "   Time resolution = " << Geometry.timeRes()
-             << " stage speed = " << Geometry.stageSpeed() << endl;
-        cout << "   Time Stamp = "
-             << (float)timeStamp * 16.0 * Geometry.timeRes() << " seconds"
-             << endl;
+        cout << EvtNum << " Preprocessing.cpp: File position for temp file " << Thread << " = " << ftell(fptmp) << endl;
+        cout << EvtNum << " Reading back event data from the temporary file " << Thread << endl;
+        cout << "   Time resolution = " << Geometry.timeRes() << " stage speed = " << Geometry.stageSpeed() << endl;
+        cout << "   Time Stamp = " << (float)timeStamp * 16.0 * Geometry.timeRes() << " seconds"<< endl;
         cout << "   Event ID = " << event_id << endl;
         cout << "   Theta = " << theta << endl;
         cout << "  Vhit     Uhit    Thit\n";
-        for (int lyr = 0; lyr < 4; lyr++) {
-          cout << "  " << Vhit[lyr] << "  " << Uhit[lyr] << "  " << Thit[lyr]
-               << endl;
-        }
+        for (int lyr = 0; lyr < 4; lyr++) cout << "  " << Vhit[lyr] << "  " << Uhit[lyr] << "  " << Thit[lyr] << endl;
         cout << "  Stage pulse sums= ";
-        for (int stage = 0; stage < 5; stage++)
-          cout << phSum[stage] << "  ";
-        cout << endl;
-        if (OTR != 0)
-          cout << "   At least one stage has a sample out of range " << endl;
+        for (int stage = 0; stage < 5; stage++) cout << phSum[stage] << "  ";          
+	cout<<endl;
+        if (OTR != 0) cout << "   At least one stage has a sample out of range " << endl;
+          
       }
-      if (stuff.continuous_scan) theta += initialAngle; // Adding the angle of the stage at time 0
 
       // Calculate the calibrated WEPL
       double Tback[2], Vback[2];
@@ -1286,28 +1171,24 @@ int Preprocessing::ProcessFile(float phantomSize, string partType,
         Vback[lyr - 2] = Vhit[lyr];
       }
       float Ene[5];
-
+      bool inBounds;
       for (int stage = 0; stage < 5; stage++) {
         // TVcorrection and MeV conversion.  Extrapolate the rear track vector
         // to the energy detector location.
         float Vedet = Geometry.extrap2D(&Uhit[2], Vback, Geometry.energyDetectorU(stage));
         float Tedet = Geometry.extrap2D(&Uhit[2], Tback, Geometry.energyDetectorU(stage));
-        bool inBounds;
-        Ene[stage] =
-            thrCalibrate[Thread]->corrFac[stage] *
-            ((float)phSum[stage] - thrCalibrate[Thread]->newPed(stage)) *
-            TVcorr->corrFactor(stage, Tedet, Vedet, inBounds);
+	float TVCorrFactor = TVcorr->corrFactor(stage, Tedet, Vedet, inBounds);
+        Ene[stage] = thrCalibrate[Thread]->corrFac[stage] * ((float)phSum[stage] - thrCalibrate[Thread]->newPed(stage))*TVCorrFactor;
+	if(debug) cout<< stage<<" "<<thrCalibrate[Thread]->corrFac[stage] <<" "<<((float)phSum[stage] - thrCalibrate[Thread]->newPed(stage))<<" "<<TVCorrFactor<<endl;
       }
       
       float Wet;
       Wet = WEPL->EtoWEPL(Ene); // Energy to WEPL conversion
       if (Wet < -999. || Wet > 999.) ++nBadWEPL;
-
       if (debug) {
         cout << "  WEPL = " << Wet << endl;
         cout << "  Corrected stage energies= ";
-        for (int stage = 0; stage < 5; stage++)
-          cout << Ene[stage] << "  ";
+        for (int stage = 0; stage < 5; stage++) cout << Ene[stage] << "  ";
         cout << endl;
       }
       // Store the data in vectors according to the angular bin (angle index k)

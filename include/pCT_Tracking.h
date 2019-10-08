@@ -13,14 +13,10 @@
 #include "pCTgeo.h"
 
 struct Tkr2D {
-  double X[4],
-      U[4];    // the lateral (X) and longitudinal (U) coordinates of the track
-  int Qh[4];   // hit quality: 0=interpolated, 1=beam constraint, 2=gap,
-               // 3=measured
-  double Miss; // distance in mm by which the two halves of the track miss each
-               // other at u=0
-  bool Good; // true if the track candidate has not been rejected in favor of a
-             // different one
+  double X[4], U[4];    // the lateral (X) and longitudinal (U) coordinates of the track    
+  int Qh[4];   // hit quality: 0=interpolated, 1=beam constraint, 2=gap, 3=measured
+  double Miss; // distance in mm by which the two halves of the track miss each  other at u=0
+  bool Good; // true if the track candidate has not been rejected in favor of a different one
   int Q;     // track quality: 3= best, made from 4 measured points
              //                2= made from 3 points and a T layer gap
   //                1= made from 3 points and a beam origin constraint

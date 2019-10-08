@@ -41,10 +41,7 @@ public:
 
   }
 
-  bool cutEvt(bool userKill, pCT_Tracking &pCTtracks,
-              TkrHits &pCThits) { // Call for each raw event after the tracking
-                                  // is completed
-
+  bool cutEvt(bool userKill, pCT_Tracking &pCTtracks, TkrHits &pCThits) { // Call for each raw event after the tracking is completed
     event_counter++;
     bool good = false;
     if (pCTtracks.nTracks >= minTkrs && pCTtracks.nTracks <= maxTkrs) { // Exactly 1 V track and 1 T track.  No 2-track events allowed.  

@@ -309,12 +309,10 @@ int main(int argc, char *argv[]) {
       .show_default();
   cfg.addItem('C', "calibrate", Calibrate);
 
-  string Normalize = "no";
+  int Normalize = 0;
   parser.add_opt('L', "normalize")
       .stow(Normalize)
-      .help("Normalize the colums of the WET vs E plot all to be equal area? "
-            "yes or no",
-            "STRING")
+      .help("Normalize the colums of the WET vs E plot all to be equal area? yes or no","INT")
       .show_default();
   cfg.addItem('L', "normalize", Normalize);
 
@@ -478,12 +476,10 @@ int main(int argc, char *argv[]) {
   // Get the list of required, position-sensitive arguments, in this case just the input filename
   vector<string> requiredArgs = parser.args();
 
-  // Most of the floating point variables are specified double precision on the
-  // assumption
-  // that this is going to execute anyway on a 64-bit machine.  An exception is
-  // the temporary
-  // data file and the binary output, which are intended to use 4-byte floating
-  // point.
+  // Most of the floating point variables are specified double precision on the assumption
+  // that this is going to execute anyway on a 64-bit machine.  An exception is the 
+  // temporary data file and the binary output, which are intended to use 4-byte floating point.
+
   cout << "Executing " << argv[0] << " version " << version << endl;
   cout << "  float is " << sizeof(float) << " bytes\n";
   cout << "  double is " << sizeof(double) << " bytes\n";
@@ -633,17 +629,14 @@ int main(int argc, char *argv[]) {
 
   if (Calibrate) { // Calibration Run
     cout << "Running the pCT TV and WEPL calibration sequence" << endl;
-    bool normalise =
-        (Normalize == "yes" || Normalize == "y" || Normalize == "Yes" ||
-         Normalize == "Y" || Normalize == "YES");
-    if (normalise) cout << "Will normalize columns in the WET vs E plot to have equal area." << endl;
+    if (Normalize) cout << "Will normalize columns in the WET vs E plot to have equal area." << endl;
 
     double tWedgeOffset = wedgeOff;
     pCTcalib calibProcessor(CalFile, Outputdir, max_events, max_time, n_debug,
                             n_plot, useTemp, version, WcalibFile,
                             TVcorrFile, minDate, maxDate, minRun, maxRun,
                             tWedgeOffset, partType, pdstlr, reCalibrate, OsName,
-                             redoCal, normalise);
+                             redoCal, Normalize);
     if (calibProcessor.TVmapper() == 0) {
       calibProcessor.enrgDep();
       calibProcessor.writeTVfile();
