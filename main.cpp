@@ -591,8 +591,7 @@ int main(int argc, char *argv[]) {
              << " was calculated from the log file " << logFile << endl;
       } else {
         initialAngle = 0.0;
-        cout << "Could not open the log file " << logFile
-             << ".  Setting the initial stage angle to zero." << endl;
+        cout << "Could not open the log file.  Setting the initial stage angle to zero." << endl;
       }
     } else {
       cout << "The initial stage angle was set by the user to " << initialAngle
@@ -617,9 +616,8 @@ int main(int argc, char *argv[]) {
   std::string OsName = getOsName();
   cout << "The operating system is identified to be " << OsName << endl;
   cout << "The phantom size for preprocessing is assumed to be " << phantomSize << " mm in radius." << endl;
-
+  
   if (KillCh != "null") cout << "The list of tracker channels to kill will be taken from file " << KillCh << endl;
-
   if (dodEEFilter) {
     if (!Calibrate) cout << "The dE-E filtering of nuclear interactions will be used before WEPL reconstruction" << endl;
     else if (!Calibrate && partType == "He") cout << "WARNING: helium fragments will be included in the analysis!" << endl;    
@@ -645,6 +643,7 @@ int main(int argc, char *argv[]) {
       cout << "The calibration run failed in calibProcessor.TVmapper; WEPL calibration will not be run." << endl;
     }
   }
+
   else { // Real run
     cout << "Executing a pCT data pre-processing run" << endl;
     // Here we call the complete preprocessing program

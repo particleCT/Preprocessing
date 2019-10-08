@@ -30,7 +30,7 @@
 // Compile it with g++ using -std=c++0x -lpthread -g -rdynamic (the -g and
 // -rdynamic can be omitted if all is working well)
 //
-struct stuff2pass { // Variables needed by the pCTevents program, put together
+struct generalparam { // Variables needed by the pCTevents program, put together
                     // to reduce the size of the parameter list.
   // This is to enable passing of the raw data processing task "pCTevents" to
   // multiple threads.
@@ -56,7 +56,7 @@ struct stuff2pass { // Variables needed by the pCTevents program, put together
 };
 
 class Preprocessing { // Top level program from the pCT preprocessing task.
-  stuff2pass stuff;
+  generalparam param;
   size_t file_size;
   float Version;
   int n_threads;
@@ -89,17 +89,6 @@ class Preprocessing { // Top level program from the pCT preprocessing task.
   bool dodEEFilter;
 
   static int findEvt(FILE *fp);
-  static bool strTest(std::string str, std::string tst);
-  void WriteBinaryFile2(bool timeStampOutput, bool energyOutput,
-                        bool eventIDOutput, float AngleNb,
-                        const char OutputFilename[], const char DATA_SOURCE[],
-                        const char PHANTOM_NAME[], int study_date,
-                        int event_counter, double u[], float V0[], float V1[],
-                        float V2[], float V3[], float T0[], float T1[],
-                        float T2[], float T3[], float WetBinary[], float E1[],
-                        float E2[], float E3[], float E4[], float E5[],
-                        float ProjAngle[], unsigned int TimeStamp[],
-                        unsigned int EventIDs[]);
   void WriteBinaryFile3(bool timeStampOutput, bool energyOutput,
                         bool eventIDOutput, float AngleNb,
                         const char OutputFilename[], const char DATA_SOURCE[],

@@ -30,11 +30,6 @@
 
 using namespace std;
 
-bool Preprocessing::strTest(string str, string tst) {
-  std::size_t found = str.find(tst);
-  return found != std::string::npos;
-}
-
 Preprocessing::Preprocessing(
     std::string inputFileName, std::string study_name, std::string Outputdir,
     std::string WcalibFile, std::string TVcorrFile, int n_threads,
@@ -75,24 +70,24 @@ Preprocessing::Preprocessing(
   sprintf(inFileName, "%s", inputFileName.c_str());
 
   // Package some variables up for passing to the different execution threads
-  stuff.inFileName = inputFileName;
-  stuff.analysisLevel = analysisLevel;
-  stuff.callUser = callUser;
-  stuff.continuous_scan = continuous_scan;
-  stuff.max_events = max_events;
-  stuff.max_time = max_time;
-  stuff.n_debug = n_debug;
-  stuff.n_plot = n_plot;
-  stuff.Outputdir = Outputdir;
-  stuff.proj_angle = proj_angle;
-  stuff.reCalibrate = realTimeCal;
-  for (int i = 0; i < 5; i++) stuff.pdstlr[i] = pdstlr[i];
+  param.inFileName = inputFileName;
+  param.analysisLevel = analysisLevel;
+  param.callUser = callUser;
+  param.continuous_scan = continuous_scan;
+  param.max_events = max_events;
+  param.max_time = max_time;
+  param.n_debug = n_debug;
+  param.n_plot = n_plot;
+  param.Outputdir = Outputdir;
+  param.proj_angle = proj_angle;
+  param.reCalibrate = realTimeCal;
+  for (int i = 0; i < 5; i++) param.pdstlr[i] = pdstlr[i];
 
-  if (stuff.callUser) cout << "The user analysis entry points will be called, to accumulate histograms, etc.\n";
+  if (param.callUser) cout << "The user analysis entry points will be called, to accumulate histograms, etc.\n";
   else cout << "The user analysis entry points will not be called and user histograms will not be accumulated or output.\n";
 	 
   dTheta = 0.;
-  if (stuff.continuous_scan) {
+  if (param.continuous_scan) {
     cout << "A continuous scan will be analyzed\n";
     cout << "The number of angle bins is " << angleBins << endl;
     dTheta = 360.0 / ((double)angleBins);
@@ -101,12 +96,12 @@ Preprocessing::Preprocessing(
          << " degrees." << endl;
   } else {
     cout << "A fixed angle scan will be analyzed\n";
-    if (stuff.proj_angle > -360.0)
-      cout << "The assumed projection angle of " << stuff.proj_angle
+    if (param.proj_angle > -360.0)
+      cout << "The assumed projection angle of " << param.proj_angle
            << " will override what comes from the data file " << endl;
     angleBins = 1;
   }
-  if (stuff.max_events > 0) cout << "The preprocessing will halt after processing " << stuff.max_events << " events\n";
+  if (param.max_events > 0) cout << "The preprocessing will halt after processing " << param.max_events << " events\n";
     
 
   cout << "Reading the input raw data file " << inFileName << endl;
@@ -154,9 +149,12 @@ int Preprocessing::findEvt(FILE *fp) { // Search for the next event header in a
   cout << endl;
   cout << "findEvt: failed to find a start of event in 512 bytes!" << endl;
   return 0;
-} // end of Preprocessing::findEvt
+} 
 
-// Routine to write out binary file in variable order, instead of event order
+// ******************************* ******************************* *******************************
+// end of the Preprocessing : findEvt
+// ******************************* ******************************* *******************************
+
 void Preprocessing::WriteBinaryFile3(
     bool timeStampOutput, bool energyOutput, bool eventIDOutput, float AngleNb,
     const char OutputFilename[], const char DATA_SOURCE[],
@@ -244,8 +242,7 @@ void Preprocessing::WriteBinaryFile3(
   }
 
   data_file.write(reinterpret_cast<char *>(WetBinary), event_counter * sizeof(float));  
-
-  if (AngleNb > 359) data_file.write(reinterpret_cast<char *>(ProjAngle),event_counter * sizeof(float));
+  data_file.write(reinterpret_cast<char *>(ProjAngle),event_counter * sizeof(float));
 
   if (timeStampOutput) {
     cout << "WriteBinaryFile3: writing out the time stamps" << endl;
@@ -262,12 +259,16 @@ void Preprocessing::WriteBinaryFile3(
   delete[] tmp;
 };
 
+// ******************************* ******************************* *******************************
+// end of the Preprocessing : WriteBinaryToFile
+// ******************************* ******************************* *******************************
+
 // Routine called to read the raw data, analyze it, write results to a temporary
 // file, and analyze the
 // WEPL calibration pedestals and gains.  Ideally this would be a private member
 // of the Preprocessing class, but then
 // the compiler doesn't allow it to be passed to multiple threads.
-void pCTevents(stuff2pass stuff, pCTgeo Geometry, UserAnalysis &user,
+void pCTevents(generalparam param, pCTgeo Geometry, UserAnalysis &user,
                pCTraw rawEvt, pedGainCalib *Calibrate,
                TVcorrection *const TVcorr, int &nKeep, double Uhit[]) {
 
@@ -285,22 +286,22 @@ void pCTevents(stuff2pass stuff, pCTgeo Geometry, UserAnalysis &user,
   // the updated pedestals and gains.
   // The other objects are common to all instances and should not be modified.
 
-  cout << "****************** Executing pCTevents for thread number "<< stuff.threadNum << " *******************************" << endl;
+  cout << "****************** Executing pCTevents for thread number "<< param.threadNum << " *******************************" << endl;
 
-  pCTcut cuts(stuff.threadNum, 3, 5, 8); // Initialize the code for event selection
+  pCTcut cuts(param.threadNum, 3, 5, 8); // Initialize the code for event selection
 
   char outBuff[93]; // Buffer for writing or reading the temporary file
   int nBuffBytes = 8 * sizeof(float) + 7 * sizeof(int) + sizeof(unsigned char);
-  cout << "PCTevents for thread " << stuff.threadNum
+  cout << "PCTevents for thread " << param.threadNum
        << ", buffer size for file writing is " << nBuffBytes << " bytes."
        << endl;
   memset(outBuff, 0, nBuffBytes);
 
-  string tempfile = stuff.Outputdir + "/extracted_data_" +
-                    to_string((long long int)stuff.threadNum) + "d.tmp";
+  string tempfile = param.Outputdir + "/extracted_data_" +
+                    to_string((long long int)param.threadNum) + "d.tmp";
   FILE *fptmp;
-  if (stuff.analysisLevel != 0) {
-    cout << "Thread " << stuff.threadNum << ": Opening the temporary file "
+  if (param.analysisLevel != 0) {
+    cout << "Thread " << param.threadNum << ": Opening the temporary file "
          << tempfile << endl;
     fptmp = fopen(tempfile.c_str(), "wb");
     if (fptmp == NULL) {
@@ -319,18 +320,18 @@ void pCTevents(stuff2pass stuff, pCTgeo Geometry, UserAnalysis &user,
   int nErrDmp = 0;
   while (!rawEvt.stop_reading) {
     try {
-      bool debug = rawEvt.event_counter < stuff.n_debug;
+      bool debug = rawEvt.event_counter < param.n_debug;
       bool Eureka = rawEvt.findEvtHdr(
           debug); // Search for the bits that indicate the beginning of an event
       if (!Eureka) {
-        cout << "pCTevents thread " << stuff.threadNum
+        cout << "pCTevents thread " << param.threadNum
              << " event header not found after " << rawEvt.event_counter
              << " events.\n";
         break;
       }
 
       if (debug)
-        cout << "Thread " << stuff.threadNum << ": Event beginning found "
+        cout << "Thread " << param.threadNum << ": Event beginning found "
              << rawEvt.event_counter << endl;
 
       /////////////////////////////////////////////////
@@ -348,7 +349,7 @@ void pCTevents(stuff2pass stuff, pCTgeo Geometry, UserAnalysis &user,
         nErrDmp++;
       if (debug || (nErrDmp < 10 && daqErr)) {
         if (daqErr) {
-          cout << "***** Thread " << stuff.threadNum
+          cout << "***** Thread " << param.threadNum
                << ", dumping event with DAQ error: Bad FPGA="
                << rawEvt.bad_fpga_address
                << " Tag mismatch=" << rawEvt.tag_mismatch;
@@ -360,15 +361,15 @@ void pCTevents(stuff2pass stuff, pCTgeo Geometry, UserAnalysis &user,
       }
       if (rawEvt.DAQ_error) { // Don't try to reconstruct error events
         // Decide whether to read another event
-        cout << "Preprocessing thread " << stuff.threadNum
+        cout << "Preprocessing thread " << param.threadNum
              << ", skipping reconstruction at event count "
              << rawEvt.event_counter << " due to DAQ error\n";
-        rawEvt.doWeStop(stuff.max_events, stuff.max_time); // This will set the
+        rawEvt.doWeStop(param.max_events, param.max_time); // This will set the
                                                            // stop_reading flag
                                                            // inside the rawEvt
                                                            // instance
         if (rawEvt.stop_reading)
-          cout << "Preprocessing thread " << stuff.threadNum
+          cout << "Preprocessing thread " << param.threadNum
                << " stopping after " << rawEvt.event_counter << " events.\n";
         continue;
       }
@@ -378,11 +379,11 @@ void pCTevents(stuff2pass stuff, pCTgeo Geometry, UserAnalysis &user,
       // Calculate the stage angle in the case of a continuous scan, assuming a
       // known constant rotation velocity
       float theta;
-      if (stuff.continuous_scan) {
+      if (param.continuous_scan) {
         double theta2 = ((double)(rawEvt.time_tag)) * Geometry.timeRes() * Geometry.stageSpeed();
         theta = (float)theta2;
       } else
-        theta = stuff.proj_angle;
+        theta = param.proj_angle;
 
       /////////////////////////////////////////////////
       // EXTRACT THE TRACKER COORDINATE INFORMATION
@@ -399,15 +400,15 @@ void pCTevents(stuff2pass stuff, pCTgeo Geometry, UserAnalysis &user,
       pCT_Tracking pCTtracks(pCThits, Geometry);
       if (debug)
         pCTtracks.dumpTracks(rawEvt.event_number);
-      if (rawEvt.event_counter < stuff.n_plot)
-        pCTtracks.displayEvent(rawEvt.event_number, pCThits, stuff.Outputdir);
+      if (rawEvt.event_counter < param.n_plot)
+        pCTtracks.displayEvent(rawEvt.event_number, pCThits, param.Outputdir);
 
       ////////////////////////////////////////////
       // PERFORM THE PRIVATE USER EVENT ANALYSIS
       ////////////////////////////////////////////
 
       bool userKill = false;
-      if (stuff.threadNum == 0 && stuff.callUser)
+      if (param.threadNum == 0 && param.callUser)
         userKill = user.rawEvent(
             rawEvt, pCThits, pCTtracks, Geometry,
             theta); // This is the user's opportunity to cut unwanted events
@@ -416,10 +417,10 @@ void pCTevents(stuff2pass stuff, pCTgeo Geometry, UserAnalysis &user,
       // WRITE OUT ONLY EVENTS THAT ARE SUITABLE FOR IMAGE RECONSTRUCTION
       ////////////////////////////////////////////////////////////////////
 
-      if (stuff.analysisLevel > 0 &&
+      if (param.analysisLevel > 0 &&
           cuts.cutEvt(userKill, pCTtracks, pCThits)) {
         if (rawEvt.event_counter % 100000 == 0)
-          cout << "Thread " << stuff.threadNum << ": Event "
+          cout << "Thread " << param.threadNum << ": Event "
                << rawEvt.event_number << ", GoodEvtCount " << cuts.nKeep
                << " timeTag " << rawEvt.time_tag << ", theta  " << theta
                << endl;
@@ -515,12 +516,12 @@ void pCTevents(stuff2pass stuff, pCTgeo Geometry, UserAnalysis &user,
       }
 
       // Decide whether to read another event
-      rawEvt.doWeStop(stuff.max_events, stuff.max_time); // This will set the
+      rawEvt.doWeStop(param.max_events, param.max_time); // This will set the
                                                          // stop_reading flag
                                                          // inside the rawEvt
                                                          // instance
       if (rawEvt.stop_reading)
-        cout << "Preprocessing thread " << stuff.threadNum << " stopping after "
+        cout << "Preprocessing thread " << param.threadNum << " stopping after "
              << rawEvt.event_counter << " events.\n";
     }
     catch (const BadEvent &badEvent) {
@@ -531,17 +532,17 @@ void pCTevents(stuff2pass stuff, pCTgeo Geometry, UserAnalysis &user,
     }
   } // End of the loop over events
 
-  cout << endl << "Thread " << stuff.threadNum
+  cout << endl << "Thread " << param.threadNum
        << ", number of events with DAQ errors reported = " << nErrDmp << endl
        << endl;
 
   cuts.summary(); // Summarize the event counts
 
-  cout << "Thread " << stuff.threadNum
+  cout << "Thread " << param.threadNum
        << ":  V-layer U coordinates = " << Uhit[0] << " " << Uhit[1] << " "
        << Uhit[2] << " " << Uhit[3] << " assumed the same for all events\n";
 
-  if (stuff.analysisLevel == 0) {
+  if (param.analysisLevel == 0) {
     nKeep = 0;
     return;
   }
@@ -552,29 +553,29 @@ void pCTevents(stuff2pass stuff, pCTgeo Geometry, UserAnalysis &user,
   /////////////////////////////////////////////////////////
 
   if (rawEvt.event_counter > 90000) {
-    Calibrate->getPeds(stuff.inFileName.c_str(), rawEvt.run_number,
-                       rawEvt.program_version, stuff.proj_angle, cuts.nKeep,
+    Calibrate->getPeds(param.inFileName.c_str(), rawEvt.run_number,
+                       rawEvt.program_version, param.proj_angle, cuts.nKeep,
                        rawEvt.start_time);
-    cout << "Thread " << stuff.threadNum << ":  We are updating the energy "
+    cout << "Thread " << param.threadNum << ":  We are updating the energy "
                                             "detector pedestal settings to the "
                                             "on-the-fly measurement values.\n";
     for (int stage = 0; stage < 5; stage++) {
       double newPed = Calibrate->newPed(stage);
       if (newPed == 0.) {
-        cout << "Thread " << stuff.threadNum
+        cout << "Thread " << param.threadNum
              << ": Keeping the TVcorr pedestal value " << TVcorr->ped[stage]
              << " for stage " << stage << endl;
       } else {
-        cout << "Thread " << stuff.threadNum
+        cout << "Thread " << param.threadNum
              << ": Pedestal from calibration file = " << TVcorr->ped[stage]
              << "     Drift= " << newPed - TVcorr->ped[stage] << endl;
       }
     }
   } else
-    cout << "Thread " << stuff.threadNum
+    cout << "Thread " << param.threadNum
          << ": Not enough events to recalibrate the pedestals." << endl;
   for (int stage = 0; stage < 5; stage++) {
-    cout << "Thread " << stuff.threadNum
+    cout << "Thread " << param.threadNum
          << ": The energy detector pedestal for stage " << stage << " is "
          << Calibrate->newPed(stage) << endl;
   }
@@ -584,22 +585,22 @@ void pCTevents(stuff2pass stuff, pCTgeo Geometry, UserAnalysis &user,
   // AND CALCULATE GAIN CORRECTION FACTORS
   /////////////////////////////////////////////////////////
 
-  if (stuff.reCalibrate) {
+  if (param.reCalibrate) {
     fptmp = fopen(tempfile.c_str(), "rb");
     if (fptmp == NULL) {
-      cout << "Thread " << stuff.threadNum
+      cout << "Thread " << param.threadNum
            << ":  Failed to reopen the temporary file\n";
       exit(1);
     }
     fseek(fptmp, 0L, SEEK_END);
     size_t file_size = ftell(fptmp);
     rewind(fptmp);
-    cout << "Thread " << stuff.threadNum
+    cout << "Thread " << param.threadNum
          << ": Temporary data file size=" << file_size << endl;
 
     for (int EvtNum = 0; EvtNum < cuts.nKeep; EvtNum++) {
       if (EvtNum % 100000 == 0)
-        cout << "Thread " << stuff.threadNum << ": Processing event " << EvtNum
+        cout << "Thread " << param.threadNum << ": Processing event " << EvtNum
              << " from the temp file for calibration." << endl;
       fread(outBuff, sizeof(char), nBuffBytes, fptmp);
       float Vhit[4], Thit[4];
@@ -609,8 +610,8 @@ void pCTevents(stuff2pass stuff, pCTgeo Geometry, UserAnalysis &user,
              4 * sizeof(float));
       memcpy(phSum, &outBuff[2 * sizeof(int) + 8 * sizeof(float)],
              5 * sizeof(int));
-      if (EvtNum <= stuff.n_debug) {
-        cout << "pCTevents thread " << stuff.threadNum
+      if (EvtNum <= param.n_debug) {
+        cout << "pCTevents thread " << param.threadNum
              << ", reading back the temporary file for calibrations. . .\n";
         cout << "  Vhit     Uhit    Thit\n";
         for (int lyr = 0; lyr < 4; lyr++) {
@@ -656,21 +657,21 @@ void pCTevents(stuff2pass stuff, pCTgeo Geometry, UserAnalysis &user,
                          Ene); // Accumulate histograms for gain recalibration
     }
 
-    Calibrate->getGains(TVcorr, stuff.inFileName.c_str(), rawEvt.run_number,
-                        rawEvt.program_version, stuff.proj_angle, cuts.nKeep,
+    Calibrate->getGains(TVcorr, param.inFileName.c_str(), rawEvt.run_number,
+                        rawEvt.program_version, param.proj_angle, cuts.nKeep,
                         rawEvt.start_time);
 
     fclose(fptmp);
-    cout << "Thread " << stuff.threadNum << ": closed the temporary file "
+    cout << "Thread " << param.threadNum << ": closed the temporary file "
          << tempfile << endl;
   }
-  cout << "Thread " << stuff.threadNum << ": Gain correction factors: ";
+  cout << "Thread " << param.threadNum << ": Gain correction factors: ";
   for (int stage = 0; stage < 5; stage++)
     cout << Calibrate->corrFac[stage] << "  ";
   cout << endl;
 
   nKeep = cuts.nKeep;
-  cout << "Thread " << stuff.threadNum
+  cout << "Thread " << param.threadNum
        << " done with pCTevents.  Number of events kept=" << nKeep << endl;
 
   return;
@@ -782,13 +783,13 @@ int Preprocessing::ProcessFile(float phantomSize, string partType,
   // data during processing without messing up the public program structure.
   UserAnalysis user(inFileName, Geometry, partType, analysisLevel, OsName);
 
-  if (stuff.callUser)
+  if (param.callUser)
     user.initialize(rawEvt); // Entry point for users to initialize their
                              // private analysis code
 
-  if (stuff.analysisLevel < 0 || stuff.analysisLevel > 2)
-    stuff.analysisLevel = 2;
-  switch (stuff.analysisLevel) {
+  if (param.analysisLevel < 0 || param.analysisLevel > 2)
+    param.analysisLevel = 2;
+  switch (param.analysisLevel) {
   case 0:
     cout << "Preprocessing.cpp: Only raw and tracker data will be analyzed\n";
     break;
@@ -802,26 +803,26 @@ int Preprocessing::ProcessFile(float phantomSize, string partType,
     break;
   }
 
-  cout << "Preprocessing.cpp: The output directory is " << stuff.Outputdir
+  cout << "Preprocessing.cpp: The output directory is " << param.Outputdir
        << endl;
 
   // Check whether the specified stage angle agrees with what is in the data
   // file
-  if (!stuff.continuous_scan) {
-    if (stuff.proj_angle > -360.0) {
-      if (abs(stuff.proj_angle - rawEvt.stage_angle) / stuff.proj_angle >
+  if (!param.continuous_scan) {
+    if (param.proj_angle > -360.0) {
+      if (abs(param.proj_angle - rawEvt.stage_angle) / param.proj_angle >
           0.001) {
         cout << "Preprocessing.cpp: The provided projection angle does not "
                 "match the input file run header!\n";
-        cout << "The provided projection angle = " << stuff.proj_angle << endl;
+        cout << "The provided projection angle = " << param.proj_angle << endl;
         cout << "The stage angle from the file = " << rawEvt.stage_angle
              << endl;
         cout << "We are overriding the value from the input file run header.\n";
       }
     } else {
-      stuff.proj_angle = rawEvt.stage_angle;
+      param.proj_angle = rawEvt.stage_angle;
       cout << "Preprocessing.cpp: We are setting the projection angle "
-              "according to the input file value of " << stuff.proj_angle
+              "according to the input file value of " << param.proj_angle
            << endl;
       cout << "The input file in general should contain the true reading from "
               "the stage for non-continuous-scan runs.\n";
@@ -844,7 +845,7 @@ int Preprocessing::ProcessFile(float phantomSize, string partType,
   /////////////////////////////////////////////////////////
 
   if (WcalibFile.size() == 0) {
-    WcalibFile = stuff.Outputdir + "/WcalibW.txt";
+    WcalibFile = param.Outputdir + "/WcalibW.txt";
     cout << "Preprocessing.cpp: Since no WEPL calibration filename and path "
             "was specified, we will look for it in " << WcalibFile << endl;
   }
@@ -853,7 +854,7 @@ int Preprocessing::ProcessFile(float phantomSize, string partType,
   WEPL->SetEthresholds1(StgThr[0], StgThr[1], StgThr[2], StgThr[3], StgThr[4]);
 
   if (TVcorrFile.size() == 0) {
-    TVcorrFile = stuff.Outputdir +
+    TVcorrFile = param.Outputdir +
                  "/TVcorr.txt"; // Default TVcorr calibration file location.
     cout << "Preprocessing.cpp: Since no TV calibration filename and path was "
             "specified, we will look for it in " << TVcorrFile << endl;
@@ -875,7 +876,7 @@ int Preprocessing::ProcessFile(float phantomSize, string partType,
   float pedestals[5];
   for (int stage = 0; stage < 5; stage++)
     pedestals[stage] = TVcorr->ped[stage];
-  thrCalibrate.at(0) = new pedGainCalib(stuff.Outputdir, stuff.pdstlr, pedestals, 0, t1, t2, t3, t4, partType, OsName); // For the mother thread only
+  thrCalibrate.at(0) = new pedGainCalib(param.Outputdir, param.pdstlr, pedestals, 0, t1, t2, t3, t4, partType, OsName); // For the mother thread only
 
   /////////////////////////////////////////////////////////////////
   // Call the routine that reads the data and does the analysis.
@@ -910,7 +911,7 @@ int Preprocessing::ProcessFile(float phantomSize, string partType,
            << fOffset[thread] << " bytes for thread " << thread << endl;
 
       thrCalibrate.at(thread) = new pedGainCalib(
-          stuff.Outputdir, stuff.pdstlr, pedestals, thread, t1, t2, t3, t4,
+          param.Outputdir, param.pdstlr, pedestals, thread, t1, t2, t3, t4,
           partType, OsName); // Each thread has its own calibration instance,
                              // for that segment of the file
 
@@ -947,8 +948,8 @@ int Preprocessing::ProcessFile(float phantomSize, string partType,
       // to insert the
       // preprocessor directive _VARIADIC_MAX=10 in order to get successful
       // compilation in Visual Studio.
-      stuff.threadNum = thread;
-      thr.push_back(std::thread(pCTevents, stuff, Geometry, std::ref(user),
+      param.threadNum = thread;
+      thr.push_back(std::thread(pCTevents, param, Geometry, std::ref(user),
                                 thrRawEvt, thrCalibrate.at(thread), TVcorr,
                                 std::ref(nKeep.at(thread)),
                                 ptrUhit + (thread - 1) * 4));
@@ -960,9 +961,9 @@ int Preprocessing::ProcessFile(float phantomSize, string partType,
   // Uhit is filled and returned for use below, just to save space in the
   // temporary file.
   // The user analysis entry points execute only in this thread, and only if
-  // stuff.callUser is true.
-  stuff.threadNum = 0;
-  pCTevents(stuff, Geometry, std::ref(user), rawEvt, thrCalibrate.at(0), TVcorr,
+  // param.callUser is true.
+  param.threadNum = 0;
+  pCTevents(param, Geometry, std::ref(user), rawEvt, thrCalibrate.at(0), TVcorr,
             std::ref(nKeep.at(0)), Uhit);
 
   if (n_threads > 1) { // Join the other threads, waiting here until they are
@@ -970,7 +971,7 @@ int Preprocessing::ProcessFile(float phantomSize, string partType,
     cout << "Preprocessing.cpp: The mother thread is now joining with the "
             "daughter threads:\n";
     for (int thread = 0; thread < n_threads - 1;
-         thread++) { // Careful: stuff.threadNum counts from 1 to n_threads for
+         thread++) { // Careful: param.threadNum counts from 1 to n_threads for
                      // daughter threads, but the thr vector counts from 0!
       cout << "    Join with thread " << thread + 1 << endl;
       thr.at(thread).join();
@@ -986,9 +987,9 @@ int Preprocessing::ProcessFile(float phantomSize, string partType,
     }
   }
 
-  if (stuff.analysisLevel < 2) {
-    if (stuff.callUser)
-      user.summary(stuff.Outputdir);
+  if (param.analysisLevel < 2) {
+    if (param.callUser)
+      user.summary(param.Outputdir);
     cout << "Preprocessing.cpp: pCT_Preprocessing all done with the raw data "
             "monitoring task." << endl;
     return 0;
@@ -1064,16 +1065,14 @@ int Preprocessing::ProcessFile(float phantomSize, string partType,
         E4[bin].reserve(alloc);
         E5[bin].reserve(alloc);
       }
-      if (timeStampOutput)
-        TS[bin].reserve(alloc);
-      if (eventIDOutput)
-        EventIDs[bin].reserve(alloc);
+      if (timeStampOutput) TS[bin].reserve(alloc);
+      if (eventIDOutput) EventIDs[bin].reserve(alloc);
       WetBinary[bin].reserve(alloc);
       ProjAngle[bin].reserve(alloc);
     }
   }
 
-  if (stuff.continuous_scan) cout << "Preprocessing.cpp: The angular bin size is " << dTheta << " for "<< angleBins << " bins." << endl;
+  if (param.continuous_scan) cout << "Preprocessing.cpp: The angular bin size is " << dTheta << " for "<< angleBins << " bins." << endl;
 
   FILE *fptmp;
   string tempfile;
@@ -1084,10 +1083,10 @@ int Preprocessing::ProcessFile(float phantomSize, string partType,
   long long timeStampOffset = 0;
   for (int Thread = 0; Thread < n_threads; Thread++) {
     if (OsName == "Windows") {
-      tempfile = stuff.Outputdir + "\\extracted_data_" +
+      tempfile = param.Outputdir + "\\extracted_data_" +
                  to_string((long long int)Thread) + "d.tmp";
     } else {
-      tempfile = stuff.Outputdir + "/extracted_data_" +
+      tempfile = param.Outputdir + "/extracted_data_" +
                  to_string((long long int)Thread) + "d.tmp";
     }
     cout << "Preprocessing.cpp, thread " << Thread
@@ -1147,7 +1146,7 @@ int Preprocessing::ProcessFile(float phantomSize, string partType,
       } else {
         theta = proj_angle;
       }
-      bool debug = EvtNum < stuff.n_debug;
+      bool debug = EvtNum < param.n_debug;
       if (debug) {
         cout << EvtNum << " Preprocessing.cpp: File position for temp file " << Thread << " = " << ftell(fptmp) << endl;
         cout << EvtNum << " Reading back event data from the temporary file " << Thread << endl;
@@ -1199,10 +1198,10 @@ int Preprocessing::ProcessFile(float phantomSize, string partType,
              << " from the temp file, time stamp=" << timeStamp;
         cout << " angle=" << theta << endl;
       }
-      if (stuff.analysisLevel == 2 ) {
+      if (param.analysisLevel == 2 ) {
         ++nEvtot;
         int k;
-        if (stuff.continuous_scan) {
+        if (param.continuous_scan) {
           k = (int)floor(theta - initialAngle / dTheta);
           k %= angleBins;
         } else
@@ -1235,7 +1234,7 @@ int Preprocessing::ProcessFile(float phantomSize, string partType,
           EventIDs[k].push_back(event_id);
         }
       }
-      if (Thread == 0 && stuff.callUser)
+      if (Thread == 0 && param.callUser)
         user.weplEvent(
             theta, Wet, Ene, Thit, Uhit, Vhit,
             OTR); // in this method the user can insert private analysis code
@@ -1254,7 +1253,6 @@ int Preprocessing::ProcessFile(float phantomSize, string partType,
          << " is " << cmd << endl;
     system(cmd.c_str());
   }
-
   cout << endl;
   cout << "Preprocessing.cpp: The total number of events saved for output was "<< nEvtot << endl;
   cout << "                   The number of events rejected with bad WEPL was "<< nBadWEPL << endl;
@@ -1262,9 +1260,9 @@ int Preprocessing::ProcessFile(float phantomSize, string partType,
   cout << "                   The accumulated time-stamp correction is, in 10ns units, " << timeStampOffset << endl << endl;
     
 
-  if (stuff.analysisLevel == 1) {
-    if (stuff.callUser)
-      user.summary(stuff.Outputdir);
+  if (param.analysisLevel == 1) {
+    if (param.callUser)
+      user.summary(param.Outputdir);
     cout << "Preprocess.cpp: The pCT_Preprocessing monitoring task is all "
             "done. . ." << endl;
     return 0;
@@ -1275,12 +1273,11 @@ int Preprocessing::ProcessFile(float phantomSize, string partType,
   char OutputFilename[512];
   for (int k = 0; k < angleBins; k++) {
     float AngleNb; // float
-    if (continuous_scan)
-      AngleNb = (float)(k * dTheta); // float
-    else
-      AngleNb = (float)(proj_angle);
+    if (continuous_scan) AngleNb = (float)(k * dTheta); // float
+    else AngleNb = (float)(proj_angle);
+      
     int Event_Counter = V0[k].size();
-    sprintf(OutputFilename, "%s/projection_%03.1f.bin", stuff.Outputdir.c_str(), AngleNb); // float
+    sprintf(OutputFilename, "%s/projection_%03.1f.bin", param.Outputdir.c_str(), AngleNb); // float
     cout << "Preprocessing.cpp: Write binary file for angle bin " << k
          << " projection angle = " << AngleNb << "  " << Event_Counter
          << " histories." <<" Output Filename : "<< OutputFilename << endl;
@@ -1301,8 +1298,8 @@ int Preprocessing::ProcessFile(float phantomSize, string partType,
   // BEGIN USER SUMMARIES AND PRINTOUTS
   //////////////////////////////////////
 
-  if (stuff.callUser)
-    user.summary(stuff.Outputdir);
+  if (param.callUser)
+    user.summary(param.Outputdir);
 
   //////////////////////////////////////
   // END USER SUMMARIES AND PRINTOUTS
