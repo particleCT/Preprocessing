@@ -1,0 +1,32 @@
+# List of names of files needed for TV and WEPL calibration CDH17
+# Start comment lines with a # sign
+# Do not introduce any blank lines!
+# The first file is the empty run (no phantom) for TV calibration
+#/ion/home/hect/Data/CDH17/CalibNew/Cal_Emp_0013.dat
+# The second file is the run with a wedge but no bricks
+#/ion/home/hect/Data/CDH17/CalibNew/Calibw_0B_0014.dat
+# The third file is the run with a single brick
+#/ion/home/hect/Data/CDH17/CalibNew/Calibw_1B_0015.dat
+# The fourth file is the run with two bricks
+#/ion/home/hect/Data/CDH17/CalibNew/Calibw_2B_0016.dat
+# The fifth file is the run with three bricks
+#/ion/home/hect/Data/CDH17/CalibNew/Calibw_3B_0017.dat
+# The sixth file is the run with four bricks
+#/ion/home/hect/Data/CDH17/CalibNew/Calibw_4B_0018.dat
+# End of the list
+# List of names of files needed for TV and WEPL calibration CPC_2016
+# Start comment lines with a # sign
+# Do not introduce any blank lines!
+# The first file is the empty run (no phantom) for TV calibration
+/ion/pCT_data/raw_data/CPC_2016_08_13/HIT_Dec/Calib_0011_emp_000.dat
+# The second file is the run with a wedge but no bricks
+/ion/pCT_data/raw_data/CPC_2016_08_13/HIT_Dec/Calib_0012_0b_000.dat
+# The third file is the run with a single brick
+/ion/pCT_data/raw_data/CPC_2016_08_13/HIT_Dec/Calib_0013_1b_000.dat
+# The fourth file is the run with two bricks
+/ion/pCT_data/raw_data/CPC_2016_08_13/HIT_Dec/Calib_0014_2b_000.dat
+# The fifth file is the run with three bricks
+/ion/pCT_data/raw_data/CPC_2016_08_13/HIT_Dec/Calib_0015_3b_000.dat
+# The sixth file is the run with four bricks
+/ion/pCT_data/raw_data/CPC_2016_08_13/HIT_Dec/Calib_0016_4b_000.dat
+# End of the list
