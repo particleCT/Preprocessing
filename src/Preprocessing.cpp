@@ -89,9 +89,9 @@ Preprocessing::Preprocessing(
   dTheta = 0.;
   if (param.continuous_scan) {
     cout << "A continuous scan will be analyzed\n";
-    cout << "The number of angle bins is " << angleBins << endl;
-    dTheta = 360.0 / ((double)angleBins);
-    cout << "delta-theta = " << dTheta << endl;
+    cout << "The file will be split into  " << angleBins << " sub-files "<<endl;
+    //dTheta = 360.0 / ((double)angleBins);
+    //cout << "delta-theta = " << dTheta << endl;
     cout << "The initial stage angle, at time 0, is " << initialAngle
          << " degrees." << endl;
   } else {
@@ -599,9 +599,10 @@ void pCTevents(generalparam param, pCTgeo Geometry, UserAnalysis &user,
          << ": Temporary data file size=" << file_size << endl;
 
     for (int EvtNum = 0; EvtNum < cuts.nKeep; EvtNum++) {
-      if (EvtNum % 100000 == 0)
+      if (EvtNum % 100000 == 0){
         cout << "Thread " << param.threadNum << ": Processing event " << EvtNum
              << " from the temp file for calibration." << endl;
+      }
       fread(outBuff, sizeof(char), nBuffBytes, fptmp);
       float Vhit[4], Thit[4];
       int phSum[5];
@@ -618,11 +619,13 @@ void pCTevents(generalparam param, pCTgeo Geometry, UserAnalysis &user,
           cout << "  " << Vhit[lyr] << "  " << Uhit[lyr] << "  " << Thit[lyr]
                << endl;
         }
+
         cout << "  Stage pulse sums= ";
         for (int stage = 0; stage < 5; stage++)
           cout << phSum[stage] << "  ";
         cout << endl;
       }
+
 
       // Calculate the calibrated WEPL
       float Ene[5], Vedet[5], Tedet[5];
@@ -637,37 +640,29 @@ void pCTevents(generalparam param, pCTgeo Geometry, UserAnalysis &user,
         Tfront[lyr] = Thit[lyr];
         // Vfront[lyr] = Vhit[lyr];
       }
-      float Tphantom =
-          Geometry.extrap2D(Uhit, Tfront, 0.); // Center of the stage
+      float Tphantom = Geometry.extrap2D(Uhit, Tfront, 0.); // Center of the stage
       // float Vphantom = Geometry.extrap2D(Uhit, Vfront, 0.);
       for (int stage = 0; stage < 5; stage++) {
         // Extrapolate the rear track vector to the energy detector stage
-        Vedet[stage] =
-            Geometry.extrap2D(&Uhit[2], Vback, Geometry.energyDetectorU(stage));
-        Tedet[stage] =
-            Geometry.extrap2D(&Uhit[2], Tback, Geometry.energyDetectorU(stage));
-
+        Vedet[stage] = Geometry.extrap2D(&Uhit[2], Vback, Geometry.energyDetectorU(stage));
+        Tedet[stage] = Geometry.extrap2D(&Uhit[2], Tback, Geometry.energyDetectorU(stage));
         bool inBounds;
-        Ene[stage] =
-            ((float)phSum[stage] - Calibrate->newPed(stage)) *
-            TVcorr->corrFactor(stage, Tedet[stage], Vedet[stage], inBounds);
+        Ene[stage] =((float)phSum[stage] - Calibrate->newPed(stage)) *
+	  TVcorr->corrFactor(stage, Tedet[stage], Vedet[stage], inBounds);
       }
-
-      Calibrate->weplEvt(Vedet[0], Tphantom,
-                         Ene); // Accumulate histograms for gain recalibration
+      
+      Calibrate->weplEvt(Vedet[0], Tphantom, Ene); // Accumulate histograms for gain recalibration
     }
-
     Calibrate->getGains(TVcorr, param.inFileName.c_str(), rawEvt.run_number,
                         rawEvt.program_version, param.proj_angle, cuts.nKeep,
                         rawEvt.start_time);
 
     fclose(fptmp);
-    cout << "Thread " << param.threadNum << ": closed the temporary file "
-         << tempfile << endl;
+    cout << "Thread " << param.threadNum << ": closed the temporary file " << tempfile << endl;
+         
   }
   cout << "Thread " << param.threadNum << ": Gain correction factors: ";
-  for (int stage = 0; stage < 5; stage++)
-    cout << Calibrate->corrFac[stage] << "  ";
+  for (int stage = 0; stage < 5; stage++) cout << Calibrate->corrFac[stage] << "  ";
   cout << endl;
 
   nKeep = cuts.nKeep;
@@ -677,25 +672,19 @@ void pCTevents(generalparam param, pCTgeo Geometry, UserAnalysis &user,
   return;
 }
 
-
-
 //*********** Driving program for pCT preprocessing **************
 int Preprocessing::ProcessFile(float phantomSize, string partType,
                                float wedgeOffset, float fileFraction,
                                int numbTkrFPGA, int numbEdetFPGA,
                                std::string KillCh) {
 
-  cout << "Preprocessing.cpp: Entering the driver routine for pCT "
-          "preprocessing. . ." << endl;
-  cout << "The phantom is assumed to be less than " << phantomSize
-       << " in radius, for recalibration of gains." << endl;
+  cout << "Preprocessing.cpp: Entering the driver routine for pCT preprocessing. . ." << endl;
+  cout << "The phantom is assumed to be less than " << phantomSize << " in radius, for recalibration of gains." << endl;
   cout << "The wedge phantom offset is assumed to be " << wedgeOffset << endl;
-  cout << "There are " << numbTkrFPGA << " tracker FPGAs and " << numbEdetFPGA
-       << " energy detector FPGAs" << endl;
+  cout << "There are " << numbTkrFPGA << " tracker FPGAs and " << numbEdetFPGA << " energy detector FPGAs" << endl;
   cout << "The file with the list of channels to kill is " << KillCh << endl;
   cout << "The file fraction to use is " << fileFraction << endl;
-  if (fileFraction > 1.0)
-    fileFraction = 1.0;
+  if (fileFraction > 1.0) fileFraction = 1.0;
 
   //////////////////////////////////////////////////////////////////////////////////////
   // ***************** Divide the input file evenly between n threads
@@ -768,24 +757,18 @@ int Preprocessing::ProcessFile(float phantomSize, string partType,
   // the input file
   pCTraw rawEvt(in_file, fileSize[0], 0, numbTkrFPGA,
                 numbEdetFPGA); // For the mother thread only
-  for (auto entry : chToKill) {
-    rawEvt.pCTkillStrip(entry.FPGA, entry.chip, entry.channel);
-  }
+  for (auto entry : chToKill) rawEvt.pCTkillStrip(entry.FPGA, entry.chip, entry.channel);
 
-  rawEvt.readRunHeader(
-      inFileName); // Look for the run header bits and parse them
-
-  pCTgeo Geometry(0.); // Create a class instance with all of the
-                                  // geometry information
-
+  rawEvt.readRunHeader(inFileName); // Look for the run header bits and parse them
+  pCTgeo Geometry(0.); // Create a class instance with all of the geometry information
+  
   // Create an instance of the class UserAnalysis.  This provides entry points
   // for users to insert private code to peak at the
   // data during processing without messing up the public program structure.
   UserAnalysis user(inFileName, Geometry, partType, analysisLevel, OsName);
 
   if (param.callUser)
-    user.initialize(rawEvt); // Entry point for users to initialize their
-                             // private analysis code
+    user.initialize(rawEvt); // Entry point for users to initialize their private analysis code
 
   if (param.analysisLevel < 0 || param.analysisLevel > 2)
     param.analysisLevel = 2;
@@ -794,17 +777,14 @@ int Preprocessing::ProcessFile(float phantomSize, string partType,
     cout << "Preprocessing.cpp: Only raw and tracker data will be analyzed\n";
     break;
   case 1:
-    cout << "Preprocessing.cpp: Raw data, tracker data, and WEPL data will be "
-            "analyzed\n";
+    cout << "Preprocessing.cpp: Raw data, tracker data, and WEPL data will be analyzed\n";
     break;
   case 2:
-    cout << "Preprocessing.cpp: The full analysis will be executed and "
-            "projection data output\n";
+    cout << "Preprocessing.cpp: The full analysis will be executed and projection data output\n";
     break;
   }
 
-  cout << "Preprocessing.cpp: The output directory is " << param.Outputdir
-       << endl;
+  cout << "Preprocessing.cpp: The output directory is " << param.Outputdir << endl;
 
   // Check whether the specified stage angle agrees with what is in the data
   // file
@@ -1000,7 +980,7 @@ int Preprocessing::ProcessFile(float phantomSize, string partType,
   // AND COMPLETE THE WEPL RECONSTRUCTION
   /////////////////////////////////////////////////////////
 
-  // [CEO Jan 2016] Buffer to store event data for writing to a temporary file
+  //        [CEO Jan 2016] Buffer to store event data for writing to a temporary file
   //        buff[0:3]          angle
   //        buff[4:19]         v_hitsV[0:3]    T locations of the T-projection hits
   //        buff[20:35]        t_hitsV[0:3]    V locations of the V-projection hits
@@ -1031,16 +1011,13 @@ int Preprocessing::ProcessFile(float phantomSize, string partType,
   vector<vector<float> > E4(sizeE);
   vector<vector<float> > E5(sizeE);
   int sizeT = 1;
-  if (timeStampOutput)
-    sizeT = angleBins;
+  if (timeStampOutput) sizeT = angleBins;
   vector<vector<unsigned int> > TS(sizeT);
   int sizeI = 1;
-  if (eventIDOutput)
-    sizeI = angleBins;
+  if (eventIDOutput) sizeI = angleBins;
   vector<vector<unsigned int> > EventIDs(sizeI);
   vector<vector<float> > WetBinary(angleBins);
   vector<vector<float> > ProjAngle(angleBins);
-
   int totEvt = 0;
   cout << "Preprocessing.cpp: the total number of events in the temporary "
           "files is " << totEvt << endl;
@@ -1048,7 +1025,7 @@ int Preprocessing::ProcessFile(float phantomSize, string partType,
     totEvt += nKeep[Thread];
   }
   int alloc = totEvt / angleBins;
-  if (alloc > 10) { // Reserve memory space for the vectors
+  if (alloc > 10) { // Reserve memory space for the vectors -- this is bonkers, there is no guarantee that angleBins is the same as angle
     for (int bin = 0; bin < angleBins; ++bin) {
       V0[bin].reserve(alloc);
       V1[bin].reserve(alloc);
@@ -1072,7 +1049,7 @@ int Preprocessing::ProcessFile(float phantomSize, string partType,
     }
   }
 
-  if (param.continuous_scan) cout << "Preprocessing.cpp: The angular bin size is " << dTheta << " for "<< angleBins << " bins." << endl;
+  //if (param.continuous_scan) cout << "Preprocessing.cpp: The angular bin size is " << dTheta << " for "<< angleBins << " bins." << endl;
 
   FILE *fptmp;
   string tempfile;
@@ -1099,8 +1076,8 @@ int Preprocessing::ProcessFile(float phantomSize, string partType,
 
     cout << "Preprocessing.cpp: Thread " << Thread << " produced "
          << nKeep[Thread] << " output events.\n";
-    for (int EvtNum = 0; EvtNum < nKeep[Thread];
-         EvtNum++) { // Analyze data from the temporary file event by event
+    for (int EvtNum = 0; EvtNum < nKeep[Thread]; EvtNum++) { // Analyze data from the temporary file event by event
+         
       fread(outBuff, sizeof(char), nBuffBytes, fptmp);
       float Vhit[4], Thit[4];
       int phSum[5];
@@ -1140,12 +1117,10 @@ int Preprocessing::ProcessFile(float phantomSize, string partType,
       float theta;
       if (continuous_scan) {
         long long longTimeStamp = 16 * ((long long)timeStamp);
-        double theta2 = ((double)(longTimeStamp + timeStampOffset)) *
-                        Geometry.timeRes() * Geometry.stageSpeed();
+        double theta2 = ((double)(longTimeStamp + timeStampOffset)) * Geometry.timeRes() * Geometry.stageSpeed();
         theta = (float)theta2 + initialAngle;
-      } else {
-        theta = proj_angle;
-      }
+      } else { theta = proj_angle;}
+      
       bool debug = EvtNum < param.n_debug;
       if (debug) {
         cout << EvtNum << " Preprocessing.cpp: File position for temp file " << Thread << " = " << ftell(fptmp) << endl;
@@ -1178,7 +1153,6 @@ int Preprocessing::ProcessFile(float phantomSize, string partType,
         float Tedet = Geometry.extrap2D(&Uhit[2], Tback, Geometry.energyDetectorU(stage));
 	float TVCorrFactor = TVcorr->corrFactor(stage, Tedet, Vedet, inBounds);
         Ene[stage] = thrCalibrate[Thread]->corrFac[stage] * ((float)phSum[stage] - thrCalibrate[Thread]->newPed(stage))*TVCorrFactor;
-	if(debug) cout<< stage<<" "<<thrCalibrate[Thread]->corrFac[stage] <<" "<<((float)phSum[stage] - thrCalibrate[Thread]->newPed(stage))<<" "<<TVCorrFactor<<endl;
       }
       
       float Wet;
@@ -1202,10 +1176,10 @@ int Preprocessing::ProcessFile(float phantomSize, string partType,
         ++nEvtot;
         int k;
         if (param.continuous_scan) {
-          k = (int)floor(theta - initialAngle / dTheta);
-          k %= angleBins;
-        } else
-          k = 0;
+	  k = (EvtNum -EvtNum%alloc)/alloc ; // Split the event per files
+	  if(k == angleBins) k--; //Sanity check
+        } else k = 0;
+	
         V0[k].push_back(Vhit[0]);
         V1[k].push_back(Vhit[1]);
         V2[k].push_back(Vhit[2]);
@@ -1273,15 +1247,14 @@ int Preprocessing::ProcessFile(float phantomSize, string partType,
   char OutputFilename[512];
   for (int k = 0; k < angleBins; k++) {
     float AngleNb; // float
-    if (continuous_scan) AngleNb = (float)(k * dTheta); // float
-    else AngleNb = (float)(proj_angle);
+    //if (continuous_scan) AngleNb = (float)(k * dTheta); // float
+    //else AngleNb = (float)(proj_angle);
       
     int Event_Counter = V0[k].size();
-    sprintf(OutputFilename, "%s/projection_%03.1f.bin", param.Outputdir.c_str(), AngleNb); // float
-    cout << "Preprocessing.cpp: Write binary file for angle bin " << k
-         << " projection angle = " << AngleNb << "  " << Event_Counter
-         << " histories." <<" Output Filename : "<< OutputFilename << endl;
-
+    //sprintf(OutputFilename, "%s/projection_%03.1f.bin", param.Outputdir.c_str(), AngleNb); // float
+    sprintf(OutputFilename, "%s/projection_%1d.bin", param.Outputdir.c_str(), k); // float
+    cout << "Preprocessing.cpp: Write binary file for file number " << k
+         << Event_Counter << " histories." <<" Output Filename : "<< OutputFilename << endl;
 
     WriteBinaryFile3(timeStampOutput, energyOutput, eventIDOutput, AngleNb,
                        OutputFilename, inFileName, study_name.c_str(),

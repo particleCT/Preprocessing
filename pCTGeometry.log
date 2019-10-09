@@ -1,0 +1,46 @@
+pCTgeo.h: loading geometry constants for the real Phase-II pCT Scanner.
+pCTgeo.h: FPGA number 0 is located in layer 0
+pCTgeo.h: FPGA number 1 is located in layer 1
+pCTgeo.h: FPGA number 2 is located in layer 2
+pCTgeo.h: FPGA number 3 is located in layer 3
+pCTgeo.h: FPGA number 4 is located in layer 0
+pCTgeo.h: FPGA number 5 is located in layer 0
+pCTgeo.h: FPGA number 6 is located in layer 1
+pCTgeo.h: FPGA number 7 is located in layer 1
+pCTgeo.h: FPGA number 8 is located in layer 2
+pCTgeo.h: FPGA number 9 is located in layer 2
+pCTgeo.h: FPGA number 10 is located in layer 3
+pCTgeo.h: FPGA number 11 is located in layer 3
+pCTgeo.h: stage rotation speed is assumed to equal 6 degrees/s
+pCTgeo.h: time-stamp resolution is assumed to equal 1e-08 seconds
+pCTgeo.h: the V-view beam origin is assumed to be at x=0 mm, y=0 mm, z=-3000mm
+pCTgeo.h: the T-view beam origin is assumed to be at x=0 mm, y=0 mm, z=-3000mm
+pCTgeo.h: the entrance to the energy detector is assumed to be located at u=256.9
+pCTgeo.h: Silicon-strip detector strip pitch = 0.228
+pCTgeo.h: u positions of the V and T tracker boards for tracker layer 0 are -217.3 -211.4
+pCTgeo.h: u positions of the V and T tracker boards for tracker layer 1 are -167.2 -161.4
+pCTgeo.h: u positions of the V and T tracker boards for tracker layer 2 are 167.2 161.4
+pCTgeo.h: u positions of the V and T tracker boards for tracker layer 3 are 217.3 211.4
+pCTgeo.h: V layer 0 is board 6 with alignment pin at v=0.001 mm
+pCTgeo.h: V layer 1 is board 4 with alignment pin at v=0.115 mm
+pCTgeo.h: V layer 2 is board 2 with alignment pin at v=0.063 mm
+pCTgeo.h: V layer 3 is board 1 with alignment pin at v=0.04 mm
+pCTgeo.h: T layer 0 is board 5 with alignment pin at t=215.168 mm and direction -1
+pCTgeo.h: T layer 1 is board 4 with alignment pin at t=211.373 mm and direction -1
+pCTgeo.h: T layer 2 is board 1 with alignment pin at t=-203.373 mm and direction 1
+pCTgeo.h: T layer 3 is board 2 with alignment pin at t=-207.168 mm and direction 1
+pCTgeo.h: V board layer 0 first strip locations per ladder: -43.686 -43.687
+pCTgeo.h: V board layer 1 first strip locations per ladder: -43.7193 -43.716
+pCTgeo.h: V board layer 2 first strip locations per ladder: -43.682 -43.681
+pCTgeo.h: V board layer 3 first strip locations per ladder: -43.727 -43.687
+pCTgeo.h: T board layer 0 first strip locations per wafer: 38.62 126.9 215.16 303.41
+pCTgeo.h: T board layer 1 first strip locations per wafer: 38.58 126.85 215.11 303.37
+pCTgeo.h: T board layer 2 first strip locations per wafer: 38.6 126.87 215.15 303.42
+pCTgeo.h: T board layer 3 first strip locations per wafer: 38.48 126.76 215.04 303.32
+pCTgeo.h: t-layer gap locations for layer 0:  88.746  0.476  -87.779
+pCTgeo.h: t-layer gap locations for layer 1:  84.996  -3.269  -91.529
+pCTgeo.h: t-layer gap locations for layer 2:  -76.976  11.299  99.574
+pCTgeo.h: t-layer gap locations for layer 3:  -80.886  7.394  95.674
+pCTgeo.h: calibration brick and wedge thickness = 50.8
+pCTgeo.h: calibration phantom wedge break locations in t are -104.5, -4.75, 4.75, 104.5, 
+pCTgeo.h: thickness of each energy detector stage = 51 mm

@@ -8,20 +8,20 @@ tempFile = 1       # Keep this as 'yes' unless you really have lots of memory av
 n = 0              # Set nonzero if you don't want to analyze all of the events
 dEEFilter = 0	   # dEE FILTER to be used always (will result in bad events returned with 5000+WEPL)
 normalize = 0      # HAS TO STAY 0 FOR NOW (an addition from Robert that results in massive deterioriation of the calib curves, it is not fully understood why) 
-fraction = 0.01    # Fraction of the input file to be read and processed
+fraction  = 0.01   # Fraction of the input file to be read and processed
 time = 0           # Set nonzero to specify a maximum time stamp to analyze, in seconds
 plot = 0           # If set nonzero a gnuplot output single-event-display file will result for the number of events selected
 user = no          # Set to 'yes' only if you want to generate all of the monitoring histograms (takes quite a bit of extra time)
 projection = -999. # Normally the correct value is taken from the run header, so don't use this
-bins = 360.        # Specify the number of projection bins to be output for a continuous scan.  Assumed not a continuous scan if bins=1
+bins = 10.         # Specify the number of projection bins to be output for a continuous scan.  Assumed not a continuous scan if bins=1
 outputDir = ./Test # Leave as '.' only if you want all the output to end up in the current directory
-W = /ion/home/hect/Data/CDH17/Calib/Wcalib.txt     # The program can use either the old (stepped phantom) or new (wedge phantom) calibration, but can only produce the new
-T = /ion/home/hect/Data/CDH17/Calib/TVcalib.txt    # For these two calibration files you must specify the complete path or relative path
+W = /ion/home/hect/Data/CPC_2016_08_13/Calib/Wcalib.txt  # The program can use either the old (stepped) or new (wedge phantom) calibration, but can only produce the new
+T = /ion/home/hect/Data/CPC_2016_08_13/Calib/TVcorr.txt # For these two calibration files you must specify the complete path or relative path
 mindate = 2030/01/01     # Calibration runs only, these ranges are written into the output calibration files, which also can be edited by hand
 maxdate = 2000/01/01
 minrun = 999             # Calibration runs only, these ranges are written into the output calibration files, which also can be edited by hand
 maxrun = -1
-log = /ion/pCT_data/raw_data/CPC_2016_08_13/HIT_Dec/LinePair34.log # Specify a path to the DAQ log file, continuous scans -> find the starting angle, NULL if stepped scan
+log = /ion/pCT_data/raw_data/CPC_2016_08_13/HIT_Dec/CIRSPHP0Inf49.log # Specify a path to the DAQ log file, continuous scans -> find the starting angle
 angle = 0.        # For a continuous scan, if this angle is zero, then the program will try to get it from the log file 
 thr0 = 1.0        # Don't change these calibration thresholds unless you really know what you are doing
 thr1 = 1.0        # For calibration runs, these set the threshold values used and written out into the WEPL calibration file
