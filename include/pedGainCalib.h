@@ -36,22 +36,20 @@ class pedGainCalib {
 public:
   float corrFac[5]; // Gain correction factor derived here for each stage
 
-  pedGainCalib(string Outputdir, int pdstlr[5], float oldPed[5], int thread,
-               float t1, float t2, float t3, float t4, string partType,
-               string OsName);
+  pedGainCalib(string Outputdir, int pdstlr[5], float oldPed[5], int thread, float t1, float t2, float t3, float t4,
+               string partType, string OsName);
 
   inline double newPed(int stage) { return Ped[stage]; }
 
   void rawPh(pCTraw &rawEvt);
 
-  void getPeds(const char *inFileName, int run_number, int program_version,
-               float proj_angle, int nKeep, string start_time);
+  void getPeds(const char *inFileName, int run_number, int program_version, float proj_angle, int nKeep,
+               string start_time);
 
   void weplEvt(float Vedet, float Tedet, float Ene[5]);
 
-  void getGains(TVcorrection *TVcorr, const char *inFileName, int run_number,
-                int program_version, int proj_angle, int nKeep,
-                string start_time);
+  void getGains(TVcorrection *TVcorr, const char *inFileName, int run_number, int program_version, int proj_angle,
+                int nKeep, string start_time);
 
 }; // end of class pedGainCalib
 #endif

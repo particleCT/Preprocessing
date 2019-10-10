@@ -36,9 +36,8 @@ public:
     configFileName = fileName;
     return;
   }
-  void addItem(char key, const char *longKey,
-               string &value) { // Call this to add a key to the list of
-                                // possible keys for the case of a string value
+  void addItem(char key, const char *longKey, string &value) { // Call this to add a key to the list of
+                                                               // possible keys for the case of a string value
     cfgItm tmpItem;
     tmpItem.key = key;
     tmpItem.longKey = longKey;
@@ -47,8 +46,7 @@ public:
                                 // can be altered later.
     itemList.push_back(tmpItem);
   }
-  void addItem(char key, const char *longKey,
-               int &value) { // For the case that the value is integer
+  void addItem(char key, const char *longKey, int &value) { // For the case that the value is integer
     cfgItm tmpItem;
     tmpItem.key = key;
     tmpItem.longKey = longKey;
@@ -56,8 +54,7 @@ public:
     tmpItem.valInt = &value;
     itemList.push_back(tmpItem);
   }
-  void addItem(char key, const char *longKey,
-               float &value) { // For the case that the value is float
+  void addItem(char key, const char *longKey, float &value) { // For the case that the value is float
     cfgItm tmpItem;
     tmpItem.key = key;
     tmpItem.longKey = longKey;
@@ -71,8 +68,7 @@ public:
     string line;
     ifstream infile(configFileName);
     int linecount = 0;
-    cout << "pctConfig::Configure: setting option defaults from file "
-         << configFileName << ":" << endl;
+    cout << "pctConfig::Configure: setting option defaults from file " << configFileName << ":" << endl;
     if (infile) {
       while (getline(infile, line)) {
         // cout << "pctConfig::Configure: from the file " << configFileName << "
@@ -87,8 +83,7 @@ public:
         string value;
         U.getKeyValue(line, key, value);
         for (int i = 0; i < itemList.size(); ++i) {
-          if (key.compare(itemList[i].key) == 0 ||
-              key.compare(itemList[i].longKey) == 0) {
+          if (key.compare(itemList[i].key) == 0 || key.compare(itemList[i].longKey) == 0) {
             // cout << "pctConfig::Configure: key found in list at position " <<
             // i << ", value=" << value << endl;
             if (itemList[i].type == "STRING") {
@@ -101,8 +96,7 @@ public:
               *itemList[i].valFloat = stof(value);
               break;
             } else
-              cout << "pctConfig::Configure: no match found for key " << key
-                   << endl;
+              cout << "pctConfig::Configure: no match found for key " << key << endl;
           }
         }
         linecount++;

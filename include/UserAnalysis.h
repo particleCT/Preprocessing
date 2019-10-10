@@ -202,7 +202,7 @@ class UserAnalysis {
 
   int lyrFit[3]; // List of layers to which the straight-line track is to be
                  // fit.
-  int lyrA; // The layer being analyzed for efficiency.
+  int lyrA;      // The layer being analyzed for efficiency.
   double xHit[4];
   double yHit[4];
   int nVtrialL[4];
@@ -215,18 +215,18 @@ class UserAnalysis {
   int nTkEvV; // Number of events with a perfect V track
   int nTkEvT; // Number of events with a perfect T track
   int nMultTk;
-  int nInside; // Number of tracks passing through the center of the phantom
-  int nTkEvnts; // Number of events with a good track
+  int nInside;         // Number of tracks passing through the center of the phantom
+  int nTkEvnts;        // Number of events with a good track
   int nVecInsideFront; // Number of events with vectors pointing to the phantom
                        // center
-  int nVecInsideBack; // Number of events with vectors pointing to the phantom
-                      // center
+  int nVecInsideBack;  // Number of events with vectors pointing to the phantom
+                       // center
   double mxSlopeFront[2], mxSlopeBack[2];
   string partType;
 
 public:
-  UserAnalysis(const char *fnameIn, pCTgeo &Geometry, string partType,
-               int analysisLevel, std::string OsName) { // User analysis constructor
+  UserAnalysis(const char *fnameIn, pCTgeo &Geometry, string partType, int analysisLevel,
+               std::string OsName) { // User analysis constructor
     cout << "Now constructing the user analysis instance." << endl;
 
     // Initialize the member variables
@@ -291,416 +291,206 @@ public:
     mask[4] = 0x10;
 
     // Define the histograms and profile plots
-    hClSz = new Histogram(64, 0., 1., "Tracker cluster size", "number strips",
-                          "clusters");
-    timeStamp =
-        new Histogram(400, 0., 2., "Event time stamp", "time (s)", "events");
-    hTdiff = new Histogram(400, -800., 4., "Time since previous event",
-                           "time (10 ns)", "events");
-    hErrInt =
-        new Histogram(400, 0., 100., "Time since previous time stamp error",
-                      "time (10 ns)", "errors");
-    hnTkV = new Histogram(20, 0., 1., "Number of tracks in the V view",
-                          "Tracks", "events");
-    hnTkT = new Histogram(20, 0., 1., "Number of tracks in the T view",
-                          "Tracks", "events");
-    hTkSlopeFV = new Histogram(
-        100, -0.2, .004, "Slope of front track vector in V", "slope", "tracks");
-    hTkSlopeFT = new Histogram(
-        100, -0.2, .004, "Slope of front track vector in T", "slope", "tracks");
-    hTkSlopeRV = new Histogram(
-        100, -0.5, .01, "Slope of rear track vector in V", "slope", "tracks");
-    hTkSlopeRT = new Histogram(
-        100, -0.5, .01, "Slope of rear track vector in T", "slope", "tracks");
-    hTkMissV = new Histogram(100, -20., 0.4,
-                             "Distance between front and rear V tracks at u=0",
-                             "mm", "tracks");
-    hTkMissT = new Histogram(100, -20., 0.4,
-                             "Distance between front and rear T tracks at u=0",
-                             "mm", "tracks");
+    hClSz = new Histogram(64, 0., 1., "Tracker cluster size", "number strips", "clusters");
+    timeStamp = new Histogram(400, 0., 2., "Event time stamp", "time (s)", "events");
+    hTdiff = new Histogram(400, -800., 4., "Time since previous event", "time (10 ns)", "events");
+    hErrInt = new Histogram(400, 0., 100., "Time since previous time stamp error", "time (10 ns)", "errors");
+    hnTkV = new Histogram(20, 0., 1., "Number of tracks in the V view", "Tracks", "events");
+    hnTkT = new Histogram(20, 0., 1., "Number of tracks in the T view", "Tracks", "events");
+    hTkSlopeFV = new Histogram(100, -0.2, .004, "Slope of front track vector in V", "slope", "tracks");
+    hTkSlopeFT = new Histogram(100, -0.2, .004, "Slope of front track vector in T", "slope", "tracks");
+    hTkSlopeRV = new Histogram(100, -0.5, .01, "Slope of rear track vector in V", "slope", "tracks");
+    hTkSlopeRT = new Histogram(100, -0.5, .01, "Slope of rear track vector in T", "slope", "tracks");
+    hTkMissV = new Histogram(100, -20., 0.4, "Distance between front and rear V tracks at u=0", "mm", "tracks");
+    hTkMissT = new Histogram(100, -20., 0.4, "Distance between front and rear T tracks at u=0", "mm", "tracks");
 
     hTrig = new Histogram(10, 0., 1., "Trigger bits", "bit", "events");
-    deltaT = new Histogram(100, 0., 10., "Time between triggers",
-                           "delta-t (ns)", "triggers");
-    deltaTmissV =
-        new Histogram(100, 0., 10., "Time since last trigger, missed V hit",
-                      "delta-t (ns)", "triggers");
-    deltaTmissT =
-        new Histogram(100, 0., 10., "Time since last trigger, missed T hit",
-                      "delta-t (ns)", "triggers");
-    deltaTstrip =
-        new Histogram(100, 200., 20., "Time between hits on same strip",
-                      "delta-t (ns)", "repeated hits");
-    deltaTevt = new Histogram(100, 0., 20., "Time between events",
-                              "delta-t (ns)", "triggers");
-    hEnrgTrg = new Histogram(7, -1., 1., "Energy Detector Trigger Bits Set",
-                             "Bit", "events");
-    hScat = new Histogram(180, 0., 0.1,
-                          "Angle between incoming and outgoing tracks",
-                          "degrees", "tracks");
-    hOTR0 = new Histogram(10, 0., 1., "Stage overflow indicators", "Stage",
-                          "particles");
-    hOTR = new Histogram(10, 0., 1.,
-                         "Stage overflow indicators for stopping particles",
-                         "Stage", "particles");
+    deltaT = new Histogram(100, 0., 10., "Time between triggers", "delta-t (ns)", "triggers");
+    deltaTmissV = new Histogram(100, 0., 10., "Time since last trigger, missed V hit", "delta-t (ns)", "triggers");
+    deltaTmissT = new Histogram(100, 0., 10., "Time since last trigger, missed T hit", "delta-t (ns)", "triggers");
+    deltaTstrip = new Histogram(100, 200., 20., "Time between hits on same strip", "delta-t (ns)", "repeated hits");
+    deltaTevt = new Histogram(100, 0., 20., "Time between events", "delta-t (ns)", "triggers");
+    hEnrgTrg = new Histogram(7, -1., 1., "Energy Detector Trigger Bits Set", "Bit", "events");
+    hScat = new Histogram(180, 0., 0.1, "Angle between incoming and outgoing tracks", "degrees", "tracks");
+    hOTR0 = new Histogram(10, 0., 1., "Stage overflow indicators", "Stage", "particles");
+    hOTR = new Histogram(10, 0., 1., "Stage overflow indicators for stopping particles", "Stage", "particles");
 
-    hVbeamSpot =
-        new Histogram(100, -50., 1., "Front vector V extrapolated to u=-3000",
-                      "V0", "vectors");
-    hTbeamSpot =
-        new Histogram(200, -200., 2., "Front vector T extrapolated to u=-3000",
-                      "T0", "vectors");
+    hVbeamSpot = new Histogram(100, -50., 1., "Front vector V extrapolated to u=-3000", "V0", "vectors");
+    hTbeamSpot = new Histogram(200, -200., 2., "Front vector T extrapolated to u=-3000", "T0", "vectors");
 
-    hVcalInt = new Histogram(100, -50., 1.,
-                             "Track intersection with energy detector in V",
-                             "V (mm)", "Tracks");
-    hTcalInt = new Histogram(200, -200., 2.,
-                             "Track intersection with energy detector in T",
-                             "T (mm)", "Tracks");
+    hVcalInt = new Histogram(100, -50., 1., "Track intersection with energy detector in V", "V (mm)", "Tracks");
+    hTcalInt = new Histogram(200, -200., 2., "Track intersection with energy detector in T", "T (mm)", "Tracks");
 
-    MxPh0 = new Histogram(100, 0., 100.,
-                          "Stage 0 maximum sample pulse height in 1-trk events",
-                          "ph", "events");
-    MxPh1 = new Histogram(100, 0., 100.,
-                          "Stage 1 maximum sample pulse height in 1-trk events",
-                          "ph", "events");
-    MxPh2 = new Histogram(100, 0., 100.,
-                          "Stage 2 maximum sample pulse height in 1-trk events",
-                          "ph", "events");
-    MxPh3 = new Histogram(100, 0., 100.,
-                          "Stage 3 maximum sample pulse height in 1-trk events",
-                          "ph", "events");
-    MxPh4 = new Histogram(100, 0., 100.,
-                          "Stage 4 maximum sample pulse height in 1-trk events",
-                          "ph", "events");
-    MxSample0 =
-        new Histogram(16, 0, 1., "Stage 0 maximum sample location in pulse",
-                      "sample", "events");
-    MxSample1 =
-        new Histogram(16, 0, 1., "Stage 1 maximum sample location in pulse",
-                      "sample", "events");
+    MxPh0 = new Histogram(100, 0., 100., "Stage 0 maximum sample pulse height in 1-trk events", "ph", "events");
+    MxPh1 = new Histogram(100, 0., 100., "Stage 1 maximum sample pulse height in 1-trk events", "ph", "events");
+    MxPh2 = new Histogram(100, 0., 100., "Stage 2 maximum sample pulse height in 1-trk events", "ph", "events");
+    MxPh3 = new Histogram(100, 0., 100., "Stage 3 maximum sample pulse height in 1-trk events", "ph", "events");
+    MxPh4 = new Histogram(100, 0., 100., "Stage 4 maximum sample pulse height in 1-trk events", "ph", "events");
+    MxSample0 = new Histogram(16, 0, 1., "Stage 0 maximum sample location in pulse", "sample", "events");
+    MxSample1 = new Histogram(16, 0, 1., "Stage 1 maximum sample location in pulse", "sample", "events");
 
-    PHvsV.push_back(ProfilePlot(100, -50., 1.0,
-                                "Energy Detector Stage 0 Pulse Height vs V  ",
-                                "V (mm)", "ADC Sum"));
-    PHvsV.push_back(ProfilePlot(100, -50., 1.0,
-                                "Energy Detector Stage 1 Pulse Height vs V  ",
-                                "V (mm)", "ADC Sum"));
-    PHvsV.push_back(ProfilePlot(100, -50., 1.0,
-                                "Energy Detector Stage 2 Pulse Height vs V  ",
-                                "V (mm)", "ADC Sum"));
-    PHvsV.push_back(ProfilePlot(100, -50., 1.0,
-                                "Energy Detector Stage 3 Pulse Height vs V  ",
-                                "V (mm)", "ADC Sum"));
-    PHvsV.push_back(ProfilePlot(100, -50., 1.0,
-                                "Energy Detector Stage 4 Pulse Height vs V  ",
-                                "V (mm)", "ADC Sum"));
+    PHvsV.push_back(ProfilePlot(100, -50., 1.0, "Energy Detector Stage 0 Pulse Height vs V  ", "V (mm)", "ADC Sum"));
+    PHvsV.push_back(ProfilePlot(100, -50., 1.0, "Energy Detector Stage 1 Pulse Height vs V  ", "V (mm)", "ADC Sum"));
+    PHvsV.push_back(ProfilePlot(100, -50., 1.0, "Energy Detector Stage 2 Pulse Height vs V  ", "V (mm)", "ADC Sum"));
+    PHvsV.push_back(ProfilePlot(100, -50., 1.0, "Energy Detector Stage 3 Pulse Height vs V  ", "V (mm)", "ADC Sum"));
+    PHvsV.push_back(ProfilePlot(100, -50., 1.0, "Energy Detector Stage 4 Pulse Height vs V  ", "V (mm)", "ADC Sum"));
 
-    PHvsT.push_back(ProfilePlot(100, -200., 4.0,
-                                "Energy Detector Stage 0 Pulse Height vs T  ",
-                                "T (mm)", "ADC Sum"));
-    PHvsT.push_back(ProfilePlot(100, -200., 4.0,
-                                "Energy Detector Stage 1 Pulse Height vs T  ",
-                                "T (mm)", "ADC Sum"));
-    PHvsT.push_back(ProfilePlot(100, -200., 4.0,
-                                "Energy Detector Stage 2 Pulse Height vs T  ",
-                                "T (mm)", "ADC Sum"));
-    PHvsT.push_back(ProfilePlot(100, -200., 4.0,
-                                "Energy Detector Stage 3 Pulse Height vs T  ",
-                                "T (mm)", "ADC Sum"));
-    PHvsT.push_back(ProfilePlot(100, -200., 4.0,
-                                "Energy Detector Stage 4 Pulse Height vs T  ",
-                                "T (mm)", "ADC Sum"));
+    PHvsT.push_back(ProfilePlot(100, -200., 4.0, "Energy Detector Stage 0 Pulse Height vs T  ", "T (mm)", "ADC Sum"));
+    PHvsT.push_back(ProfilePlot(100, -200., 4.0, "Energy Detector Stage 1 Pulse Height vs T  ", "T (mm)", "ADC Sum"));
+    PHvsT.push_back(ProfilePlot(100, -200., 4.0, "Energy Detector Stage 2 Pulse Height vs T  ", "T (mm)", "ADC Sum"));
+    PHvsT.push_back(ProfilePlot(100, -200., 4.0, "Energy Detector Stage 3 Pulse Height vs T  ", "T (mm)", "ADC Sum"));
+    PHvsT.push_back(ProfilePlot(100, -200., 4.0, "Energy Detector Stage 4 Pulse Height vs T  ", "T (mm)", "ADC Sum"));
 
-    hSmpMx.push_back(Histogram(100, -1000., 100.,
-                               "Energy Detector Stage 0 Maximum Sample PH",
-                               "ADC", "protons"));
-    hSmpMx.push_back(Histogram(100, -1000., 100.,
-                               "Energy Detector Stage 1 Maximum Sample PH",
-                               "ADC", "protons"));
-    hSmpMx.push_back(Histogram(100, -1000., 100.,
-                               "Energy Detector Stage 2 Maximum Sample PH",
-                               "ADC", "protons"));
-    hSmpMx.push_back(Histogram(100, -1000., 100.,
-                               "Energy Detector Stage 3 Maximum Sample PH",
-                               "ADC", "protons"));
-    hSmpMx.push_back(Histogram(100, -1000., 100.,
-                               "Energy Detector Stage 4 Maximum Sample PH",
-                               "ADC", "protons"));
-    hSmpMx.push_back(Histogram(100, -1000., 100.,
-                               "Energy Detector Stage 5 Maximum Sample PH",
-                               "ADC", "protons"));
+    hSmpMx.push_back(Histogram(100, -1000., 100., "Energy Detector Stage 0 Maximum Sample PH", "ADC", "protons"));
+    hSmpMx.push_back(Histogram(100, -1000., 100., "Energy Detector Stage 1 Maximum Sample PH", "ADC", "protons"));
+    hSmpMx.push_back(Histogram(100, -1000., 100., "Energy Detector Stage 2 Maximum Sample PH", "ADC", "protons"));
+    hSmpMx.push_back(Histogram(100, -1000., 100., "Energy Detector Stage 3 Maximum Sample PH", "ADC", "protons"));
+    hSmpMx.push_back(Histogram(100, -1000., 100., "Energy Detector Stage 4 Maximum Sample PH", "ADC", "protons"));
+    hSmpMx.push_back(Histogram(100, -1000., 100., "Energy Detector Stage 5 Maximum Sample PH", "ADC", "protons"));
 
-    hSamplePH.push_back(Histogram(
-        200, -50., 1., "Energy Detector Stage 0 Sample PH", "ADC", "protons"));
-    hSamplePH.push_back(Histogram(
-        200, -50., 1., "Energy Detector Stage 1 Sample PH", "ADC", "protons"));
-    hSamplePH.push_back(Histogram(
-        200, -50., 1., "Energy Detector Stage 2 Sample PH", "ADC", "protons"));
-    hSamplePH.push_back(Histogram(
-        200, -50., 1., "Energy Detector Stage 3 Sample PH", "ADC", "protons"));
-    hSamplePH.push_back(Histogram(
-        200, -50., 1., "Energy Detector Stage 4 Sample PH", "ADC", "protons"));
-    hSamplePH.push_back(Histogram(
-        200, -50., 1., "Energy Detector Stage 5 Sample PH", "ADC", "protons"));
+    hSamplePH.push_back(Histogram(200, -50., 1., "Energy Detector Stage 0 Sample PH", "ADC", "protons"));
+    hSamplePH.push_back(Histogram(200, -50., 1., "Energy Detector Stage 1 Sample PH", "ADC", "protons"));
+    hSamplePH.push_back(Histogram(200, -50., 1., "Energy Detector Stage 2 Sample PH", "ADC", "protons"));
+    hSamplePH.push_back(Histogram(200, -50., 1., "Energy Detector Stage 3 Sample PH", "ADC", "protons"));
+    hSamplePH.push_back(Histogram(200, -50., 1., "Energy Detector Stage 4 Sample PH", "ADC", "protons"));
+    hSamplePH.push_back(Histogram(200, -50., 1., "Energy Detector Stage 5 Sample PH", "ADC", "protons"));
 
-    nClustT.push_back(Histogram(11, -1., 1., "Number of clusters in T layer 1",
-                                "Clusters", "Events"));
-    nClustT.push_back(Histogram(11, -1., 1., "Number of clusters in T layer 2",
-                                "Clusters", "Events"));
-    nClustT.push_back(Histogram(11, -1., 1., "Number of clusters in T layer 3",
-                                "Clusters", "Events"));
-    nClustT.push_back(Histogram(11, -1., 1., "Number of clusters in T layer 4",
-                                "Clusters", "Events"));
+    nClustT.push_back(Histogram(11, -1., 1., "Number of clusters in T layer 1", "Clusters", "Events"));
+    nClustT.push_back(Histogram(11, -1., 1., "Number of clusters in T layer 2", "Clusters", "Events"));
+    nClustT.push_back(Histogram(11, -1., 1., "Number of clusters in T layer 3", "Clusters", "Events"));
+    nClustT.push_back(Histogram(11, -1., 1., "Number of clusters in T layer 4", "Clusters", "Events"));
 
-    nClustV.push_back(Histogram(11, -1., 1., "Number of clusters in V layer 1",
-                                "Clusters", "Events"));
-    nClustV.push_back(Histogram(11, -1., 1., "Number of clusters in V layer 2",
-                                "Clusters", "Events"));
-    nClustV.push_back(Histogram(11, -1., 1., "Number of clusters in V layer 3",
-                                "Clusters", "Events"));
-    nClustV.push_back(Histogram(11, -1., 1., "Number of clusters in V layer 4",
-                                "Clusters", "Events"));
+    nClustV.push_back(Histogram(11, -1., 1., "Number of clusters in V layer 1", "Clusters", "Events"));
+    nClustV.push_back(Histogram(11, -1., 1., "Number of clusters in V layer 2", "Clusters", "Events"));
+    nClustV.push_back(Histogram(11, -1., 1., "Number of clusters in V layer 3", "Clusters", "Events"));
+    nClustV.push_back(Histogram(11, -1., 1., "Number of clusters in V layer 4", "Clusters", "Events"));
 
-    hPeds.push_back(Histogram(100, -300., 6., "Stage 1 FPGA pedestals",
-                              "ADC counts", "Triggers"));
-    hPeds.push_back(Histogram(100, -300., 6., "Stage 2 FPGA pedestals",
-                              "ADC counts", "Triggers"));
-    hPeds.push_back(Histogram(100, -300., 6., "Stage 3 FPGA pedestals",
-                              "ADC counts", "Triggers"));
-    hPeds.push_back(Histogram(100, -300., 6., "Stage 4 FPGA pedestals",
-                              "ADC counts", "Triggers"));
-    hPeds.push_back(Histogram(100, -300., 6., "Stage 5 FPGA pedestals",
-                              "ADC counts", "Triggers"));
+    hPeds.push_back(Histogram(100, -300., 6., "Stage 1 FPGA pedestals", "ADC counts", "Triggers"));
+    hPeds.push_back(Histogram(100, -300., 6., "Stage 2 FPGA pedestals", "ADC counts", "Triggers"));
+    hPeds.push_back(Histogram(100, -300., 6., "Stage 3 FPGA pedestals", "ADC counts", "Triggers"));
+    hPeds.push_back(Histogram(100, -300., 6., "Stage 4 FPGA pedestals", "ADC counts", "Triggers"));
+    hPeds.push_back(Histogram(100, -300., 6., "Stage 5 FPGA pedestals", "ADC counts", "Triggers"));
 
-    PHedet.push_back(Histogram(100, -1000., 110., "Layer 1 Pulse Height",
-                               "ADC sum", "Triggers"));
-    PHedet.push_back(Histogram(100, -1000., 110., "Layer 2 Pulse Height",
-                               "ADC sum", "Triggers"));
-    PHedet.push_back(Histogram(100, -1000., 110., "Layer 3 Pulse Height",
-                               "ADC sum", "Triggers"));
-    PHedet.push_back(Histogram(100, -1000., 110., "Layer 4 Pulse Height",
-                               "ADC sum", "Triggers"));
-    PHedet.push_back(Histogram(100, -1000., 110., "Layer 5 Pulse Height",
-                               "ADC sum", "Triggers"));
+    PHedet.push_back(Histogram(100, -1000., 110., "Layer 1 Pulse Height", "ADC sum", "Triggers"));
+    PHedet.push_back(Histogram(100, -1000., 110., "Layer 2 Pulse Height", "ADC sum", "Triggers"));
+    PHedet.push_back(Histogram(100, -1000., 110., "Layer 3 Pulse Height", "ADC sum", "Triggers"));
+    PHedet.push_back(Histogram(100, -1000., 110., "Layer 4 Pulse Height", "ADC sum", "Triggers"));
+    PHedet.push_back(Histogram(100, -1000., 110., "Layer 5 Pulse Height", "ADC sum", "Triggers"));
 
-    tHist.push_back(Histogram(440, -200.64, .912,
-                              "Tracker layer 1 t Distribution", "t (mm)",
-                              "Tracks"));
-    tHist.push_back(Histogram(440, -200.64, .912,
-                              "Tracker layer 2 t Distribution", "t (mm)",
-                              "Tracks"));
-    tHist.push_back(Histogram(440, -200.64, .912,
-                              "Tracker layer 3 t Distribution", "t (mm)",
-                              "Tracks"));
-    tHist.push_back(Histogram(440, -200.64, .912,
-                              "Tracker layer 4 t Distribution", "t (mm)",
-                              "Tracks"));
+    tHist.push_back(Histogram(440, -200.64, .912, "Tracker layer 1 t Distribution", "t (mm)", "Tracks"));
+    tHist.push_back(Histogram(440, -200.64, .912, "Tracker layer 2 t Distribution", "t (mm)", "Tracks"));
+    tHist.push_back(Histogram(440, -200.64, .912, "Tracker layer 3 t Distribution", "t (mm)", "Tracks"));
+    tHist.push_back(Histogram(440, -200.64, .912, "Tracker layer 4 t Distribution", "t (mm)", "Tracks"));
 
-    vHist.push_back(Histogram(440, -50.16, .228,
-                              "Tracker layer 1 v Distribution", "v (mm)",
-                              "Tracks"));
-    vHist.push_back(Histogram(440, -50.16, .228,
-                              "Tracker layer 2 v Distribution", "v (mm)",
-                              "Tracks"));
-    vHist.push_back(Histogram(440, -50.16, .228,
-                              "Tracker layer 3 v Distribution", "v (mm)",
-                              "Tracks"));
-    vHist.push_back(Histogram(440, -50.16, .228,
-                              "Tracker layer 4 v Distribution", "v (mm)",
-                              "Tracks"));
+    vHist.push_back(Histogram(440, -50.16, .228, "Tracker layer 1 v Distribution", "v (mm)", "Tracks"));
+    vHist.push_back(Histogram(440, -50.16, .228, "Tracker layer 2 v Distribution", "v (mm)", "Tracks"));
+    vHist.push_back(Histogram(440, -50.16, .228, "Tracker layer 3 v Distribution", "v (mm)", "Tracks"));
+    vHist.push_back(Histogram(440, -50.16, .228, "Tracker layer 4 v Distribution", "v (mm)", "Tracks"));
 
-    hResidV.push_back(Histogram(200, -1.5, 0.015, "Tracker layer 1 V residuals",
-                                "residual (mm)", "Tracks"));
-    hResidV.push_back(Histogram(200, -1.5, 0.015, "Tracker layer 2 V residuals",
-                                "residual (mm)", "Tracks"));
-    hResidV.push_back(Histogram(200, -1.5, 0.015, "Tracker layer 3 V residuals",
-                                "residual (mm)", "Tracks"));
-    hResidV.push_back(Histogram(200, -1.5, 0.015, "Tracker layer 4 V residuals",
-                                "residual (mm)", "Tracks"));
+    hResidV.push_back(Histogram(200, -1.5, 0.015, "Tracker layer 1 V residuals", "residual (mm)", "Tracks"));
+    hResidV.push_back(Histogram(200, -1.5, 0.015, "Tracker layer 2 V residuals", "residual (mm)", "Tracks"));
+    hResidV.push_back(Histogram(200, -1.5, 0.015, "Tracker layer 3 V residuals", "residual (mm)", "Tracks"));
+    hResidV.push_back(Histogram(200, -1.5, 0.015, "Tracker layer 4 V residuals", "residual (mm)", "Tracks"));
 
-    hResidT.push_back(Histogram(200, -1.5, 0.015, "Tracker layer 1 T residuals",
-                                "residual (mm)", "Tracks"));
-    hResidT.push_back(Histogram(200, -1.5, 0.015, "Tracker layer 2 T residuals",
-                                "residual (mm)", "Tracks"));
-    hResidT.push_back(Histogram(200, -1.5, 0.015, "Tracker layer 3 T residuals",
-                                "residual (mm)", "Tracks"));
-    hResidT.push_back(Histogram(200, -1.5, 0.015, "Tracker layer 4 T residuals",
-                                "residual (mm)", "Tracks"));
+    hResidT.push_back(Histogram(200, -1.5, 0.015, "Tracker layer 1 T residuals", "residual (mm)", "Tracks"));
+    hResidT.push_back(Histogram(200, -1.5, 0.015, "Tracker layer 2 T residuals", "residual (mm)", "Tracks"));
+    hResidT.push_back(Histogram(200, -1.5, 0.015, "Tracker layer 3 T residuals", "residual (mm)", "Tracks"));
+    hResidT.push_back(Histogram(200, -1.5, 0.015, "Tracker layer 4 T residuals", "residual (mm)", "Tracks"));
 
-    Vresidual.push_back(Histogram(80, -4., 0.1, "Layer 1 V Unbiased Residuals",
-                                  "mm", "Tracks"));
-    Vresidual.push_back(Histogram(80, -4., 0.1, "Layer 2 V Unbiased Residuals",
-                                  "mm", "Tracks"));
-    Vresidual.push_back(Histogram(80, -4., 0.1, "Layer 3 V Unbiased Residuals",
-                                  "mm", "Tracks"));
-    Vresidual.push_back(Histogram(80, -4., 0.1, "Layer 4 V Unbiased Residuals",
-                                  "mm", "Tracks"));
+    Vresidual.push_back(Histogram(80, -4., 0.1, "Layer 1 V Unbiased Residuals", "mm", "Tracks"));
+    Vresidual.push_back(Histogram(80, -4., 0.1, "Layer 2 V Unbiased Residuals", "mm", "Tracks"));
+    Vresidual.push_back(Histogram(80, -4., 0.1, "Layer 3 V Unbiased Residuals", "mm", "Tracks"));
+    Vresidual.push_back(Histogram(80, -4., 0.1, "Layer 4 V Unbiased Residuals", "mm", "Tracks"));
 
-    Tresidual.push_back(Histogram(80, -4., 0.1, "Layer 1 T Unbiased Residuals",
-                                  "mm", "Tracks"));
-    Tresidual.push_back(Histogram(80, -4., 0.1, "Layer 2 T Unbiased Residuals",
-                                  "mm", "Tracks"));
-    Tresidual.push_back(Histogram(80, -4., 0.1, "Layer 3 T Unbiased Residuals",
-                                  "mm", "Tracks"));
-    Tresidual.push_back(Histogram(80, -4., 0.1, "Layer 4 T Unbiased Residuals",
-                                  "mm", "Tracks"));
+    Tresidual.push_back(Histogram(80, -4., 0.1, "Layer 1 T Unbiased Residuals", "mm", "Tracks"));
+    Tresidual.push_back(Histogram(80, -4., 0.1, "Layer 2 T Unbiased Residuals", "mm", "Tracks"));
+    Tresidual.push_back(Histogram(80, -4., 0.1, "Layer 3 T Unbiased Residuals", "mm", "Tracks"));
+    Tresidual.push_back(Histogram(80, -4., 0.1, "Layer 4 T Unbiased Residuals", "mm", "Tracks"));
 
-    hTheta = new Histogram(720, 0., 8., "Projection angle (stage angle)",
-                           "Degrees", "events");
-    hEvsTheta = new ProfilePlot(720, 0., 8., "Energy vs projection angle",
-                                "Degrees", "MeV");
+    hTheta = new Histogram(720, 0., 8., "Projection angle (stage angle)", "Degrees", "events");
+    hEvsTheta = new ProfilePlot(720, 0., 8., "Energy vs projection angle", "Degrees", "MeV");
 
     if (analysisLevel >= 2) {
-      hVedet = new Histogram2D(50, -50., 2.0, 50, -100., 8.0,
-                               "Projection of back vector to edet in V",
-                               "V (mm)", "WEPL (mm)", "Tracks");
-      hTedet = new Histogram2D(50, -150., 6.0, 50, -100., 8.0,
-                               "Projection of back vector to edet in T",
-                               "V (mm)", "WEPL (mm)", "Tracks");
-      hMxLyr =
-          new Histogram(7, -1., 1., "Deepest stage hit", "stage", "events");
+      hVedet = new Histogram2D(50, -50., 2.0, 50, -100., 8.0, "Projection of back vector to edet in V", "V (mm)",
+                               "WEPL (mm)", "Tracks");
+      hTedet = new Histogram2D(50, -150., 6.0, 50, -100., 8.0, "Projection of back vector to edet in T", "V (mm)",
+                               "WEPL (mm)", "Tracks");
+      hMxLyr = new Histogram(7, -1., 1., "Deepest stage hit", "stage", "events");
 
-      EvsV.push_back(ProfilePlot(100, -50., 1.0,
-                                 "Energy Detector Stage 0 Energy vs V  ",
-                                 "V (mm)", "MeV"));
-      EvsV.push_back(ProfilePlot(100, -50., 1.0,
-                                 "Energy Detector Stage 1 Energy vs V  ",
-                                 "V (mm)", "MeV"));
-      EvsV.push_back(ProfilePlot(100, -50., 1.0,
-                                 "Energy Detector Stage 2 Energy vs V  ",
-                                 "V (mm)", "MeV"));
-      EvsV.push_back(ProfilePlot(100, -50., 1.0,
-                                 "Energy Detector Stage 3 Energy vs V  ",
-                                 "V (mm)", "MeV"));
-      EvsV.push_back(ProfilePlot(100, -50., 1.0,
-                                 "Energy Detector Stage 4 Energyt vs V  ",
-                                 "V (mm)", "MeV"));
+      EvsV.push_back(ProfilePlot(100, -50., 1.0, "Energy Detector Stage 0 Energy vs V  ", "V (mm)", "MeV"));
+      EvsV.push_back(ProfilePlot(100, -50., 1.0, "Energy Detector Stage 1 Energy vs V  ", "V (mm)", "MeV"));
+      EvsV.push_back(ProfilePlot(100, -50., 1.0, "Energy Detector Stage 2 Energy vs V  ", "V (mm)", "MeV"));
+      EvsV.push_back(ProfilePlot(100, -50., 1.0, "Energy Detector Stage 3 Energy vs V  ", "V (mm)", "MeV"));
+      EvsV.push_back(ProfilePlot(100, -50., 1.0, "Energy Detector Stage 4 Energyt vs V  ", "V (mm)", "MeV"));
 
-      EvsT.push_back(ProfilePlot(100, -200., 4.0,
-                                 "Energy Detector Stage 0 Energy vs T  ",
-                                 "T (mm)", "MeV"));
-      EvsT.push_back(ProfilePlot(100, -200., 4.0,
-                                 "Energy Detector Stage 1 Energy vs T  ",
-                                 "T (mm)", "MeV"));
-      EvsT.push_back(ProfilePlot(100, -200., 4.0,
-                                 "Energy Detector Stage 2 Energy vs T  ",
-                                 "T (mm)", "MeV"));
-      EvsT.push_back(ProfilePlot(100, -200., 4.0,
-                                 "Energy Detector Stage 3 Energy vs T  ",
-                                 "T (mm)", "MeV"));
-      EvsT.push_back(ProfilePlot(100, -200., 4.0,
-                                 "Energy Detector Stage 4 Energy vs T  ",
-                                 "T (mm)", "MeV"));
+      EvsT.push_back(ProfilePlot(100, -200., 4.0, "Energy Detector Stage 0 Energy vs T  ", "T (mm)", "MeV"));
+      EvsT.push_back(ProfilePlot(100, -200., 4.0, "Energy Detector Stage 1 Energy vs T  ", "T (mm)", "MeV"));
+      EvsT.push_back(ProfilePlot(100, -200., 4.0, "Energy Detector Stage 2 Energy vs T  ", "T (mm)", "MeV"));
+      EvsT.push_back(ProfilePlot(100, -200., 4.0, "Energy Detector Stage 3 Energy vs T  ", "T (mm)", "MeV"));
+      EvsT.push_back(ProfilePlot(100, -200., 4.0, "Energy Detector Stage 4 Energy vs T  ", "T (mm)", "MeV"));
 
       if (partType == "H") {
-        hEcal = new Histogram(150, 0., 2., "Calibrated sum of stage energies",
-                              "mm", "protons");
+        hEcal = new Histogram(150, 0., 2., "Calibrated sum of stage energies", "mm", "protons");
       } else {
-        hEcal = new Histogram(150, 0., 8., "Calibrated sum of stage energies",
-                              "mm", "He ions");
+        hEcal = new Histogram(150, 0., 8., "Calibrated sum of stage energies", "mm", "He ions");
       }
       hWEPL = new Histogram(200, -100., 2., "Calibrated WEPL", "mm", "protons");
-      hWEPLzero = new Histogram(
-          200, -100., 2., "Calibrated WEPL for |t|>110 mm", "mm", "protons");
-      hRadioGraph =
-          new ProfilePlot2Dpeak(220, -90., 1.0, 80, -40., 1.0, 100, -50., 3.,
-                                "Radiograph", "T (mm)", "V (mm)", "WEPL (mm)");
-      hRadioGraph2 =
-          new ProfilePlot2D(440, -90., 0.5, 160, -40., 0.5, "Radiograph",
-                            "T (mm)", "V (mm)", "WEPL (mm)");
+      hWEPLzero = new Histogram(200, -100., 2., "Calibrated WEPL for |t|>110 mm", "mm", "protons");
+      hRadioGraph = new ProfilePlot2Dpeak(220, -90., 1.0, 80, -40., 1.0, 100, -50., 3., "Radiograph", "T (mm)",
+                                          "V (mm)", "WEPL (mm)");
+      hRadioGraph2 = new ProfilePlot2D(440, -90., 0.5, 160, -40., 0.5, "Radiograph", "T (mm)", "V (mm)", "WEPL (mm)");
       if (partType == "H") {
-        hEstop[0] = new Histogram(400, 15., 0.35,
-                                  "Stopping energy distribution for stage 0",
-                                  "Energy (MeV)", "proton events");
-        hEstop[1] = new Histogram(400, 15., 0.35,
-                                  "Stopping energy distribution for stage 1",
-                                  "Energy (MeV)", "proton events");
-        hEstop[2] = new Histogram(400, 15., 0.35,
-                                  "Stopping energy distribution for stage 2",
-                                  "Energy (MeV)", "proton events");
-        hEstop[3] = new Histogram(400, 15., 0.35,
-                                  "Stopping energy distribution for stage 3",
-                                  "Energy (MeV)", "proton events");
-        hEstop[4] = new Histogram(400, 15., 0.35,
-                                  "Stopping energy distribution for stage 4",
-                                  "Energy (MeV)", "proton events");
-        hStop4[0] = new Histogram(400, 60., 0.35,
-                                  "Stage 0 energy for stopping in stage 4",
-                                  "Energy (MeV)", "proton Events");
-        hStop4[1] = new Histogram(400, 60., 0.35,
-                                  "Stage 1 energy for stopping in stage 4",
-                                  "Energy (MeV)", "proton Events");
-        hStop4[2] = new Histogram(400, 60., 0.35,
-                                  "Stage 2 energy for stopping in stage 4",
-                                  "Energy (MeV)", "proton Events");
-        hStop4[3] = new Histogram(400, 60., 0.35,
-                                  "Stage 3 energy for stopping in stage 4",
-                                  "Energy (MeV)", "proton Events");
-        hStop3[0] = new Histogram(400, 60., 0.35,
-                                  "Stage 0 energy for stopping in stage 3",
-                                  "Energy (MeV)", "proton Events");
-        hStop3[1] = new Histogram(400, 60., 0.35,
-                                  "Stage 1 energy for stopping in stage 3",
-                                  "Energy (MeV)", "proton Events");
-        hStop3[2] = new Histogram(400, 60., 0.35,
-                                  "Stage 2 energy for stopping in stage 3",
-                                  "Energy (MeV)", "proton Events");
-        hStop2[0] = new Histogram(400, 60., 0.35,
-                                  "Stage 0 energy for stopping in stage 2",
-                                  "Energy (MeV)", "proton Events");
-        hStop2[1] = new Histogram(400, 60., 0.35,
-                                  "Stage 1 energy for stopping in stage 2",
-                                  "Energy (MeV)", "proton Events");
-        hStop1 = new Histogram(400, 60., 0.35,
-                               "Stage 0 energy for stopping in stage 1",
-                               "Energy (MeV)", "proton Events");
+        hEstop[0] =
+            new Histogram(400, 15., 0.35, "Stopping energy distribution for stage 0", "Energy (MeV)", "proton events");
+        hEstop[1] =
+            new Histogram(400, 15., 0.35, "Stopping energy distribution for stage 1", "Energy (MeV)", "proton events");
+        hEstop[2] =
+            new Histogram(400, 15., 0.35, "Stopping energy distribution for stage 2", "Energy (MeV)", "proton events");
+        hEstop[3] =
+            new Histogram(400, 15., 0.35, "Stopping energy distribution for stage 3", "Energy (MeV)", "proton events");
+        hEstop[4] =
+            new Histogram(400, 15., 0.35, "Stopping energy distribution for stage 4", "Energy (MeV)", "proton events");
+        hStop4[0] =
+            new Histogram(400, 60., 0.35, "Stage 0 energy for stopping in stage 4", "Energy (MeV)", "proton Events");
+        hStop4[1] =
+            new Histogram(400, 60., 0.35, "Stage 1 energy for stopping in stage 4", "Energy (MeV)", "proton Events");
+        hStop4[2] =
+            new Histogram(400, 60., 0.35, "Stage 2 energy for stopping in stage 4", "Energy (MeV)", "proton Events");
+        hStop4[3] =
+            new Histogram(400, 60., 0.35, "Stage 3 energy for stopping in stage 4", "Energy (MeV)", "proton Events");
+        hStop3[0] =
+            new Histogram(400, 60., 0.35, "Stage 0 energy for stopping in stage 3", "Energy (MeV)", "proton Events");
+        hStop3[1] =
+            new Histogram(400, 60., 0.35, "Stage 1 energy for stopping in stage 3", "Energy (MeV)", "proton Events");
+        hStop3[2] =
+            new Histogram(400, 60., 0.35, "Stage 2 energy for stopping in stage 3", "Energy (MeV)", "proton Events");
+        hStop2[0] =
+            new Histogram(400, 60., 0.35, "Stage 0 energy for stopping in stage 2", "Energy (MeV)", "proton Events");
+        hStop2[1] =
+            new Histogram(400, 60., 0.35, "Stage 1 energy for stopping in stage 2", "Energy (MeV)", "proton Events");
+        hStop1 =
+            new Histogram(400, 60., 0.35, "Stage 0 energy for stopping in stage 1", "Energy (MeV)", "proton Events");
       } else {
-        hEstop[0] = new Histogram(400, 60., 1.4,
-                                  "Stopping energy distribution for stage 0",
-                                  "Energy (MeV)", "He events");
-        hEstop[1] = new Histogram(400, 60., 1.4,
-                                  "Stopping energy distribution for stage 1",
-                                  "Energy (MeV)", "He events");
-        hEstop[2] = new Histogram(400, 60., 1.4,
-                                  "Stopping energy distribution for stage 2",
-                                  "Energy (MeV)", "He events");
-        hEstop[3] = new Histogram(400, 60., 1.4,
-                                  "Stopping energy distribution for stage 3",
-                                  "Energy (MeV)", "He events");
-        hEstop[4] = new Histogram(400, 60., 1.4,
-                                  "Stopping energy distribution for stage 4",
-                                  "Energy (MeV)", "He events");
-        hStop4[0] = new Histogram(400, 60., 1.4,
-                                  "Stage 0 energy for stopping in stage 4",
-                                  "Energy (MeV)", "He Events");
-        hStop4[1] = new Histogram(400, 60., 1.4,
-                                  "Stage 1 energy for stopping in stage 4",
-                                  "Energy (MeV)", "He Events");
-        hStop4[2] = new Histogram(400, 60., 1.4,
-                                  "Stage 2 energy for stopping in stage 4",
-                                  "Energy (MeV)", "He Events");
-        hStop4[3] = new Histogram(400, 60., 1.4,
-                                  "Stage 3 energy for stopping in stage 4",
-                                  "Energy (MeV)", "He Events");
-        hStop3[0] = new Histogram(400, 60., 1.4,
-                                  "Stage 0 energy for stopping in stage 3",
-                                  "Energy (MeV)", "He Events");
-        hStop3[1] = new Histogram(400, 60., 1.4,
-                                  "Stage 1 energy for stopping in stage 3",
-                                  "Energy (MeV)", "He Events");
-        hStop3[2] = new Histogram(400, 60., 1.4,
-                                  "Stage 2 energy for stopping in stage 3",
-                                  "Energy (MeV)", "He Events");
-        hStop2[0] = new Histogram(400, 60., 1.4,
-                                  "Stage 0 energy for stopping in stage 2",
-                                  "Energy (MeV)", "He Events");
-        hStop2[1] = new Histogram(400, 60., 1.4,
-                                  "Stage 1 energy for stopping in stage 2",
-                                  "Energy (MeV)", "He Events");
-        hStop1 = new Histogram(400, 60., 1.4,
-                               "Stage 0 energy for stopping in stage 1",
-                               "Energy (MeV)", "He Events");
+        hEstop[0] =
+            new Histogram(400, 60., 1.4, "Stopping energy distribution for stage 0", "Energy (MeV)", "He events");
+        hEstop[1] =
+            new Histogram(400, 60., 1.4, "Stopping energy distribution for stage 1", "Energy (MeV)", "He events");
+        hEstop[2] =
+            new Histogram(400, 60., 1.4, "Stopping energy distribution for stage 2", "Energy (MeV)", "He events");
+        hEstop[3] =
+            new Histogram(400, 60., 1.4, "Stopping energy distribution for stage 3", "Energy (MeV)", "He events");
+        hEstop[4] =
+            new Histogram(400, 60., 1.4, "Stopping energy distribution for stage 4", "Energy (MeV)", "He events");
+        hStop4[0] = new Histogram(400, 60., 1.4, "Stage 0 energy for stopping in stage 4", "Energy (MeV)", "He Events");
+        hStop4[1] = new Histogram(400, 60., 1.4, "Stage 1 energy for stopping in stage 4", "Energy (MeV)", "He Events");
+        hStop4[2] = new Histogram(400, 60., 1.4, "Stage 2 energy for stopping in stage 4", "Energy (MeV)", "He Events");
+        hStop4[3] = new Histogram(400, 60., 1.4, "Stage 3 energy for stopping in stage 4", "Energy (MeV)", "He Events");
+        hStop3[0] = new Histogram(400, 60., 1.4, "Stage 0 energy for stopping in stage 3", "Energy (MeV)", "He Events");
+        hStop3[1] = new Histogram(400, 60., 1.4, "Stage 1 energy for stopping in stage 3", "Energy (MeV)", "He Events");
+        hStop3[2] = new Histogram(400, 60., 1.4, "Stage 2 energy for stopping in stage 3", "Energy (MeV)", "He Events");
+        hStop2[0] = new Histogram(400, 60., 1.4, "Stage 0 energy for stopping in stage 2", "Energy (MeV)", "He Events");
+        hStop2[1] = new Histogram(400, 60., 1.4, "Stage 1 energy for stopping in stage 2", "Energy (MeV)", "He Events");
+        hStop1 = new Histogram(400, 60., 1.4, "Stage 0 energy for stopping in stage 1", "Energy (MeV)", "He Events");
       }
     }
   }; // End of user analysis constructor
@@ -726,8 +516,7 @@ public:
 
   }; // End of user analysis initialization
 
-  void weplEvent(float theta, float WEPL, float energy[5], float Thit[4],
-                 double Uhit[4], float Vhit[4],
+  void weplEvent(float theta, float WEPL, float energy[5], float Thit[4], double Uhit[4], float Vhit[4],
                  unsigned char OTR) { // User event analysis called for each
                                       // WEPL reconstructed
     n_wepl++;
@@ -756,16 +545,13 @@ public:
       Vfront[lyr] = Vhit[lyr];
     }
     float Vedet[5], Tedet[5];
-    float Uphantom =
-        -2.0 * uGeometry->getBrickThickness(); // rough U location of the
-                                               // calibration phantom
+    float Uphantom = -2.0 * uGeometry->getBrickThickness(); // rough U location of the
+                                                            // calibration phantom
     float Vphantom = uGeometry->extrap2D(Uhit, Vfront, Uphantom);
     float Tphantom = uGeometry->extrap2D(Uhit, Tfront, Uphantom);
     for (int lyr = 0; lyr < 5; ++lyr) {
-      Vedet[lyr] =
-          uGeometry->extrap2D(&Uhit[2], Vback, uGeometry->energyDetectorU(lyr));
-      Tedet[lyr] =
-          uGeometry->extrap2D(&Uhit[2], Tback, uGeometry->energyDetectorU(lyr));
+      Vedet[lyr] = uGeometry->extrap2D(&Uhit[2], Vback, uGeometry->energyDetectorU(lyr));
+      Tedet[lyr] = uGeometry->extrap2D(&Uhit[2], Tback, uGeometry->energyDetectorU(lyr));
       EvsV[lyr].entry(Vphantom, energy[lyr]);
       EvsT[lyr].entry(Tphantom, energy[lyr]);
     }
@@ -818,8 +604,7 @@ public:
     vout[1] = Thit[3] - Thit[2];
     vout[2] = Uhit[3] - Uhit[2];
     double vinNrm = sqrt(vin[0] * vin[0] + vin[1] * vin[1] + vin[2] * vin[2]);
-    double voutNrm =
-        sqrt(vout[0] * vout[0] + vout[1] * vout[1] + vout[2] * vout[2]);
+    double voutNrm = sqrt(vout[0] * vout[0] + vout[1] * vout[1] + vout[2] * vout[2]);
     for (int i = 0; i < 3; ++i) {
       vin[i] = vin[i] / vinNrm;
       vout[i] = vout[i] / voutNrm;
@@ -863,8 +648,7 @@ public:
       hRadioGraph2->entry(bt[0], bv[0], WEPL2);
     }
     if (n_wepl % 100000000 == 0) {
-      cout << "UserAnalysis weplEvent " << n_wepl << ":  WEPL=" << WEPL
-           << "  E= ";
+      cout << "UserAnalysis weplEvent " << n_wepl << ":  WEPL=" << WEPL << "  E= ";
       for (int i = 0; i < 5; i++)
         cout << energy[i] << " ";
       cout << endl << "  T= ";
@@ -886,25 +670,21 @@ public:
     }
   }
 
-  bool rawEvent(const pCTraw &pCTEvent, const TkrHits &pCThits,
-                pCT_Tracking &pCTtracks, pCTgeo &geometry,
+  bool rawEvent(const pCTraw &pCTEvent, const TkrHits &pCThits, pCT_Tracking &pCTtracks, pCTgeo &geometry,
                 float theta) { // User event analysis called for each raw event
                                // read in
 
-    bool cutEvent =
-        false; // Set this true to eliminate this event from the processing
+    bool cutEvent = false; // Set this true to eliminate this event from the processing
 
     numEvents++;
     if (numEvents % 100000 == 0)
-      cout << "UserAnalysis rawEvent " << numEvents
-           << " Time tag= " << pCTEvent.time_tag << "\n";
+      cout << "UserAnalysis rawEvent " << numEvents << " Time tag= " << pCTEvent.time_tag << "\n";
     if (pCTEvent.time_tag > maxTime)
       maxTime = pCTEvent.time_tag;
 
     float timeSeconds = float(pCTEvent.time_tag) * 1.0E-8;
     if (timeSeconds < timeFirst) {
-      cout << "User rawEvent: Setting the earliest time stamp to "
-           << timeSeconds << "\n";
+      cout << "User rawEvent: Setting the earliest time stamp to " << timeSeconds << "\n";
       timeFirst = timeSeconds;
     }
 
@@ -916,12 +696,10 @@ public:
       hErrInt->entry(errorInt);
       lastError = lastTime;
       if (nWarning < 11) {
-        cout << "Warning: TIME TAG DECREASE encountered!  Old=" << lastTime
-             << " New=" << pCTEvent.time_tag;
-        cout << "  Difference=" << timeDiff
-             << "  Time since last trigger = " << pCTEvent.delta_t << endl;
-        cout << "  Time interval from the last tag error = " << errorInt
-             << "     Time tag=" << pCTEvent.time_tag << endl;
+        cout << "Warning: TIME TAG DECREASE encountered!  Old=" << lastTime << " New=" << pCTEvent.time_tag;
+        cout << "  Difference=" << timeDiff << "  Time since last trigger = " << pCTEvent.delta_t << endl;
+        cout << "  Time interval from the last tag error = " << errorInt << "     Time tag=" << pCTEvent.time_tag
+             << endl;
         nWarning++;
       }
     } else {
@@ -1019,12 +797,8 @@ public:
 
     // Count number of tracks passing through the phantom center
     if (pCTtracks.nTracks > 0) {
-      double vCenter = (pCTtracks.frontPredV(pCTtracks.itkV, 0.) +
-                        pCTtracks.backPredV(pCTtracks.itkV, 0.)) /
-                       2.;
-      double tCenter = (pCTtracks.frontPredT(pCTtracks.itkT, 0.) +
-                        pCTtracks.backPredT(pCTtracks.itkT, 0.)) /
-                       2.;
+      double vCenter = (pCTtracks.frontPredV(pCTtracks.itkV, 0.) + pCTtracks.backPredV(pCTtracks.itkV, 0.)) / 2.;
+      double tCenter = (pCTtracks.frontPredT(pCTtracks.itkT, 0.) + pCTtracks.backPredT(pCTtracks.itkT, 0.)) / 2.;
       if (abs(vCenter) < 5.0 && abs(tCenter) < 5.0)
         nInside++;
       nTkEvnts++;
@@ -1035,9 +809,8 @@ public:
     for (int Idx = 0; Idx < 2; Idx++) {
       for (int i = 0; i < pCThits.Lyr[0].N[Idx]; i++) {
         for (int j = 0; j < pCThits.Lyr[1].N[Idx]; j++) {
-          double slope =
-              (pCThits.Lyr[1].Y[Idx].at(j) - pCThits.Lyr[0].Y[Idx].at(i)) /
-              (pCThits.Lyr[1].U[Idx].at(j) - pCThits.Lyr[0].U[Idx].at(i));
+          double slope = (pCThits.Lyr[1].Y[Idx].at(j) - pCThits.Lyr[0].Y[Idx].at(i)) /
+                         (pCThits.Lyr[1].U[Idx].at(j) - pCThits.Lyr[0].U[Idx].at(i));
           if (abs(slope) < mxSlopeFront[Idx]) {
             double Y = pCThits.Lyr[0].Y[Idx].at(i);
             double U = pCThits.Lyr[0].U[Idx].at(i);
@@ -1055,9 +828,8 @@ public:
     for (int Idx = 0; Idx < 2; Idx++) {
       for (int i = 0; i < pCThits.Lyr[2].N[Idx]; i++) {
         for (int j = 0; j < pCThits.Lyr[3].N[Idx]; j++) {
-          double slope =
-              (pCThits.Lyr[3].Y[Idx].at(j) - pCThits.Lyr[2].Y[Idx].at(i)) /
-              (pCThits.Lyr[3].U[Idx].at(j) - pCThits.Lyr[2].U[Idx].at(i));
+          double slope = (pCThits.Lyr[3].Y[Idx].at(j) - pCThits.Lyr[2].Y[Idx].at(i)) /
+                         (pCThits.Lyr[3].U[Idx].at(j) - pCThits.Lyr[2].U[Idx].at(i));
           if (abs(slope) < mxSlopeBack[Idx]) {
             double Y = pCThits.Lyr[2].Y[Idx].at(i);
             double U = pCThits.Lyr[2].U[Idx].at(i);
@@ -1082,25 +854,17 @@ public:
       hTkMissV->entry(missV);
       double missT = pCTtracks.TTracks[pCTtracks.itkT].Miss;
       hTkMissT->entry(missT);
-      double slopeRV = (pCTtracks.VTracks[pCTtracks.itkV].X[3] -
-                        pCTtracks.VTracks[pCTtracks.itkV].X[2]) /
-                       (pCTtracks.VTracks[pCTtracks.itkV].U[3] -
-                        pCTtracks.VTracks[pCTtracks.itkV].U[2]);
+      double slopeRV = (pCTtracks.VTracks[pCTtracks.itkV].X[3] - pCTtracks.VTracks[pCTtracks.itkV].X[2]) /
+                       (pCTtracks.VTracks[pCTtracks.itkV].U[3] - pCTtracks.VTracks[pCTtracks.itkV].U[2]);
       hTkSlopeRV->entry(slopeRV);
-      double slopeRT = (pCTtracks.TTracks[pCTtracks.itkT].X[3] -
-                        pCTtracks.TTracks[pCTtracks.itkT].X[2]) /
-                       (pCTtracks.TTracks[pCTtracks.itkT].U[3] -
-                        pCTtracks.TTracks[pCTtracks.itkT].U[2]);
+      double slopeRT = (pCTtracks.TTracks[pCTtracks.itkT].X[3] - pCTtracks.TTracks[pCTtracks.itkT].X[2]) /
+                       (pCTtracks.TTracks[pCTtracks.itkT].U[3] - pCTtracks.TTracks[pCTtracks.itkT].U[2]);
       hTkSlopeRT->entry(slopeRT);
-      double slopeFV = (pCTtracks.VTracks[pCTtracks.itkV].X[1] -
-                        pCTtracks.VTracks[0].X[pCTtracks.itkV]) /
-                       (pCTtracks.VTracks[pCTtracks.itkV].U[1] -
-                        pCTtracks.VTracks[pCTtracks.itkV].U[0]);
+      double slopeFV = (pCTtracks.VTracks[pCTtracks.itkV].X[1] - pCTtracks.VTracks[0].X[pCTtracks.itkV]) /
+                       (pCTtracks.VTracks[pCTtracks.itkV].U[1] - pCTtracks.VTracks[pCTtracks.itkV].U[0]);
       hTkSlopeFV->entry(slopeFV);
-      double slopeFT = (pCTtracks.TTracks[pCTtracks.itkT].X[1] -
-                        pCTtracks.TTracks[pCTtracks.itkT].X[0]) /
-                       (pCTtracks.TTracks[pCTtracks.itkT].U[1] -
-                        pCTtracks.TTracks[pCTtracks.itkT].U[0]);
+      double slopeFT = (pCTtracks.TTracks[pCTtracks.itkT].X[1] - pCTtracks.TTracks[pCTtracks.itkT].X[0]) /
+                       (pCTtracks.TTracks[pCTtracks.itkT].U[1] - pCTtracks.TTracks[pCTtracks.itkT].U[0]);
       hTkSlopeFT->entry(slopeFT);
 
       hVbeamSpot->entry(pCTtracks.frontPredV(pCTtracks.itkV, uBeamSpot));
@@ -1247,9 +1011,8 @@ public:
       }
     }
     // Tracker hit-efficiency analysis
-    for (lyrA = 0; lyrA < 4;
-         lyrA++) { // Study all 4 layers successively. lyrA is the one being
-                   // measured for efficiency
+    for (lyrA = 0; lyrA < 4; lyrA++) { // Study all 4 layers successively. lyrA is the one being
+                                       // measured for efficiency
       int cnt = 0;
       for (int lyr = 0; lyr < 4; lyr++) {
         if (lyr != lyrA) {
@@ -1258,13 +1021,10 @@ public:
         }
       }
       // Analyze the hit efficiency in the V layer specified by lyrA
-      if (nTtkrs == 1 && pCThits.Lyr[0].N[1] == 1 && pCThits.Lyr[1].N[1] == 1 &&
-          pCThits.Lyr[2].N[1] == 1 &&
+      if (nTtkrs == 1 && pCThits.Lyr[0].N[1] == 1 && pCThits.Lyr[1].N[1] == 1 && pCThits.Lyr[2].N[1] == 1 &&
           pCThits.Lyr[3].N[1] == 1) { // 1 track in T with 4 perfect hits
-        if (pCThits.Lyr[lyrFit[0]].N[0] == 1 &&
-            pCThits.Lyr[lyrFit[1]].N[0] == 1 &&
-            pCThits.Lyr[lyrFit[2]].N[0] ==
-                1) { // All other V layers hit, but just once
+        if (pCThits.Lyr[lyrFit[0]].N[0] == 1 && pCThits.Lyr[lyrFit[1]].N[0] == 1 &&
+            pCThits.Lyr[lyrFit[2]].N[0] == 1) { // All other V layers hit, but just once
           if (phSum[0] > 2500 && phSum[0] < 8500 && phSum[4] > -3200 &&
               phSum[4] < 4800) { // Filter out multi-proton events
             for (int lyr = 0; lyr < 4; lyr++) {
@@ -1284,8 +1044,7 @@ public:
                 LineFit LineFitV(3, xHit, yHit); // Fit a track in V to the 3
                                                  // layers not being studied
                 double vPos = LineFitV.eval(geometry.uV(lyrA));
-                if (LineFitV.getChi2() < mxChi2 && vPos > -40. &&
-                    vPos < 40.) { // Must be a good fit in V
+                if (LineFitV.getChi2() < mxChi2 && vPos > -40. && vPos < 40.) { // Must be a good fit in V
                   if (Textrap > 0.)
                     nVtrialL[lyrA]++;
                   else
@@ -1319,11 +1078,9 @@ public:
       }
 
       // Analyze the hit efficiency in the T layer specified by lyrA
-      if (nVtkrs == 1 && pCThits.Lyr[0].N[0] == 1 && pCThits.Lyr[1].N[0] == 1 &&
-          pCThits.Lyr[2].N[0] == 1 && pCThits.Lyr[3].N[0] == 1) {
-        if (pCThits.Lyr[lyrFit[0]].N[1] == 1 &&
-            pCThits.Lyr[lyrFit[1]].N[1] == 1 &&
-            pCThits.Lyr[lyrFit[2]].N[1] == 1) {
+      if (nVtkrs == 1 && pCThits.Lyr[0].N[0] == 1 && pCThits.Lyr[1].N[0] == 1 && pCThits.Lyr[2].N[0] == 1 &&
+          pCThits.Lyr[3].N[0] == 1) {
+        if (pCThits.Lyr[lyrFit[0]].N[1] == 1 && pCThits.Lyr[lyrFit[1]].N[1] == 1 && pCThits.Lyr[lyrFit[2]].N[1] == 1) {
           if (phSum[0] > 2500 && phSum[0] < 8500 && phSum[4] > -3200 &&
               phSum[4] < 4800) { // Select single proton events
             for (int lyr = 0; lyr < 4; lyr++) {
@@ -1340,8 +1097,7 @@ public:
                 }
                 LineFit LineFitT(3, xHit, yHit);
                 double tPos = LineFitT.eval(geometry.uT(lyrA));
-                if (LineFitT.getChi2() < mxChi2 && tPos > -155. &&
-                    tPos < 155.) {
+                if (LineFitT.getChi2() < mxChi2 && tPos > -155. && tPos < 155.) {
                   nTtrial[lyrA]++;
                   bool success = false;
                   for (int hit = 0; hit < pCThits.Lyr[lyrA].N[1]; hit++) {
@@ -1374,8 +1130,7 @@ public:
         int chipNum = pCTEvent.tkr_fpga[fpga].chip[chip].address;
         int nClus = pCTEvent.tkr_fpga[fpga].chip[chip].num_clusts;
         for (int clust = 0; clust < nClus; clust++) {
-          int frstStrip =
-              pCTEvent.tkr_fpga[fpga].chip[chip].cluster[clust].first;
+          int frstStrip = pCTEvent.tkr_fpga[fpga].chip[chip].cluster[clust].first;
           int len = pCTEvent.tkr_fpga[fpga].chip[chip].cluster[clust].length;
           for (int strip = 0; strip < len; strip++) {
             int address = frstStrip + strip;
@@ -1396,8 +1151,7 @@ public:
         int chipNum = pCTEvent.tkr_fpga[fpga].chip[chip].address;
         int nClus = pCTEvent.tkr_fpga[fpga].chip[chip].num_clusts;
         for (int clust = 0; clust < nClus; clust++) {
-          int frstStrip =
-              pCTEvent.tkr_fpga[fpga].chip[chip].cluster[clust].first;
+          int frstStrip = pCTEvent.tkr_fpga[fpga].chip[chip].cluster[clust].first;
           int len = pCTEvent.tkr_fpga[fpga].chip[chip].cluster[clust].length;
           for (int strip = 0; strip < len; strip++) {
             int address = frstStrip + strip;
@@ -1416,13 +1170,10 @@ public:
                                         // completing the loop over all events.
                                         // Write out results and print plots.
 
-    cout << "\n UserAnalysis summary: maximum time tag encountered = "
-         << maxTime << "\n";
+    cout << "\n UserAnalysis summary: maximum time tag encountered = " << maxTime << "\n";
     cout << " UserAnalysis summary: Minimum time since the last event, in 10ns "
-            "units (negative indicates time tag error) = " << minTimeDiff
-         << "\n\n";
-    cout << " UserAnalysis summary: number of events analyzed = " << numEvents
-         << "\n\n";
+            "units (negative indicates time tag error) = " << minTimeDiff << "\n\n";
+    cout << " UserAnalysis summary: number of events analyzed = " << numEvents << "\n\n";
     cout << " UserAnalysis summary: number of events with at least one good "
             "track = " << nTkEvnts << "\n";
     cout << " UserAnalysis summary: number of events with multiple tracks in V "
@@ -1442,35 +1193,25 @@ public:
     double VeffR[4] = { 0., 0., 0., 0. };
     double Teff[4] = { 0., 0., 0., 0. };
     cout << "Chi^2 cut for the efficiency analysis = " << mxChi2 << endl;
-    cout << "Residual cut for the efficiency analysis = " << hitWindow << " mm"
-         << endl;
+    cout << "Residual cut for the efficiency analysis = " << hitWindow << " mm" << endl;
     for (lyrA = 0; lyrA < 4; lyrA++) {
-      cout << "Number of V-layer efficiency trials for negative T=   "
-           << nVtrialL[lyrA] << "\n";
-      cout << "Number of V-layer efficiency successes for negative T="
-           << nVsuccessL[lyrA] << "\n";
+      cout << "Number of V-layer efficiency trials for negative T=   " << nVtrialL[lyrA] << "\n";
+      cout << "Number of V-layer efficiency successes for negative T=" << nVsuccessL[lyrA] << "\n";
       if (nVtrialL > 0) {
         VeffL[lyrA] = (double)nVsuccessL[lyrA] / (double)nVtrialL[lyrA];
-        cout << "Efficiency of V layer " << lyrA + 1 << " for negative T is "
-             << VeffL[lyrA] << "\n";
+        cout << "Efficiency of V layer " << lyrA + 1 << " for negative T is " << VeffL[lyrA] << "\n";
       }
-      cout << "Number of V-layer efficiency trials for positive T=   "
-           << nVtrialR[lyrA] << "\n";
-      cout << "Number of V-layer efficiency successes for positive T="
-           << nVsuccessR[lyrA] << "\n";
+      cout << "Number of V-layer efficiency trials for positive T=   " << nVtrialR[lyrA] << "\n";
+      cout << "Number of V-layer efficiency successes for positive T=" << nVsuccessR[lyrA] << "\n";
       if (nVtrialR > 0) {
         VeffR[lyrA] = (double)nVsuccessR[lyrA] / (double)nVtrialR[lyrA];
-        cout << "Efficiency of V layer " << lyrA + 1 << " for positive T is "
-             << VeffR[lyrA] << "\n";
+        cout << "Efficiency of V layer " << lyrA + 1 << " for positive T is " << VeffR[lyrA] << "\n";
       }
-      cout << "Number of T-layer efficiency trials=   " << nTtrial[lyrA]
-           << "\n";
-      cout << "Number of T-layer efficiency successes=" << nTsuccess[lyrA]
-           << "\n";
+      cout << "Number of T-layer efficiency trials=   " << nTtrial[lyrA] << "\n";
+      cout << "Number of T-layer efficiency successes=" << nTsuccess[lyrA] << "\n";
       if (nTtrial > 0) {
         Teff[lyrA] = (double)nTsuccess[lyrA] / (double)nTtrial[lyrA];
-        cout << "Efficiency of T layer " << lyrA + 1 << " is " << Teff[lyrA]
-             << "\n";
+        cout << "Efficiency of T layer " << lyrA + 1 << " is " << Teff[lyrA] << "\n";
       }
     }
 
@@ -1486,8 +1227,8 @@ public:
             nhits += tkrChCnt[FPGA][chip][ch];
             if (nEvntOcc > 1000000) {
               if (tkrChCnt[FPGA][chip][ch] == 0) {
-                cout << "  FPGA " << FPGA << " chip " << chip << " channel "
-                     << ch << " has zero occupancy and may be dead" << endl;
+                cout << "  FPGA " << FPGA << " chip " << chip << " channel " << ch
+                     << " has zero occupancy and may be dead" << endl;
               }
             }
           }
@@ -1501,8 +1242,8 @@ public:
             float occ = float(tkrChCnt[FPGA][chip][ch]) / float(nEvntOcc);
             float focc = occ / avgOcc;
             if (focc > 3.5) {
-              cout << "    FPGA " << FPGA << " chip " << chip << " channel "
-                   << ch << " has occupancy=" << occ << ",   " << focc << endl;
+              cout << "    FPGA " << FPGA << " chip " << chip << " channel " << ch << " has occupancy=" << occ << ",   "
+                   << focc << endl;
             }
           }
         }
@@ -1512,8 +1253,7 @@ public:
     char strbuf3[100];
     time_t t = time(NULL);
     struct tm *now = localtime(&t);
-    sprintf(strbuf3, " %d-%d-%d", now->tm_year + 1900, now->tm_mon + 1,
-            now->tm_mday);
+    sprintf(strbuf3, " %d-%d-%d", now->tm_year + 1900, now->tm_mon + 1, now->tm_mday);
     std::string FNpD = fname + strbuf3;
 
     FILE *oFile;
@@ -1632,23 +1372,14 @@ public:
       PHedet[3].plot(oFile);
       fprintf(oFile, "set label 4 'Current date and time: %d-%d-%d    %d:%d' "
                      "at screen 0.55, 0.28\n",
-              now->tm_year + 1900, now->tm_mon + 1, now->tm_mday, now->tm_hour,
-              now->tm_min);
-      fprintf(oFile, "set label 5 'Run Number %d' at screen 0.55, 0.25 left\n",
-              runNumber);
-      fprintf(
-          oFile,
-          "set label 6 'FPGA Program Version %d' at screen 0.55, 0.22 left\n",
-          programVersion);
+              now->tm_year + 1900, now->tm_mon + 1, now->tm_mday, now->tm_hour, now->tm_min);
+      fprintf(oFile, "set label 5 'Run Number %d' at screen 0.55, 0.25 left\n", runNumber);
+      fprintf(oFile, "set label 6 'FPGA Program Version %d' at screen 0.55, 0.22 left\n", programVersion);
       fprintf(oFile, "set label 7 'Stage Angle = %5.1f degrees' at screen "
                      "0.55, 0.19 left\n",
               stageAngle);
-      fprintf(oFile,
-              "set label 8 'Start Time = %s ' at screen 0.55, 0.16 left\n",
-              startTime.c_str());
-      fprintf(oFile,
-              "set label 9 'Number of events = %d' at screen 0.55, 0.13 left\n",
-              numEvents);
+      fprintf(oFile, "set label 8 'Start Time = %s ' at screen 0.55, 0.16 left\n", startTime.c_str());
+      fprintf(oFile, "set label 9 'Number of events = %d' at screen 0.55, 0.13 left\n", numEvents);
       PHedet[4].plot(oFile);
       fprintf(oFile, "unset multiplot\n");
       fprintf(oFile, "show label\n");
@@ -2061,25 +1792,17 @@ public:
       fprintf(oFile, "set multiplot title 'Tracker V-Layer Residuals %s' "
                      "layout 2,2 columnsfirst scale 1.0,1.0\n",
               FNpD.c_str());
-      fprintf(oFile, "set label 1 'T<0 Eff.=%6.4f' at graph 0.05, 0.9 left\n",
-              VeffL[0]);
-      fprintf(oFile, "set label 2 'T>0 Eff.=%6.4f' at graph 0.05, 0.8 left\n",
-              VeffR[0]);
+      fprintf(oFile, "set label 1 'T<0 Eff.=%6.4f' at graph 0.05, 0.9 left\n", VeffL[0]);
+      fprintf(oFile, "set label 2 'T>0 Eff.=%6.4f' at graph 0.05, 0.8 left\n", VeffR[0]);
       Vresidual[0].plot(oFile, true);
-      fprintf(oFile, "set label 1 'T<0 Eff.=%6.4f' at graph 0.05, 0.9 left\n",
-              VeffL[1]);
-      fprintf(oFile, "set label 2 'T>0 Eff.=%6.4f' at graph 0.05, 0.8 left\n",
-              VeffR[1]);
+      fprintf(oFile, "set label 1 'T<0 Eff.=%6.4f' at graph 0.05, 0.9 left\n", VeffL[1]);
+      fprintf(oFile, "set label 2 'T>0 Eff.=%6.4f' at graph 0.05, 0.8 left\n", VeffR[1]);
       Vresidual[1].plot(oFile, true);
-      fprintf(oFile, "set label 1 'T<0 Eff.=%6.4f' at graph 0.05, 0.9 left\n",
-              VeffL[2]);
-      fprintf(oFile, "set label 2 'T>0 Eff.=%6.4f' at graph 0.05, 0.8 left\n",
-              VeffR[2]);
+      fprintf(oFile, "set label 1 'T<0 Eff.=%6.4f' at graph 0.05, 0.9 left\n", VeffL[2]);
+      fprintf(oFile, "set label 2 'T>0 Eff.=%6.4f' at graph 0.05, 0.8 left\n", VeffR[2]);
       Vresidual[2].plot(oFile, true);
-      fprintf(oFile, "set label 1 'T<0 Eff.=%6.4f' at graph 0.05, 0.9 left\n",
-              VeffL[3]);
-      fprintf(oFile, "set label 2 'T>0 Eff.=%6.4f' at graph 0.05, 0.8 left\n",
-              VeffR[3]);
+      fprintf(oFile, "set label 1 'T<0 Eff.=%6.4f' at graph 0.05, 0.9 left\n", VeffL[3]);
+      fprintf(oFile, "set label 2 'T>0 Eff.=%6.4f' at graph 0.05, 0.8 left\n", VeffR[3]);
       Vresidual[3].plot(oFile, true);
       fprintf(oFile, "unset multiplot\n");
       fprintf(oFile, "show label\n");
@@ -2099,17 +1822,13 @@ public:
       fprintf(oFile, "set multiplot title 'Tracker T-Layer Residuals %s' "
                      "layout 2,2 columnsfirst scale 1.0,1.0\n",
               FNpD.c_str());
-      fprintf(oFile, "set label 3 'Efficiency=%6.4f' at graph 0.05, 0.9 left\n",
-              Teff[0]);
+      fprintf(oFile, "set label 3 'Efficiency=%6.4f' at graph 0.05, 0.9 left\n", Teff[0]);
       Tresidual[0].plot(oFile, true);
-      fprintf(oFile, "set label 3 'Efficiency=%6.4f' at graph 0.05, 0.9 left\n",
-              Teff[1]);
+      fprintf(oFile, "set label 3 'Efficiency=%6.4f' at graph 0.05, 0.9 left\n", Teff[1]);
       Tresidual[1].plot(oFile, true);
-      fprintf(oFile, "set label 3 'Efficiency=%6.4f' at graph 0.05, 0.9 left\n",
-              Teff[2]);
+      fprintf(oFile, "set label 3 'Efficiency=%6.4f' at graph 0.05, 0.9 left\n", Teff[2]);
       Tresidual[2].plot(oFile, true);
-      fprintf(oFile, "set label 3 'Efficiency=%6.4f' at graph 0.05, 0.9 left\n",
-              Teff[3]);
+      fprintf(oFile, "set label 3 'Efficiency=%6.4f' at graph 0.05, 0.9 left\n", Teff[3]);
       Tresidual[3].plot(oFile, true);
       fprintf(oFile, "unset multiplot\n");
       fprintf(oFile, "show label\n");
@@ -2180,25 +1899,14 @@ public:
         hEstop[3]->plot(oFile);
         fprintf(oFile, "set label 4 'Current date and time: %d-%d-%d    %d:%d' "
                        "at screen 0.55, 0.28\n",
-                now->tm_year + 1900, now->tm_mon + 1, now->tm_mday,
-                now->tm_hour, now->tm_min);
-        fprintf(oFile,
-                "set label 5 'Run Number %d' at screen 0.55, 0.25 left\n",
-                runNumber);
-        fprintf(
-            oFile,
-            "set label 6 'FPGA Program Version %d' at screen 0.55, 0.22 left\n",
-            programVersion);
+                now->tm_year + 1900, now->tm_mon + 1, now->tm_mday, now->tm_hour, now->tm_min);
+        fprintf(oFile, "set label 5 'Run Number %d' at screen 0.55, 0.25 left\n", runNumber);
+        fprintf(oFile, "set label 6 'FPGA Program Version %d' at screen 0.55, 0.22 left\n", programVersion);
         fprintf(oFile, "set label 7 'Stage Angle = %5.1f degrees' at screen "
                        "0.55, 0.19 left\n",
                 stageAngle);
-        fprintf(oFile,
-                "set label 8 'Start Time = %s ' at screen 0.55, 0.16 left\n",
-                startTime.c_str());
-        fprintf(
-            oFile,
-            "set label 9 'Number of events = %d' at screen 0.55, 0.13 left\n",
-            numEvents);
+        fprintf(oFile, "set label 8 'Start Time = %s ' at screen 0.55, 0.16 left\n", startTime.c_str());
+        fprintf(oFile, "set label 9 'Number of events = %d' at screen 0.55, 0.13 left\n", numEvents);
         hEstop[4]->plot(oFile);
         fprintf(oFile, "unset multiplot\n");
         fprintf(oFile, "show label\n");
@@ -2370,24 +2078,17 @@ public:
       }
     }
 
-
-    cout << "Number of events with the 2nd stage trigger bits fired="
-         << nTgrLyr1 << endl;
-    cout << "Number of events with the 3rd stage trigger bits fired="
-         << nTgrLyr2 << endl;
-    cout << "Number of events with both 1st and 2nd stage trigger bits fired="
-         << nTgrLyr01 << endl;
-    cout << "Number of events with both 1st and 3rd stage trigger bits fired="
-         << nTgrLyr02 << endl;
+    cout << "Number of events with the 2nd stage trigger bits fired=" << nTgrLyr1 << endl;
+    cout << "Number of events with the 3rd stage trigger bits fired=" << nTgrLyr2 << endl;
+    cout << "Number of events with both 1st and 2nd stage trigger bits fired=" << nTgrLyr01 << endl;
+    cout << "Number of events with both 1st and 3rd stage trigger bits fired=" << nTgrLyr02 << endl;
     if (nTgrLyr1 > 0) {
       float trigEff = float(nTgrLyr01) / float(nTgrLyr1);
-      cout << "Efficiency of the layer-0 trigger for protons firing 2nd stage="
-           << trigEff << endl;
+      cout << "Efficiency of the layer-0 trigger for protons firing 2nd stage=" << trigEff << endl;
     }
     if (nTgrLyr2 > 0) {
       float trigEff = float(nTgrLyr02) / float(nTgrLyr2);
-      cout << "Efficiency of the layer-0 trigger for protons firing 3rd stage="
-           << trigEff << endl;
+      cout << "Efficiency of the layer-0 trigger for protons firing 3rd stage=" << trigEff << endl;
     }
     cout << "Done with the user analysis summary\n";
 

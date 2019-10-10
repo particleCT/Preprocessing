@@ -11,7 +11,7 @@
 class TkrHits {
 public:
   struct LyrHits {
-    int N[2]; // Number of hits in each of the V and T views for a given layer
+    int N[2];                       // Number of hits in each of the V and T views for a given layer
     std::vector<double> Y[2], U[2]; // 0=V and 1=T
     std::vector<int> F[2];          // Track number; -1 if not used
   };

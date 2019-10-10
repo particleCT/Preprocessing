@@ -135,8 +135,7 @@ public:
     double x2 = (double)i2 + 0.5;
     double y1 = (R[i1 - 1] + R[i1] + R[i1 + 1]) / 3.0;
     double y2 = (R[i2 - 1] + R[i2] + R[i2 + 1]) / 3.0;
-    A = (y2 * (x1 - x0) - y1 * (x2 - x0)) /
-        ((x1 - x0) * (x2 * x2 - x0 * x0) - (x2 - x0) * (x1 * x1 - x0 * x0));
+    A = (y2 * (x1 - x0) - y1 * (x2 - x0)) / ((x1 - x0) * (x2 * x2 - x0 * x0) - (x2 - x0) * (x1 * x1 - x0 * x0));
     B = (y1 - A * (x1 * x1 - x0 * x0)) / (x1 - x0);
     C = y1 - (A * x1 + B) * x1;
   }
@@ -203,13 +202,10 @@ class pCTcalib {
   int i1[nStage], i2[nStage], i3;
 
 public:
-  pCTcalib(string inputFileNameIn, string OutputdirIn, int max_eventsIn,
-           int max_time, int n_debugIn, int n_plotIn,
-           bool useTemp, string version, string WcalibFile, string TVcorrFile,
-           string minDateIn, string maxDateIn, int minRunIn, int maxRunIn,
-           double tWedgeOffset, string partType, int pdstlr[5],
-           bool RealTimeCal, std::string OsName, bool redo,
-           bool normalise);
+  pCTcalib(string inputFileNameIn, string OutputdirIn, int max_eventsIn, int max_time, int n_debugIn, int n_plotIn,
+           bool useTemp, string version, string WcalibFile, string TVcorrFile, string minDateIn, string maxDateIn,
+           int minRunIn, int maxRunIn, double tWedgeOffset, string partType, int pdstlr[5], bool RealTimeCal,
+           std::string OsName, bool redo, bool normalise);
   int TVmapper();
   void enrgDep();
   void writeTVfile();
@@ -217,11 +213,8 @@ public:
   // NIST PSTAR proton range in polystyrene vs E corrected for Birk's law with
   // Kb=.02 cm/meV
   // Experimentally measured R vs E for our 5 stage detector:
-  inline float Rend(float x) { return 0.0057 * x * x + 0.2463 * x; } // -0.366;
-  inline float RendHe(float x) {
-    return -0.0057 * x * x + 0.2463 * x;
-  } // -0.366; }
-  void plot2D(string fn, string T, string TX, string TY, int N, float X[],
-              float Y[], float E[]);
+  inline float Rend(float x) { return 0.0057 * x * x + 0.2463 * x; }    // -0.366;
+  inline float RendHe(float x) { return -0.0057 * x * x + 0.2463 * x; } // -0.366; }
+  void plot2D(string fn, string T, string TX, string TY, int N, float X[], float Y[], float E[]);
 };
 #endif

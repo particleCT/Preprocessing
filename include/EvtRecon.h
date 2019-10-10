@@ -40,11 +40,9 @@ class EvtRecon {
 
 public:
   inline ~EvtRecon() { delTmpFile(); }
-  EvtRecon(pCTgeo &Geometry, TVcorrection *const TVcorr, string inputFileName,
-           string OutputDir, int max_events, int max_time, int n_debug,
-           int n_plot, int nBlocks, bool useTemp, bool doGains,
-           string partType, int pdstlr[5], bool reCalibrate,
-           std::string OsName);
+  EvtRecon(pCTgeo &Geometry, TVcorrection *const TVcorr, string inputFileName, string OutputDir, int max_events,
+           int max_time, int n_debug, int n_plot, int nBlocks, bool useTemp, bool doGains, string partType,
+           int pdstlr[5], bool reCalibrate, std::string OsName);
   void readTmp(Event &evt);
   void dumpTmp(Event evt);
   void reopenTmpFile();
@@ -54,8 +52,8 @@ public:
     return to_string(j);
   }
 
-  bool useTmpFile; // Set true to use temporary files for event storage instead
-                   // of local memory (needed for huge runs or little computers)
+  bool useTmpFile;       // Set true to use temporary files for event storage instead
+                         // of local memory (needed for huge runs or little computers)
   vector<Event> evtList; // This list doesn't get used if a temporary file is
                          // employed instead
   int nEvents;
@@ -68,8 +66,8 @@ public:
   int study_date;
   float stage_angle;
   int program_version;
-  float Peds[5]; // Energy detector pedestals measured from the processed data
-                 // set
+  float Peds[5];    // Energy detector pedestals measured from the processed data
+                    // set
   float CorFacs[5]; // Gain correction factors
 };
 

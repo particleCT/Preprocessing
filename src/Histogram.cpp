@@ -5,8 +5,8 @@
 #include "Histogram.h"
 #include "Util.h"
 
-Histogram::Histogram(int nBins, double bin0, double binWidth, std::string title,
-                     std::string xlabel, std::string ylabel) {
+Histogram::Histogram(int nBins, double bin0, double binWidth, std::string title, std::string xlabel,
+                     std::string ylabel) {
   N = nBins;
   BW = binWidth;
   B0 = bin0;
@@ -42,9 +42,7 @@ void Histogram::plot(FILE *oFile, bool stats, std::string choice,
     rms = sqrt(sumX2 / nEntry - mean * mean);
   }
   fprintf(oFile, "#*** This file is intended to be displayed by gnuplot.\n");
-  fprintf(
-      oFile,
-      "#*** Either double click on the file (works in Windows at least),\n");
+  fprintf(oFile, "#*** Either double click on the file (works in Windows at least),\n");
   fprintf(oFile, "#*** or else start up gnuplot and use the load command to "
                  "display the plot.\n");
   // The following line will make the plot persist in linux when double clicking
@@ -63,8 +61,7 @@ void Histogram::plot(FILE *oFile, bool stats, std::string choice,
   }
   fprintf(oFile, "set xtics font 'Verdana,12'\n");
   fprintf(oFile, "set ytics font 'Verdana,12'\n");
-  fprintf(oFile, "set title '%s %s' font 'Verdana,12'\n", T.c_str(),
-          txt.c_str());
+  fprintf(oFile, "set title '%s %s' font 'Verdana,12'\n", T.c_str(), txt.c_str());
   fprintf(oFile, "set xlabel '%s' font 'Verdana,12'\n", XL.c_str());
   fprintf(oFile, "set ylabel '%s' font 'Verdana,12'\n", YL.c_str());
   fprintf(oFile, "set xrange[%7.4f : %7.4f]\n", B0, B0 + N * BW);
@@ -112,8 +109,7 @@ void Histogram::print(std::string fn) { // Print the histogram contents to an
   }
   FILE *oFile = fopen(fn.c_str(), "w");
   if (oFile != NULL) {
-    fprintf(oFile, "Printing Histogram %s: %s vs %s\n", T.c_str(), YL.c_str(),
-            XL.c_str());
+    fprintf(oFile, "Printing Histogram %s: %s vs %s\n", T.c_str(), YL.c_str(), XL.c_str());
     fprintf(oFile, "  Number of entries=%d\n", nEntry);
     fprintf(oFile, "  Mean=%e\n", mean);
     fprintf(oFile, "  rms= %e\n", rms);
@@ -133,8 +129,7 @@ void Histogram::print(std::string fn) { // Print the histogram contents to an
   }
 };
 
-std::vector<double>
-Histogram::getBins() { // Return an array of the bin locations
+std::vector<double> Histogram::getBins() { // Return an array of the bin locations
   std::vector<double> tmp;
   for (int i = 0; i < N; ++i) {
     tmp.push_back(B0 + (((double)i) + 0.5) * BW);
@@ -142,8 +137,7 @@ Histogram::getBins() { // Return an array of the bin locations
   return tmp;
 };
 
-std::vector<double>
-Histogram::getContents() { // Return an array of the contents of the bins
+std::vector<double> Histogram::getContents() { // Return an array of the contents of the bins
   std::vector<double> tmp;
   for (int i = 0; i < N; ++i) {
     tmp.push_back(counts[i]);
@@ -173,8 +167,7 @@ double Histogram::mode() { // Return the mode of the distribution
   return B0 + (((double)Imax) + 0.5) * BW;
 }
 
-int
-Histogram::imode() { // Return the bin number for the mode of the distribution
+int Histogram::imode() { // Return the bin number for the mode of the distribution
   double max = -1.0;
   int Imax = 0;
   for (int i = 0; i < N; ++i) {
@@ -192,7 +185,7 @@ int Histogram::FWHMboundaries(float &xLow, float &xHigh) {
   for (int i = 1; i < N - 1; ++i) {
     if (counts[i] > max) { // Try to avoid spurious single-bin 'noise' peaks
                            //			if (counts[i - 1] < 0.05*counts[i] && counts[i +
-                           //1] < 0.05*counts[i]) continue;
+      // 1] < 0.05*counts[i]) continue;
       max = counts[i];
       Imax = i;
     }
@@ -286,9 +279,8 @@ double Histogram::mean() { // Return the mean of the full distribution
   return avg;
 }
 
-Histogram2D::Histogram2D(int nXbins, double Xbin0, double XbinWidth, int nYbins,
-                         double Ybin0, double YbinWidth, string title,
-                         string xlabel, string ylabel, string zlabel) {
+Histogram2D::Histogram2D(int nXbins, double Xbin0, double XbinWidth, int nYbins, double Ybin0, double YbinWidth,
+                         string title, string xlabel, string ylabel, string zlabel) {
   NX = nXbins;
   NY = nYbins;
   BXW = XbinWidth;
@@ -305,14 +297,10 @@ Histogram2D::Histogram2D(int nXbins, double Xbin0, double XbinWidth, int nYbins,
 
 // Method to normalize all columns to the same area
 // This is constructed specifically to aid in the pCT WEPL calibration
-void Histogram2D::normalizeColumns(int ymin, int ymax, double area,
-                                   double cut) {
-  cout << "Normalizing the columns of 2D histogram " << T << " to equal areas "
-       << area << endl;
-  cout << "      Columns with area less than " << cut << " will be left alone."
-       << endl;
-  cout << "      Columns without a clear broad peak will be left alone."
-       << endl;
+void Histogram2D::normalizeColumns(int ymin, int ymax, double area, double cut) {
+  cout << "Normalizing the columns of 2D histogram " << T << " to equal areas " << area << endl;
+  cout << "      Columns with area less than " << cut << " will be left alone." << endl;
+  cout << "      Columns without a clear broad peak will be left alone." << endl;
   double *peaks = new double[NX];
   for (int col = 0; col < NX; ++col) {
     double A = 0.;
@@ -353,23 +341,19 @@ void Histogram2D::normalizeColumns(int ymin, int ymax, double area,
       }
     }
     if (A == 0. || A < cut || !goodRow) {
-      cout << "   Column " << col << ", total counts = " << A << " max=" << max
-           << " avg=" << AAvg << " nConsec=" << nConsec << " Aabove=" << Aabove
-           << endl;
+      cout << "   Column " << col << ", total counts = " << A << " max=" << max << " avg=" << AAvg
+           << " nConsec=" << nConsec << " Aabove=" << Aabove << endl;
       continue;
     }
     double norm = area / A;
-    cout << "   Column " << col << ", total counts = " << A << " max=" << max
-         << " avg=" << AAvg << " nConsec=" << nConsec << " Aabove=" << Aabove
-         << " norm=" << norm << endl;
+    cout << "   Column " << col << ", total counts = " << A << " max=" << max << " avg=" << AAvg
+         << " nConsec=" << nConsec << " Aabove=" << Aabove << " norm=" << norm << endl;
     for (int row = 0; row < NY; ++row) {
       counts[col][row] *= norm;
     }
     peaks[col] *= norm;
-    if (col >
-        1) { // look for columns that are too low in their peak value and adjust
-      if (peaks[col - 1] < 0.9 * peaks[col] &&
-          peaks[col - 1] < 0.9 * peaks[col - 2]) {
+    if (col > 1) { // look for columns that are too low in their peak value and adjust
+      if (peaks[col - 1] < 0.9 * peaks[col] && peaks[col - 1] < 0.9 * peaks[col - 2]) {
         double adj = 0.5 * (peaks[col - 2] + peaks[col]) / peaks[col - 1];
         for (int row = 0; row < NY; ++row) {
           counts[col - 1][row] *= adj;
@@ -508,8 +492,7 @@ void Histogram2D::read(string fn) {
     while (getline(infile, line)) {
       size_t found = line.find("splot");
       if (found != line.npos) {
-        cout << "Histogram2D::read: line " << line << " found in file " << fn
-             << endl;
+        cout << "Histogram2D::read: line " << line << " found in file " << fn << endl;
         break;
       }
     }
@@ -525,23 +508,19 @@ void Histogram2D::read(string fn) {
             counts[i][j] = Z;
           }
         } else {
-          cout << "Histogram2D::read: a line is missing in file " << fn
-               << " at i=" << i << " j=" << j << endl;
+          cout << "Histogram2D::read: a line is missing in file " << fn << " at i=" << i << " j=" << j << endl;
         }
       }
     }
   } else {
-    cout << "Histogram2D::read: cannot find or open the input file " << fn
-         << endl;
+    cout << "Histogram2D::read: cannot find or open the input file " << fn << endl;
   }
 }
 
 void Histogram2D::plot(FILE *oFile) {
 
   fprintf(oFile, "#*** This file is intended to be displayed by gnuplot.\n");
-  fprintf(
-      oFile,
-      "#*** Either double click on the file (works in Windows at least),\n");
+  fprintf(oFile, "#*** Either double click on the file (works in Windows at least),\n");
   fprintf(oFile, "#*** or else start up gnuplot and use the load command to "
                  "display the plot.\n");
   // The following line will make the plot persist in linux when double clicking
@@ -571,10 +550,8 @@ void Histogram2D::plot(FILE *oFile) {
   fprintf(oFile, "e\n");
 };
 
-ProfilePlot2D::ProfilePlot2D(int nxBins, double xbin0, double xbinWidth,
-                             int nyBins, double ybin0, double ybinWidth,
-                             string title, string xlabel, string ylabel,
-                             string zlabel) {
+ProfilePlot2D::ProfilePlot2D(int nxBins, double xbin0, double xbinWidth, int nyBins, double ybin0, double ybinWidth,
+                             string title, string xlabel, string ylabel, string zlabel) {
   Nx = nxBins;
   Ny = nyBins;
   xB0 = xbin0;
@@ -598,9 +575,7 @@ ProfilePlot2D::ProfilePlot2D(int nxBins, double xbin0, double xbinWidth,
 void ProfilePlot2D::plot(FILE *oFile) {
 
   fprintf(oFile, "#*** This file is intended to be displayed by gnuplot.\n");
-  fprintf(
-      oFile,
-      "#*** Either double click on the file (works in Windows at least),\n");
+  fprintf(oFile, "#*** Either double click on the file (works in Windows at least),\n");
   fprintf(oFile, "#*** or else start up gnuplot and use the load command to "
                  "display the plot.\n");
   fprintf(oFile, "set title '%s' \n", T.c_str());
@@ -659,8 +634,7 @@ void ProfilePlot2D::print(FILE *oFile) {
   }
 }
 
-ProfilePlot::ProfilePlot(int nBins, double bin0, double binWidth,
-                         std::string title, std::string xlabel,
+ProfilePlot::ProfilePlot(int nBins, double bin0, double binWidth, std::string title, std::string xlabel,
                          std::string ylabel) {
   N = nBins;
   BW = binWidth;
@@ -679,14 +653,12 @@ ProfilePlot::ProfilePlot(int nBins, double bin0, double binWidth,
 }
 
 void ProfilePlot::print(std::string fn) {
-  std::cout << "printing profile plot " << T.c_str() << " to file " << fn
-            << "\n";
+  std::cout << "printing profile plot " << T.c_str() << " to file " << fn << "\n";
   std::cout << "Number of bins = " << N << "\n";
 
   FILE *oFile = fopen(fn.c_str(), "w");
   if (oFile != NULL) {
-    fprintf(oFile, "Printing profile plot %s: %s vs %s\n", T.c_str(),
-            YL.c_str(), XL.c_str());
+    fprintf(oFile, "Printing profile plot %s: %s vs %s\n", T.c_str(), YL.c_str(), XL.c_str());
     fprintf(oFile, "  Number of entries=%d\n", nEntries);
     for (int i = 0; i < N; ++i) {
       double XX, EEy, YY;
@@ -698,8 +670,7 @@ void ProfilePlot::print(std::string fn) {
       else
         YY = 0.;
       if (counts[i] > 1)
-        EEy = sqrt((sumY2[i] / (double)counts[i] - YY * YY) /
-                   ((double)(counts[i] - 1)));
+        EEy = sqrt((sumY2[i] / (double)counts[i] - YY * YY) / ((double)(counts[i] - 1)));
       else
         EEy = 0.;
       fprintf(oFile, "  %d  %8.3f %d  %8.3f+-%8.3f\n", i, XX, C, YY, EEy);
@@ -719,8 +690,7 @@ void ProfilePlot::plot(FILE *oFile) {
       Y[i] = sumY[i] / (double)counts[i];
       Ex[i] = BW / 2.;
       if (counts[i] > 1)
-        Ey[i] = sqrt((sumY2[i] / (double)counts[i] - Y[i] * Y[i]) /
-                     ((double)(counts[i] - 1)));
+        Ey[i] = sqrt((sumY2[i] / (double)counts[i] - Y[i] * Y[i]) / ((double)(counts[i] - 1)));
       else
         Ey[i] = 0.;
     } else {
@@ -731,9 +701,7 @@ void ProfilePlot::plot(FILE *oFile) {
     }
   }
   fprintf(oFile, "#*** This file is intended to be displayed by gnuplot.\n");
-  fprintf(
-      oFile,
-      "#*** Either double click on the file (works in Windows at least),\n");
+  fprintf(oFile, "#*** Either double click on the file (works in Windows at least),\n");
   fprintf(oFile, "#*** or else start up gnuplot and use the load command to "
                  "display the plot.\n");
   fprintf(oFile, "set title '%s' \n", T.c_str());
@@ -752,11 +720,9 @@ void ProfilePlot::plot(FILE *oFile) {
 // the distribution in the bin, instead of the average value used in the normal
 // profile plot
 // Consequently it uses a lot of memory but works well for the radiograph
-ProfilePlot2Dpeak::ProfilePlot2Dpeak(int nxBins, double xbin0, double xbinWidth,
-                                     int nyBins, double ybin0, double ybinWidth,
-                                     int nzBins, double zbin0, double zbinWidth,
-                                     string title, string xlabel, string ylabel,
-                                     string zlabel) {
+ProfilePlot2Dpeak::ProfilePlot2Dpeak(int nxBins, double xbin0, double xbinWidth, int nyBins, double ybin0,
+                                     double ybinWidth, int nzBins, double zbin0, double zbinWidth, string title,
+                                     string xlabel, string ylabel, string zlabel) {
   Nx = nxBins;
   Ny = nyBins;
   Nz = nzBins;
@@ -779,8 +745,7 @@ ProfilePlot2Dpeak::ProfilePlot2Dpeak(int nxBins, double xbin0, double xbinWidth,
 
   for (int i = 0; i < Nx; i++) {
     for (int j = 0; j < Ny; j++) {
-      string title = T + " bin " + to_string((long double)i) + "," +
-                     to_string((long double)j);
+      string title = T + " bin " + to_string((long double)i) + "," + to_string((long double)j);
       counts[i][j] = new Histogram(Nz, zB0, zBW, T, ZL, "Counts");
     }
   }

@@ -28,8 +28,7 @@ public:
     intercept = ybar - slope * xbar;
     chi2 = 0.;
     for (int i = 0; i < nPnts; ++i) {
-      chi2 += pow((intercept + slope * x[i] - y[i]) / 0.155,
-                  2); // Fudged to make the mean ~1 for 1 d.o.f.
+      chi2 += pow((intercept + slope * x[i] - y[i]) / 0.155, 2); // Fudged to make the mean ~1 for 1 d.o.f.
     }
     //        std::cout << "LineFit: ";
     //        for (int lyr; lyr<nPnts; lyr++) {cout << x[lyr] << " " << y[lyr]

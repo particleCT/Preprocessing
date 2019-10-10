@@ -19,8 +19,7 @@ void EvtRecon::readTmp(Event &evt) {
 void EvtRecon::dumpTmp(Event evt) {
   cout << "EvtRecon: event data from the temporary file: " << endl;
   for (int i = 0; i < 4; ++i) {
-    cout << "  Layer " << i << " T=" << evt.Thit[i] << ",  V=" << evt.Vhit[i]
-         << endl;
+    cout << "  Layer " << i << " T=" << evt.Thit[i] << ",  V=" << evt.Vhit[i] << endl;
   }
   cout << "  Stage ADC values: ";
   for (int stage = 0; stage < 5; ++stage) {
@@ -31,23 +30,20 @@ void EvtRecon::dumpTmp(Event evt) {
 void EvtRecon::reopenTmpFile() {
   evtFile = fopen(evtFileName.c_str(), "rb");
   if (evtFile == NULL) {
-    cout << "EvtRecon_" << Nblk << ":  Failed to reopen the temporary file"
-         << evtFileName << endl;
+    cout << "EvtRecon_" << Nblk << ":  Failed to reopen the temporary file" << evtFileName << endl;
     exit(1);
   }
   fseek(evtFile, 0L, SEEK_END);
   size_t file_size = ftell(evtFile);
   rewind(evtFile);
-  cout << "EvtRecon_" << Nblk << ": temporary data file " << evtFileName
-       << " size=" << file_size << endl;
+  cout << "EvtRecon_" << Nblk << ": temporary data file " << evtFileName << " size=" << file_size << endl;
 }
 void EvtRecon::rewindTmpFile() {
   rewind(evtFile);
   fseek(evtFile, 0L, SEEK_END);
   size_t file_size = ftell(evtFile);
   rewind(evtFile);
-  cout << "EvtRecon_" << Nblk << ": temporary data file " << evtFileName
-       << " size=" << file_size << endl;
+  cout << "EvtRecon_" << Nblk << ": temporary data file " << evtFileName << " size=" << file_size << endl;
 }
 void EvtRecon::delTmpFile() {
   fclose(evtFile);
@@ -60,22 +56,18 @@ void EvtRecon::delTmpFile() {
   system(cmd.c_str()); // Delete the temporary file
 }
 
-EvtRecon::EvtRecon(pCTgeo &Geometry, TVcorrection *const TVcorr,
-                   string inputFileName, string OutputDir, int max_events,
-                   int max_time, int n_debug, int n_plot, 
-                   int nBlocks, bool useTemp, bool doGains, string partType,
+EvtRecon::EvtRecon(pCTgeo &Geometry, TVcorrection *const TVcorr, string inputFileName, string OutputDir, int max_events,
+                   int max_time, int n_debug, int n_plot, int nBlocks, bool useTemp, bool doGains, string partType,
                    int pdstlr[5], bool reCalibrate, std::string OsName) {
 
-  cout << "*********** Entering EvtRecon " << nBlocks
-       << " for processing raw calibration data **************" << endl;
+  cout << "*********** Entering EvtRecon " << nBlocks << " for processing raw calibration data **************" << endl;
   start_time = time(NULL);
   now = localtime(&start_time);
   printf("Current local time and date: %s", asctime(now));
 
   if (max_events > 0)
-    cout << "The preprocessing will halt after processing " << max_events
-         << " events\n";
-    cout << "The input data are assumed to be real, not simulated" << endl;
+    cout << "The preprocessing will halt after processing " << max_events << " events\n";
+  cout << "The input data are assumed to be real, not simulated" << endl;
 
   this->OsName = OsName;
 
@@ -88,27 +80,23 @@ EvtRecon::EvtRecon(pCTgeo &Geometry, TVcorrection *const TVcorr,
   if (useTmpFile) {
     evtFile = fopen(evtFileName.c_str(), "wb");
     if (evtFile == NULL) {
-      cout << "EvtRecon: failed to open the temporary file " << evtFileName
-           << endl;
+      cout << "EvtRecon: failed to open the temporary file " << evtFileName << endl;
       exit(1);
     }
-    cout << "EvtRecon_" << nBlocks << ": Opened file " << evtFileName
-         << " for temporary storage of event data." << endl;
+    cout << "EvtRecon_" << nBlocks << ": Opened file " << evtFileName << " for temporary storage of event data."
+         << endl;
   }
   nEvents = 0;
 
   // ******************** Open the input data file
   // *******************************
 
-  cout << "EvtRecon_" << nBlocks << ": Reading the input raw data file "
-       << inputFileName << endl;
+  cout << "EvtRecon_" << nBlocks << ": Reading the input raw data file " << inputFileName << endl;
 
   in_file = fopen(inputFileName.c_str(), "rb");
   if (in_file == NULL) {
-    cout << "EvtRecon: error opening the input raw data file " << inputFileName
-         << " for nBlocks= " << nBlocks << endl;
-    string msg = "EvtRecon: Error opening the input raw data file " +
-                 inputFileName + " for nBlocks=" + to_str(nBlocks);
+    cout << "EvtRecon: error opening the input raw data file " << inputFileName << " for nBlocks= " << nBlocks << endl;
+    string msg = "EvtRecon: Error opening the input raw data file " + inputFileName + " for nBlocks=" + to_str(nBlocks);
     cout << "EvtRecon is aborting the run" << endl;
     perror(msg.c_str());
     exit(1);
@@ -117,32 +105,27 @@ EvtRecon::EvtRecon(pCTgeo &Geometry, TVcorrection *const TVcorr,
   fseek(in_file, 0L, SEEK_END);
   file_size = ftell(in_file);
   rewind(in_file);
-  cout << "EvtRecon_" << nBlocks << ": Input raw data file size=" << file_size
-       << endl;
+  cout << "EvtRecon_" << nBlocks << ": Input raw data file size=" << file_size << endl;
 
   pCTcut cuts(nBlocks, 1, 2, 2); // Initialize the code for event selection
-              
 
   // Create an instance of the class for parsing and storing the raw data from
   // the input file
   pCTraw rawEvt(in_file, file_size, 0, num_tkr_fpga, num_enrg_fpga);
 
-  rawEvt.readRunHeader(
-      inputFileName.c_str()); // Look for the run header bits and parse them
+  rawEvt.readRunHeader(inputFileName.c_str()); // Look for the run header bits and parse them
   runNumber = rawEvt.run_number;
   runStartTime = rawEvt.start_time;
   study_date = rawEvt.study_date;
   stage_angle = rawEvt.stage_angle;
   program_version = rawEvt.program_version;
 
-
   // Allocate memory for the output event data (for efficiency---it can get more
   // memory later if needed)
   int esL = ((int)file_size) / 50;
   unsigned int estLength = (esL < max_events) ? esL : max_events;
   if (!useTmpFile) {
-    cout << "Estimated number of bytes needed for temporary storage = "
-         << estLength << endl;
+    cout << "Estimated number of bytes needed for temporary storage = " << estLength << endl;
     evtList.reserve(estLength);
   }
 
@@ -156,35 +139,28 @@ EvtRecon::EvtRecon(pCTgeo &Geometry, TVcorrection *const TVcorr,
   // with the wedge phantom.
   float wedgeLimit = Geometry.getTWedgeBreaks(4) + 5.0; // NO BRICK OFFSET //+5.
   float openRange = 20.0;
-  cout << "EvtRecon_ " << nBlocks << ": range in T used for recalibration is "
-       << wedgeLimit << " to " << wedgeLimit + openRange << " mm\n";
+  cout << "EvtRecon_ " << nBlocks << ": range in T used for recalibration is " << wedgeLimit << " to "
+       << wedgeLimit + openRange << " mm\n";
   float pedestals[nStage];
   for (int stage = 0; stage < nStage; stage++)
     pedestals[stage] = 0.;
-  pedGainCalib Calibrate(
-      OutputDir, pdstlr, pedestals, nBlocks, -150., -151., wedgeLimit,
-      wedgeLimit + openRange, partType,
-      OsName); // Specifies range in t where particles miss the wedge phantom
+  pedGainCalib Calibrate(OutputDir, pdstlr, pedestals, nBlocks, -150., -151., wedgeLimit, wedgeLimit + openRange,
+                         partType, OsName); // Specifies range in t where particles miss the wedge phantom
 
   // Here is the start of the event loop
   while (!rawEvt.stop_reading) {
     try {
-      bool Eureka = rawEvt.findEvtHdr(
-          false); // Search for the bits that indicate the beginning of an event
+      bool Eureka = rawEvt.findEvtHdr(false); // Search for the bits that indicate the beginning of an event
       if (!Eureka) {
-        cout << "EvtRecon_" << nBlocks << ": event header not found after "
-             << rawEvt.event_counter << " events.\n";
+        cout << "EvtRecon_" << nBlocks << ": event header not found after " << rawEvt.event_counter << " events.\n";
         break;
       }
 
       if (rawEvt.event_counter % 1000000 == 0)
-        cout << "EvtRecon_" << nBlocks << ": Processing raw event "
-             << rawEvt.event_counter << endl;
+        cout << "EvtRecon_" << nBlocks << ": Processing raw event " << rawEvt.event_counter << endl;
       bool debug = rawEvt.event_counter < n_debug;
       if (debug)
-        cout << "EvtRecon_" << nBlocks
-             << ": Event beginning found for event count "
-             << rawEvt.event_counter << endl;
+        cout << "EvtRecon_" << nBlocks << ": Event beginning found for event count " << rawEvt.event_counter << endl;
 
       rawEvt.readOneEvent(debug);
       if (debug)
@@ -231,9 +207,8 @@ EvtRecon::EvtRecon(pCTgeo &Geometry, TVcorrection *const TVcorr,
     catch (const BadEvent &badEvent) {
       // do nothing - go back and find next event header
       cout << badEvent.what() << endl;
-      cout << "EvtRecon " << nBlocks
-           << ": bad event data input caught at event number "
-           << rawEvt.event_counter << endl;
+      cout << "EvtRecon " << nBlocks << ": bad event data input caught at event number " << rawEvt.event_counter
+           << endl;
     }
   } // End of the loop over events
 
@@ -241,8 +216,7 @@ EvtRecon::EvtRecon(pCTgeo &Geometry, TVcorrection *const TVcorr,
 
   cuts.summary(); // Summarize the event counts
 
-  Calibrate.getPeds(inputFileName.c_str(), runNumber, program_version,
-                    stage_angle, nEvents, runStartTime);
+  Calibrate.getPeds(inputFileName.c_str(), runNumber, program_version, stage_angle, nEvents, runStartTime);
   for (int stage = 0; stage < 5; stage++) {
     Peds[stage] = Calibrate.newPed(stage);
   }
@@ -255,33 +229,28 @@ EvtRecon::EvtRecon(pCTgeo &Geometry, TVcorrection *const TVcorr,
     if (useTmpFile) {
       evtFile = fopen(evtFileName.c_str(), "rb");
       if (evtFile == NULL) {
-        cout << "EvtRecon nBlocks=" << nBlocks
-             << ":  Failed to reopen the temporary file\n";
+        cout << "EvtRecon nBlocks=" << nBlocks << ":  Failed to reopen the temporary file\n";
         exit(1);
       }
       fseek(evtFile, 0L, SEEK_END);
       size_t file_size = ftell(evtFile);
       rewind(evtFile);
-      cout << "EvtRecon nBlocks=" << nBlocks
-           << ": Temporary data file size=" << file_size << endl;
+      cout << "EvtRecon nBlocks=" << nBlocks << ": Temporary data file size=" << file_size << endl;
     }
     for (int EvtNum = 0; EvtNum < nEvents; EvtNum++) {
       if (EvtNum % 1000000 == 0)
-        cout << "EvtRecon_" << nBlocks << " gain analysis, processing event "
-             << EvtNum << endl;
+        cout << "EvtRecon_" << nBlocks << " gain analysis, processing event " << EvtNum << endl;
       Event thisEvent;
       if (useTmpFile)
         readTmp(thisEvent);
       else
         thisEvent = evtList[EvtNum];
       if (EvtNum <= n_debug) {
-        cout
-            << "EvtRecon gain analysis nBlocks=" << nBlocks
-            << ", reading back the temporary file for gain calibrations. . .\n";
+        cout << "EvtRecon gain analysis nBlocks=" << nBlocks
+             << ", reading back the temporary file for gain calibrations. . .\n";
         cout << "EvtRecon__" << nBlocks << "  Vhit     Thit\n";
         for (int lyr = 0; lyr < 4; lyr++) {
-          cout << "  " << thisEvent.Vhit[lyr] << "  " << thisEvent.Thit[lyr]
-               << endl;
+          cout << "  " << thisEvent.Vhit[lyr] << "  " << thisEvent.Thit[lyr] << endl;
         }
         cout << "EvtRecon_" << nBlocks << "  Stage pulse sums= ";
         for (int stage = 0; stage < 5; stage++)
@@ -301,15 +270,12 @@ EvtRecon::EvtRecon(pCTgeo &Geometry, TVcorrection *const TVcorr,
       int nGood = 0;
       for (int stage = 0; stage < 5; stage++) {
         // Extrapolate the rear track vector to the energy detector stage
-        Vedet[stage] =
-            Geometry.extrap2D(&UV[2], &V[2], Geometry.energyDetectorU(stage));
-        Tedet[stage] =
-            Geometry.extrap2D(&UT[2], &T[2], Geometry.energyDetectorU(stage));
+        Vedet[stage] = Geometry.extrap2D(&UV[2], &V[2], Geometry.energyDetectorU(stage));
+        Tedet[stage] = Geometry.extrap2D(&UT[2], &T[2], Geometry.energyDetectorU(stage));
 
         bool inBounds;
-        Ene[stage] =
-            ((float)thisEvent.ADC[stage] - Peds[stage]) *
-            TVcorr->corrFactor(stage, Tedet[stage], Vedet[stage], inBounds);
+        Ene[stage] = ((float)thisEvent.ADC[stage] - Peds[stage]) *
+                     TVcorr->corrFactor(stage, Tedet[stage], Vedet[stage], inBounds);
         if (inBounds)
           nGood++;
       }
@@ -320,8 +286,7 @@ EvtRecon::EvtRecon(pCTgeo &Geometry, TVcorrection *const TVcorr,
     }
 
     if (reCalibrate) {
-      Calibrate.getGains(TVcorr, inputFileName.c_str(), rawEvt.run_number,
-                         rawEvt.program_version, 0., cuts.nKeep,
+      Calibrate.getGains(TVcorr, inputFileName.c_str(), rawEvt.run_number, rawEvt.program_version, 0., cuts.nKeep,
                          rawEvt.start_time);
       cout << "EvtRecon nBricks=" << nBlocks << ": Gain correction factors: ";
       for (int stage = 0; stage < 5; stage++) {
@@ -330,8 +295,7 @@ EvtRecon::EvtRecon(pCTgeo &Geometry, TVcorrection *const TVcorr,
       }
       cout << endl;
     } else {
-      cout << "EvtRecon nBricks=" << nBlocks
-           << ": Recalibration turned off, Gain correction factors are ";
+      cout << "EvtRecon nBricks=" << nBlocks << ": Recalibration turned off, Gain correction factors are ";
       for (int stage = 0; stage < 5; stage++) {
         CorFacs[stage] = 1.0;
         cout << CorFacs[stage] << "  ";
@@ -342,7 +306,6 @@ EvtRecon::EvtRecon(pCTgeo &Geometry, TVcorrection *const TVcorr,
     fclose(evtFile);
   }
 
-  cout << "EvtRecon_" << nBlocks << " is complete.  " << nEvents
-       << " events were stored in the event list " << endl;
+  cout << "EvtRecon_" << nBlocks << " is complete.  " << nEvents << " events were stored in the event list " << endl;
 
 }; // end of the EvtRecon constructor

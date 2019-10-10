@@ -24,8 +24,7 @@ class Histogram {
   vector<double> X, Y, Ex, Ey;
 
 public:
-  Histogram(int nBins, double bin0, double binWidth, string title,
-            string xlabel, string ylabel);
+  Histogram(int nBins, double bin0, double binWidth, string title, string xlabel, string ylabel);
   string Title() { return T; }
 
   inline void entry(double x) {
@@ -61,8 +60,7 @@ public:
     }
   }
 
-  void plot(FILE *oFile, bool stats = false, string choice = "",
-            std::string txt = " ");
+  void plot(FILE *oFile, bool stats = false, string choice = "", std::string txt = " ");
   void print(string fn);
   vector<double> getBins();
   vector<double> getContents();
@@ -87,9 +85,8 @@ class Histogram2D {
   int nEntry;
 
 public:
-  Histogram2D(int nXbins, double Xbin0, double XbinWidth, int nYbins,
-              double Ybin0, double YbinWidth, string title, string xlabel,
-              string ylabel, string zlabel);
+  Histogram2D(int nXbins, double Xbin0, double XbinWidth, int nYbins, double Ybin0, double YbinWidth, string title,
+              string xlabel, string ylabel, string zlabel);
   void entry(double x, double y);
   void entry(int i, int j);
   void plot(FILE *oFile);
@@ -117,8 +114,7 @@ class ProfilePlot {
   int nEntries;
 
 public:
-  ProfilePlot(int nBins, double bin0, double binWidth, string title,
-              string xlabel, string ylabel);
+  ProfilePlot(int nBins, double bin0, double binWidth, string title, string xlabel, string ylabel);
 
   inline void entry(double x, double y) {
     int bin = floor((x - B0) / BW);
@@ -159,9 +155,8 @@ class ProfilePlot2D {
   int nEntries;
 
 public:
-  ProfilePlot2D(int nxBins, double xbin0, double xbinWidth, int nyBins,
-                double ybin0, double ybinWidth, string title, string xlabel,
-                string ylabel, string zlabel);
+  ProfilePlot2D(int nxBins, double xbin0, double xbinWidth, int nyBins, double ybin0, double ybinWidth, string title,
+                string xlabel, string ylabel, string zlabel);
 
   inline void entry(double x, double y, double z) {
     int xbin = floor((x - xB0) / xBW);
@@ -193,10 +188,8 @@ class ProfilePlot2Dpeak {
   int nEntries;
 
 public:
-  ProfilePlot2Dpeak(int nxBins, double xbin0, double xbinWidth, int nyBins,
-                    double ybin0, double ybinWidth, int nzBins, double zbin0,
-                    double zbinWidth, string title, string xlabel,
-                    string ylabel, string zlabel);
+  ProfilePlot2Dpeak(int nxBins, double xbin0, double xbinWidth, int nyBins, double ybin0, double ybinWidth, int nzBins,
+                    double zbin0, double zbinWidth, string title, string xlabel, string ylabel, string zlabel);
   ~ProfilePlot2Dpeak();
   void entry(double x, double y, double z);
   void print(FILE *oFile);

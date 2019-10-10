@@ -21,8 +21,8 @@ class TVcorrection {
 #define nStage 5
 #define nPix 380
 
-  float tPlaneShifts[4][4]; // planes sensors array for sensors shifts (stored
-                            // in TVcorr.txt but no longer used)
+  float tPlaneShifts[4][4];  // planes sensors array for sensors shifts (stored
+                             // in TVcorr.txt but no longer used)
   float TVmap[nStage][nPix]; // 5 TV maps with 1cm pixels, 10x38 cm2 area, total
                              // 10x38=380 pixels
 
@@ -35,8 +35,7 @@ public:
                int run) { // pass 0 for all of year, month, day, run to avoid
                           // checks on those values
     cout << "TVcorrection: opening TV correction file " << TVfile << endl;
-    fstream TVcalfile(TVfile,
-                      ios_base::in); // Open text file with TV-corr etc. data
+    fstream TVcalfile(TVfile, ios_base::in); // Open text file with TV-corr etc. data
     if (!TVcalfile.is_open()) {
       perror("Error opening TV correction file");
       return;
@@ -73,8 +72,7 @@ public:
     string line;
     ifstream infile(TVfile);
     if (infile) {
-      cout << endl << "Echoing comment lines from the TV calibration file "
-           << TVfile << ": " << endl;
+      cout << endl << "Echoing comment lines from the TV calibration file " << TVfile << ": " << endl;
       while (getline(infile, line)) {
         size_t found = line.find_first_not_of(" ");
         if (line[found] == '#') {
@@ -111,9 +109,8 @@ public:
               checked = true;
             } else {
               cout << "TVcorrection: the calibration file date and run are not "
-                      "appropriate for these data with year=" << year
-                   << " month= " << month << " day= " << day << " run= " << run
-                   << endl;
+                      "appropriate for these data with year=" << year << " month= " << month << " day= " << day
+                   << " run= " << run << endl;
               exit(-1);
             }
           }
@@ -126,14 +123,12 @@ public:
               "the date and run ranges of the TVcorrection calibration "
               "constants! **************" << endl;
     }
-    cout << "   Pedestals = " << ped[0] << " " << ped[1] << " " << ped[2] << " "
-         << ped[3] << " " << ped[4] << endl;
+    cout << "   Pedestals = " << ped[0] << " " << ped[1] << " " << ped[2] << " " << ped[3] << " " << ped[4] << endl;
   }
 
   float corrFactorInt(float TVmapr[nStage][nPix], int stage, float T, float V,
                       bool &inBounds) { // Can be called with an external TVmap
-    inBounds =
-        true; // No class members or variables are referenced by this function
+    inBounds = true;                    // No class members or variables are referenced by this function
     int tPix = floor(0.1 * (T + 190.));
     if (tPix < 0) {
       tPix = 0;
@@ -157,22 +152,19 @@ public:
       int tHigh = tLow + 1;
       int vLow = floor(0.1 * (V + 45.));
       int vHigh = vLow + 1;
-      if (tLow < 37 && tHigh > 0 && vLow < 9 &&
-          vHigh > 0) { // Bilinear interpolation
+      if (tLow < 37 && tHigh > 0 && vLow < 9 && vHigh > 0) { // Bilinear interpolation
         float f00 = TVmapr[stage][vLow + 10 * tLow];
         float f10 = TVmapr[stage][vLow + 10 * tHigh];
         float f01 = TVmapr[stage][vHigh + 10 * tLow];
         float f11 = TVmapr[stage][vHigh + 10 * tHigh];
-        if (f00 > 0.9 || f10 > 0.9 || f01 > 0.9 ||
-            f11 > 0.9) { // Can't include any bad pixels in the interpolation
+        if (f00 > 0.9 || f10 > 0.9 || f01 > 0.9 || f11 > 0.9) { // Can't include any bad pixels in the interpolation
           return TVmapr[stage][vPix + 10 * tPix];
         } else {
           float T0 = -185.0 + 10.0 * tLow;
           float V0 = -45.0 + 10.0 * vLow;
           float VS = (V - V0) / 10.;
           float TS = (T - T0) / 10.;
-          float result = f00 + (f10 - f00) * TS + (f01 - f00) * VS +
-                         (f11 + f00 - f10 - f01) * TS * VS;
+          float result = f00 + (f10 - f00) * TS + (f01 - f00) * VS + (f11 + f00 - f10 - f01) * TS * VS;
           return result;
         }
       } else {
@@ -183,9 +175,8 @@ public:
     }
   }
 
-  float corrFactor(int stage, float T, float V,
-                   bool &inBounds) { // Return the calibration factor for
-                                     // location T,V in the specified stage
+  float corrFactor(int stage, float T, float V, bool &inBounds) { // Return the calibration factor for
+                                                                  // location T,V in the specified stage
     return corrFactorInt(TVmap, stage, T, V, inBounds);
   }
 

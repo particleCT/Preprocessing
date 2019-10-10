@@ -33,8 +33,7 @@ void Value::set(const std::string &str) {}
 string Value::to_str() const { return string(); }
 
 Option::Option(int k, const string &n)
-    : store_ptr(0), store_optional(false), set_var(0), set_once(false),
-      call_func(0), help_default(false) {
+    : store_ptr(0), store_optional(false), set_var(0), set_once(false), call_func(0), help_default(false) {
   key = k;
   name = n;
 }
@@ -205,9 +204,7 @@ Option &Parser::add_opt(int key, const string &name, bool hide) {
   return *o;
 }
 
-Option &Parser::add_opt(const string &name, bool hide) {
-  return add_opt(0, name, hide);
-}
+Option &Parser::add_opt(const string &name, bool hide) { return add_opt(0, name, hide); }
 
 vector<string> &Parser::args() { return arg_list; }
 
@@ -233,8 +230,7 @@ void Parser::parse(int argc, char *argv[], bool ignore_unknown) {
       }
       // find option from list
       bool unknown = true;
-      for (vector<Option *>::iterator j = opt_list.begin(); j != opt_list.end();
-           j++)
+      for (vector<Option *>::iterator j = opt_list.begin(); j != opt_list.end(); j++)
         if ((*j)->get_name() == n) {
           unknown = false;
           if (vp)
@@ -248,8 +244,7 @@ void Parser::parse(int argc, char *argv[], bool ignore_unknown) {
       continue;
     }
     // short options
-    for (string::size_type k = 1; k < s.length();
-         k++) { // there can be several options in a token
+    for (string::size_type k = 1; k < s.length(); k++) { // there can be several options in a token
       vector<Option *>::iterator j;
       for (j = opt_list.begin(); j != opt_list.end(); j++)
         if ((*j)->get_key() == s[k])
@@ -285,8 +280,7 @@ void Parser::set_header(const std::string &text) { header_text = text; }
 const string &Parser::get_header() const { return header_text; }
 
 Option *Parser::find(int key) {
-  for (vector<Option *>::iterator j = opt_list.begin(); j != opt_list.end();
-       j++)
+  for (vector<Option *>::iterator j = opt_list.begin(); j != opt_list.end(); j++)
     if ((*j)->get_key() == key) {
       return *j;
     }
@@ -294,8 +288,7 @@ Option *Parser::find(int key) {
 }
 
 Option *Parser::find(const std::string &name) {
-  for (vector<Option *>::iterator j = opt_list.begin(); j != opt_list.end();
-       j++)
+  for (vector<Option *>::iterator j = opt_list.begin(); j != opt_list.end(); j++)
     if ((*j)->get_name() == name) {
       return *j;
     }
@@ -304,15 +297,13 @@ Option *Parser::find(const std::string &name) {
 
 void Parser::remove(int key) {
   // erase help first (have to leave the extra help lines.)
-  for (vector<HelpLine>::iterator i = help_list.begin(); i != help_list.end();
-       i++)
+  for (vector<HelpLine>::iterator i = help_list.begin(); i != help_list.end(); i++)
     if (i->opt && i->opt->get_key() == key) {
       help_list.erase(i);
       break;
     }
   // erase the option itself
-  for (vector<Option *>::iterator j = opt_list.begin(); j != opt_list.end();
-       j++)
+  for (vector<Option *>::iterator j = opt_list.begin(); j != opt_list.end(); j++)
     if ((*j)->get_key() == key) {
       delete *j;
       opt_list.erase(j);
@@ -322,15 +313,13 @@ void Parser::remove(int key) {
 
 void Parser::remove(const std::string &name) {
   // erase help first (have to leave the extra help lines.)
-  for (vector<HelpLine>::iterator i = help_list.begin(); i != help_list.end();
-       i++)
+  for (vector<HelpLine>::iterator i = help_list.begin(); i != help_list.end(); i++)
     if (i->opt && i->opt->get_name() == name) {
       help_list.erase(i);
       break;
     }
   // erase the option itself
-  for (vector<Option *>::iterator j = opt_list.begin(); j != opt_list.end();
-       j++)
+  for (vector<Option *>::iterator j = opt_list.begin(); j != opt_list.end(); j++)
     if ((*j)->get_name() == name) {
       delete *j;
       opt_list.erase(j);
@@ -348,8 +337,7 @@ void Parser::remove_all() {
 
 string Parser::get_help() {
   string h;
-  for (vector<HelpLine>::iterator i = help_list.begin(); i != help_list.end();
-       i++) {
+  for (vector<HelpLine>::iterator i = help_list.begin(); i != help_list.end(); i++) {
     h += i->msg;
     if (i->opt) {
       h += i->opt->get_help();
@@ -377,14 +365,12 @@ bool version_callback(int key, const string &str, void *data) {
 }
 
 Option &Parser::add_opt_help() {
-  return add_opt('h', "help").call(&help_callback, this).help(
-      "display this help list and exit");
+  return add_opt('h', "help").call(&help_callback, this).help("display this help list and exit");
 }
 
 Option &Parser::add_opt_version(const string &ver) {
   version_info = ver;
-  return add_opt('V', "version").call(&version_callback, &version_info).help(
-      "print program version and exit");
+  return add_opt('V', "version").call(&version_callback, &version_info).help("print program version and exit");
 }
 
 SubParser::SubParser() : sep(',') {}
@@ -423,8 +409,7 @@ void SubParser::set(const string &str) {
 
 string SubParser::get_help() {
   string h;
-  for (vector<HelpLine>::iterator i = help_list.begin(); i != help_list.end();
-       i++) {
+  for (vector<HelpLine>::iterator i = help_list.begin(); i != help_list.end(); i++) {
     h += i->msg;
     if (i->opt) {
       h += i->opt->get_help(Option::HF_NODASH);
@@ -445,8 +430,7 @@ bool sub_help_callback(int key, const string &str, void *data) {
 }
 
 Option &SubParser::add_opt_help() {
-  return add_opt("help").call(&sub_help_callback, this).help(
-      "display this help list and exit");
+  return add_opt("help").call(&sub_help_callback, this).help("display this help list and exit");
 }
 
 Error::Error() {}
@@ -465,8 +449,6 @@ OptError::OptError(const string &o, const string &m) {
   msg = m + " for option: " + o;
 }
 
-ConvError::ConvError(const string &str, const string &type) {
-  msg = "error converting '" + str + "' to " + type;
-}
+ConvError::ConvError(const string &str, const string &type) { msg = "error converting '" + str + "' to " + type; }
 
 UnknError::UnknError(const string &o) { msg = "unknown option: " + o; }

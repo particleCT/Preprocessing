@@ -63,18 +63,15 @@ public:
   ~Option();
 
   // option modifiers
-  template <typename T> Option &stow(T &t); // stow value to streamable variable
-  Option &store(Value *ptr = 0); // store value to "* ptr", the Value will be
-                                 // released by the Option
-  Option &optional(const std::string &str =
-                       ""); // value is optional defaulting to "str"
-  Option &set(int *var, int value = -1); // set "* var" to "value"
-  Option &once(int init =
-                   0); // can only be set once, with distinct value, "init"
-  Option &call(CallBack *func, void *data); // call function "* func" with
-                                            // "data" as extra argument
-  Option &help(const std::string &text,
-               const std::string &var = ""); // help text
+  template <typename T> Option &stow(T &t);      // stow value to streamable variable
+  Option &store(Value *ptr = 0);                 // store value to "* ptr", the Value will be
+                                                 // released by the Option
+  Option &optional(const std::string &str = ""); // value is optional defaulting to "str"
+  Option &set(int *var, int value = -1);         // set "* var" to "value"
+  Option &once(int init = 0);                    // can only be set once, with distinct value, "init"
+  Option &call(CallBack *func, void *data);      // call function "* func" with
+                                                 // "data" as extra argument
+  Option &help(const std::string &text, const std::string &var = ""); // help text
   Option &help_word(const std::string &var);
   Option &show_default(bool do_show = true);
 
@@ -202,8 +199,6 @@ public:
   }
 };
 
-template <typename T> Option &Option::stow(T &t) {
-  return store(new StreamableValue<T>(t));
-}
+template <typename T> Option &Option::stow(T &t) { return store(new StreamableValue<T>(t)); }
 }
 #endif // ARG_HH

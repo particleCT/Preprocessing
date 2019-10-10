@@ -62,22 +62,22 @@ public:
   std::vector<int> killCh[num_tkr_fpga][max_chips];
 
   // Run header information extracted from the input file:
-  int run_number; // Filled only if run header found
+  int run_number;         // Filled only if run header found
   std::string start_time; // Filled only if run header found
-  int study_date; // Filled only if run header found (integer representation of
-                  // the start_time)
-  float stage_angle; // Filled only if run header found
-  int program_version; // Filled only if run header found
-  bool TimeTags; // Assumed true if no run header is found
+  int study_date;         // Filled only if run header found (integer representation of
+                          // the start_time)
+  float stage_angle;      // Filled only if run header found
+  int program_version;    // Filled only if run header found
+  bool TimeTags;          // Assumed true if no run header is found
   // Information from a single event.  This is just the raw data organized for
   // convenient access
   bool DAQ_error;
-  int event_number; // Warning, this can repeat in a long run
-  bool trigger_bits[6]; // Energy detector trigger bits (all 0 for
-                        // program_version<64)
-  int raw_length; // Number of bits in the raw event
+  int event_number;            // Warning, this can repeat in a long run
+  bool trigger_bits[6];        // Energy detector trigger bits (all 0 for
+                               // program_version<64)
+  int raw_length;              // Number of bits in the raw event
   unsigned long long time_tag; // Time tag
-  int delta_t; // Time in 10ns units since previous trigger condition
+  int delta_t;                 // Time in 10ns units since previous trigger condition
   bool bad_fpga_address;
   bool tag_mismatch;
   bool CRC_error;
@@ -90,13 +90,13 @@ public:
     bool OTR[3]; // out-of-range indicators per channel; calculate for
                  // non-reduced data
     int tag;
-    bool type; // 0=samples written out, 1=reduced in FPGA
-    int num_samples; // 0 if samples are not written out
-    int num_channels; // 2 or 3 for reduced data, always 3 for samples
+    bool type;         // 0=samples written out, 1=reduced in FPGA
+    int num_samples;   // 0 if samples are not written out
+    int num_channels;  // 2 or 3 for reduced data, always 3 for samples
     int sample[3][16]; // up to 16 samples for each channel; none for reduced
                        // data
-    int pedestal[3]; // equals the first sample
-    int pulse_sum[3]; // calculate from the samples for non-reduced data
+    int pedestal[3];   // equals the first sample
+    int pulse_sum[3];  // calculate from the samples for non-reduced data
   } enrg_fpga[num_enrg_fpga];
   struct TrackerFPGA {
     bool error;
@@ -109,18 +109,17 @@ public:
       int address;
       int num_clusts;
       struct TrackerCluster {
-        int length; // Number of strips in cluster (1 to 64)
-        int first; // Address of the first strip in cluster (0 to 63)
+        int length;          // Number of strips in cluster (1 to 64)
+        int first;           // Address of the first strip in cluster (0 to 63)
       } cluster[max_clusts]; // Entries beyond num_clusts are unfilled
-    } chip[max_chips]; // Entries beyond num_chips are unfilled
-  } tkr_fpga[num_tkr_fpga]; // Index is the FPGA address
+    } chip[max_chips];       // Entries beyond num_chips are unfilled
+  } tkr_fpga[num_tkr_fpga];  // Index is the FPGA address
 
   int event_counter;
   bool stop_reading;
   std::string Months[12];
 
-  pCTraw(FILE *in_file, size_t file_size,  int thread,
-         int numbTkrFPGA, int numbEdetFPGA);
+  pCTraw(FILE *in_file, size_t file_size, int thread, int numbTkrFPGA, int numbEdetFPGA);
   void pCTkillStrip(int FPGA, int chip, int channel);
   void dumpEvt();
   void readRunHeader(const char *inFileName);
@@ -136,26 +135,17 @@ private: // Blakes's and Piersimoni's bit parsing methods, plus more, are all
 
   bool findRunHdr();
 
-  unsigned short reverse_short_bytes(unsigned short x);
-
-  void read_append_data(FILE *in_file, unsigned long long &bit_container,
-                        unsigned int &num_bits, long long &origin,
+  void read_append_data(FILE *in_file, unsigned long long &bit_container, unsigned int &num_bits, long long &origin,
                         size_t file_size, bool &stop_reading);
 
-  unsigned long long extract_N_bits(FILE *in_file, long long stream_position,
-                                    unsigned long long &bit_container,
-                                    unsigned int &num_bits,
-                                    unsigned int bits_2_extract,
-                                    size_t file_size, bool &stop_reading);
+  unsigned long long extract_N_bits(FILE *in_file, long long stream_position, unsigned long long &bit_container,
+                                    unsigned int &num_bits, unsigned int bits_2_extract, size_t file_size,
+                                    bool &stop_reading);
 
-  unsigned long long just_read(FILE *in_file, size_t file_size,
-                               bool &stop_reading,
-                               unsigned long long &bit_container,
-                               unsigned int &num_bits,
-                               unsigned int bits_2_extract, long long &origin);
+  unsigned long long just_read(FILE *in_file, size_t file_size, bool &stop_reading, unsigned long long &bit_container,
+                               unsigned int &num_bits, unsigned int bits_2_extract, long long &origin);
 
-  int read_file_header(unsigned long long fileHeader_bits,
-                       const char *namefile);
+  int read_file_header(unsigned long long fileHeader_bits, const char *namefile);
 
   int read_run_number(unsigned long long runNumber_bits);
 
@@ -180,15 +170,12 @@ private: // Blakes's and Piersimoni's bit parsing methods, plus more, are all
     return projectionangle_bits;
   }
 
-  bool read_BegOfEvent(unsigned long long BegOfEvent_bits,
-                       unsigned long long &bit_container,
-                       unsigned long long temp_cont, unsigned int &num_bits,
-                       unsigned int temp_queu, int &event_counter, bool debug);
+  bool read_BegOfEvent(unsigned long long BegOfEvent_bits, unsigned long long &bit_container,
+                       unsigned long long temp_cont, unsigned int &num_bits, unsigned int temp_queu, int &event_counter,
+                       bool debug);
 
-  bool read_BegOfRun(unsigned long long BegOfRun_bits,
-                     unsigned long long &bit_container,
-                     unsigned long long temp_cont, unsigned int &num_bits,
-                     unsigned int temp_queu);
+  bool read_BegOfRun(unsigned long long BegOfRun_bits, unsigned long long &bit_container, unsigned long long temp_cont,
+                     unsigned int &num_bits, unsigned int temp_queu);
 
   inline unsigned long long read_timeTag(unsigned long long timeTag_bits) {
     // cout << "Event time tag (in clock cycles): " << timeTag_bits << endl;
@@ -204,17 +191,14 @@ private: // Blakes's and Piersimoni's bit parsing methods, plus more, are all
 
   int read_eventHeader(unsigned long long eventHeader_bits, int &TrgBits);
 
-  int read_FPGAsHeader(unsigned long long FPGAsHeader_bits, int FPGA_num,
-                       int &tag, int &err);
+  int read_FPGAsHeader(unsigned long long FPGAsHeader_bits, int FPGA_num, int &tag, int &err);
 
-  int read_ASICHeader(unsigned long long ASICHeader_bits, int &ASIC_add,
-                      int &err, int &perr, int &ovrflw);
+  int read_ASICHeader(unsigned long long ASICHeader_bits, int &ASIC_add, int &err, int &perr, int &ovrflw);
 
   int read_stripHeader(unsigned long long stripHeader_bits, int &strip_add);
 
-  int read_EnFPGAs(unsigned long long EnFPGAs_bits, bool &ped_flag,
-                   bool &Entype_flag, unsigned int &nsamp, unsigned int &OTR,
-                   int &frontend_tag);
+  int read_EnFPGAs(unsigned long long EnFPGAs_bits, bool &ped_flag, bool &Entype_flag, unsigned int &nsamp,
+                   unsigned int &OTR, int &frontend_tag);
 
 }; // End of the pCTraw class
 #endif

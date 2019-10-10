@@ -11,11 +11,9 @@
 
 #include "pCTcalib.h"
 
-bool getLineIntersection(double p0u, double p0t, // Two points on the first line
-                         double p1u, double p1t, double p2u,
-                         double p2t, // Two points on the second line
-                         double p3u, double p3t, double &ipu,
-                         double &ipt) { // Return the intersection point
+bool getLineIntersection(double p0u, double p0t,                             // Two points on the first line
+                         double p1u, double p1t, double p2u, double p2t,     // Two points on the second line
+                         double p3u, double p3t, double &ipu, double &ipt) { // Return the intersection point
   if (p0u == p1u || p2u == p3u)
     return false;
   double slope1 = (p1t - p0t) / (p1u - p0u); // Slope of the first line
@@ -62,8 +60,7 @@ struct calStuff { // Structure used to facilitate passing information to the 5
   double emptyW; // half width of empty region in t to use for calibration
 };
 
-bool EnrgCut(calStuff stuff, float Estage[5], float Etot, float cut0,
-             float cut1, float cut3) {
+bool EnrgCut(calStuff stuff, float Estage[5], float Etot, float cut0, float cut1, float cut3) {
 
   bool dropEvent = false;
 
@@ -78,10 +75,8 @@ bool EnrgCut(calStuff stuff, float Estage[5], float Etot, float cut0,
 
   if (Estage[4] > stuff.Thr[4]) {
     if (stuff.partType == "He") {
-      if (Estage[3] <
-              (0.00045 * Estage[4] * Estage[4] - 0.42 * Estage[4] + 237) ||
-          Estage[3] >
-              (0.00045 * Estage[4] * Estage[4] - 0.42 * Estage[4] + 260))
+      if (Estage[3] < (0.00045 * Estage[4] * Estage[4] - 0.42 * Estage[4] + 237) ||
+          Estage[3] > (0.00045 * Estage[4] * Estage[4] - 0.42 * Estage[4] + 260))
         dropEvent = true;
     }
 
@@ -91,15 +86,12 @@ bool EnrgCut(calStuff stuff, float Estage[5], float Etot, float cut0,
        + 69.) || Estage[3]>(0.00351528*Estage[4] * Estage[4] -
        0.703048*Estage[4] + 79.5048)) dropEvent = true;
             }*/
-    if (Estage[3] < cut0 || Estage[2] < cut0 || Estage[1] < cut0 ||
-        Estage[0] < cut0 || Estage[4] > cut3)
+    if (Estage[3] < cut0 || Estage[2] < cut0 || Estage[1] < cut0 || Estage[0] < cut0 || Estage[4] > cut3)
       dropEvent = true;
   } else if (Estage[3] > stuff.Thr[3]) {
     if (stuff.partType == "He") {
-      if (Estage[2] <
-              (0.00085 * Estage[3] * Estage[3] - 0.5664 * Estage[3] + 226) ||
-          Estage[2] >
-              (0.00085 * Estage[3] * Estage[3] - 0.5664 * Estage[3] + 254))
+      if (Estage[2] < (0.00085 * Estage[3] * Estage[3] - 0.5664 * Estage[3] + 226) ||
+          Estage[2] > (0.00085 * Estage[3] * Estage[3] - 0.5664 * Estage[3] + 254))
         dropEvent = true;
     }
     // DELTA	E-E FILTER DOES	NOT SIGNIFICANTLY CHANGE CALIBRATION
@@ -109,15 +101,12 @@ bool EnrgCut(calStuff stuff, float Estage[5], float Etot, float cut0,
        78.37)) dropEvent = true;
             }*/
 
-    if (Estage[2] < cut0 || Estage[1] < cut0 || Estage[0] < cut0 ||
-        Estage[3] > cut3)
+    if (Estage[2] < cut0 || Estage[1] < cut0 || Estage[0] < cut0 || Estage[3] > cut3)
       dropEvent = true;
   } else if (Estage[2] > stuff.Thr[2]) {
     if (stuff.partType == "He") {
-      if (Estage[1] <
-              (0.00085 * Estage[2] * Estage[2] - 0.5664 * Estage[2] + 220) ||
-          Estage[1] >
-              (0.00085 * Estage[2] * Estage[2] - 0.5664 * Estage[2] + 248))
+      if (Estage[1] < (0.00085 * Estage[2] * Estage[2] - 0.5664 * Estage[2] + 220) ||
+          Estage[1] > (0.00085 * Estage[2] * Estage[2] - 0.5664 * Estage[2] + 248))
         dropEvent = true;
     }
     // DELTA	E-E FILTER DOES	NOT SIGNIFICANTLY CHANGE CALIBRATION
@@ -131,10 +120,8 @@ bool EnrgCut(calStuff stuff, float Estage[5], float Etot, float cut0,
       dropEvent = true;
   } else if (Estage[1] > stuff.Thr[1]) {
     if (stuff.partType == "He") {
-      if (Estage[0] <
-              (0.00085 * Estage[1] * Estage[1] - 0.5664 * Estage[1] + 220) ||
-          Estage[0] >
-              (0.00085 * Estage[1] * Estage[1] - 0.5664 * Estage[1] + 246))
+      if (Estage[0] < (0.00085 * Estage[1] * Estage[1] - 0.5664 * Estage[1] + 220) ||
+          Estage[0] > (0.00085 * Estage[1] * Estage[1] - 0.5664 * Estage[1] + 246))
         dropEvent = true;
     }
     // DELTA	E-E FILTER DOES	NOT SIGNIFICANTLY CHANGE CALIBRATION
@@ -165,27 +152,23 @@ bool EnrgCut(calStuff stuff, float Estage[5], float Etot, float cut0,
   */
 }
 
-void procWEPLcal(calStuff stuff, TVcorrection TVcal,
-                 Histogram2D *REhist[nStage], Histogram2D *dEEhist[nStage],
+void procWEPLcal(calStuff stuff, TVcorrection TVcal, Histogram2D *REhist[nStage], Histogram2D *dEEhist[nStage],
                  pCTgeo Geometry) {
   // Routine passed to multiple threads to process the WEPL calibration.
   // In principle it is a private method of the pCTcalib class, but the
   // compilers will not allow it
   // to be multithreaded if it is a class member.
 
-  cout << "Entering procWEPLcal for Nbricks=" << stuff.Nbricks
-       << ".  The list of histograms to fill is" << endl;
+  cout << "Entering procWEPLcal for Nbricks=" << stuff.Nbricks << ".  The list of histograms to fill is" << endl;
   for (int stage = 0; stage < nStage; ++stage) {
-    cout << stuff.Nbricks << " bricks, stage " << stage
-         << ", title=  " << REhist[stage]->Title() << endl;
+    cout << stuff.Nbricks << " bricks, stage " << stage << ", title=  " << REhist[stage]->Title() << endl;
   }
 
   TVcorrection *TVcorr = &TVcal;
-  EvtRecon *procEvt = new EvtRecon(
-      Geometry, TVcorr, stuff.inputFileName, stuff.Outputdir, stuff.max_events,
-      stuff.max_time, 0, 0, stuff.Nbricks, stuff.useTemp,
-      true, stuff.partType, stuff.pdstlr, stuff.reCalibrate,
-      stuff.OsName); // Process the raw data file to produce the event list
+  EvtRecon *procEvt =
+      new EvtRecon(Geometry, TVcorr, stuff.inputFileName, stuff.Outputdir, stuff.max_events, stuff.max_time, 0, 0,
+                   stuff.Nbricks, stuff.useTemp, true, stuff.partType, stuff.pdstlr, stuff.reCalibrate,
+                   stuff.OsName); // Process the raw data file to produce the event list
 
   double Ut[2], Uv[2], T[2], V[2];
   double Uft[2], Ufv[2], Tf[2], Vf[2];
@@ -205,32 +188,25 @@ void procWEPLcal(calStuff stuff, TVcorrection TVcal,
   cout << "Front tracker t: " << Uv[0] << " " << Uv[1] << endl;
   Histogram *hStgEcorr[nStage];
   for (int stage = 0; stage < nStage; ++stage) {
-    cout << "procWEPLcal " << stuff.Nbricks << ": Pedestal measured for stage "
-         << stage << " is " << procEvt->Peds[stage] << " ADC counts " << endl;
-    cout << "procWEPLcal " << stuff.Nbricks
-         << ": gain correction factor for stage " << stage << " is "
+    cout << "procWEPLcal " << stuff.Nbricks << ": Pedestal measured for stage " << stage << " is "
+         << procEvt->Peds[stage] << " ADC counts " << endl;
+    cout << "procWEPLcal " << stuff.Nbricks << ": gain correction factor for stage " << stage << " is "
          << procEvt->CorFacs[stage] << endl;
-    string Title = "nBricks= " + to_string((long long int)stuff.Nbricks) +
-                   " corrected energy for stage " +
+    string Title = "nBricks= " + to_string((long long int)stuff.Nbricks) + " corrected energy for stage " +
                    to_string((long long int)stage);
     if (stuff.partType == "H")
-      hStgEcorr[stage] =
-          new Histogram(400, 15., 0.175, Title, "Energy (MeV)", "protons");
+      hStgEcorr[stage] = new Histogram(400, 15., 0.175, Title, "Energy (MeV)", "protons");
     else
-      hStgEcorr[stage] =
-          new Histogram(400, 15., 0.7, Title, "Energy (MeV)", "He ions");
+      hStgEcorr[stage] = new Histogram(400, 15., 0.7, Title, "Energy (MeV)", "He ions");
   }
-  string Title = "nBricks " + to_string((long long int)stuff.Nbricks) +
-                 " sum of corrected stage energies";
+  string Title = "nBricks " + to_string((long long int)stuff.Nbricks) + " sum of corrected stage energies";
   Histogram *hTotEcorr;
   if (stuff.partType == "H")
     hTotEcorr = new Histogram(800, 0., 0.3, Title, "Energy (MeV)", "protons");
   else
     hTotEcorr = new Histogram(840, 0., 1.0, Title, "Energy (MeV)", "He ions");
-  Title = "nBricks " + to_string((long long int)stuff.Nbricks) +
-          " calibration phantom thickness";
-  ProfilePlot *hwt0Prof =
-      new ProfilePlot(100, -150, 3.0, Title, "T (mm)", "Thickness (mm)");
+  Title = "nBricks " + to_string((long long int)stuff.Nbricks) + " calibration phantom thickness";
+  ProfilePlot *hwt0Prof = new ProfilePlot(100, -150, 3.0, Title, "T (mm)", "Thickness (mm)");
 
   // Wedge phantom geometry and locations,
   double Tw1 = Geometry.getTWedgeBreaks(1);
@@ -238,26 +214,20 @@ void procWEPLcal(calStuff stuff, TVcorrection TVcal,
   double Tw3 = Geometry.getTWedgeBreaks(3);
   double Tw4 = Geometry.getTWedgeBreaks(4);
   double tBrickEnd = Geometry.getTWedgeBreaks(4);
-  double BrickThickness =
-      Geometry.getBrickThickness(); // Brick thickness; also the wedge thickness
+  double BrickThickness = Geometry.getBrickThickness(); // Brick thickness; also the wedge thickness
 
   double Ust[2]; // Polystyrene wedge phantom U coordinates, front and back
   Ust[0] = -2.5 * BrickThickness;
   Ust[1] = Ust[0] + BrickThickness;
   double Wbricks = BrickThickness * stuff.Nbricks;
-  double Uout =
-      Ust[1] + Wbricks; // U coordinate of the last brick, downstream side
-  cout << "procWEPLcal: The wedge phantom goes from u=" << Ust[0]
-       << " to u=" << Ust[1] << endl;
-  cout << "procWEPLcal: The " << stuff.Nbricks << " bricks go from u=" << Ust[1]
-       << " to u=" << Uout << endl;
-  cout << "procWEPLcal: Stage thresholds are " << stuff.Thr[0] << " "
-       << stuff.Thr[1] << " " << stuff.Thr[2] << " " << stuff.Thr[3] << " "
-       << stuff.Thr[4] << endl;
-  cout << "procWEPLcal: The wedge phantom break points are, in mm: " << Tw1
-       << ", " << Tw2 << ", " << Tw3 << ", " << Tw4 << endl;
-  cout << "procWEPLcal: The calibration brick thickness is " << BrickThickness
-       << " mm " << endl;
+  double Uout = Ust[1] + Wbricks; // U coordinate of the last brick, downstream side
+  cout << "procWEPLcal: The wedge phantom goes from u=" << Ust[0] << " to u=" << Ust[1] << endl;
+  cout << "procWEPLcal: The " << stuff.Nbricks << " bricks go from u=" << Ust[1] << " to u=" << Uout << endl;
+  cout << "procWEPLcal: Stage thresholds are " << stuff.Thr[0] << " " << stuff.Thr[1] << " " << stuff.Thr[2] << " "
+       << stuff.Thr[3] << " " << stuff.Thr[4] << endl;
+  cout << "procWEPLcal: The wedge phantom break points are, in mm: " << Tw1 << ", " << Tw2 << ", " << Tw3 << ", " << Tw4
+       << endl;
+  cout << "procWEPLcal: The calibration brick thickness is " << BrickThickness << " mm " << endl;
 
   float cut0, cut1, cut3; // energy cuts to reject events incompatible with
                           // expected Bragg peak.
@@ -277,11 +247,10 @@ void procWEPLcal(calStuff stuff, TVcorrection TVcal,
   double deltaInt = 20.; // intercept and slope to calculate maximum difference
                          // in V or T vs stage number
   double deltaSlope = 30.;
-  double tEmpty =
-      30.; // t location of center of range for selecting empty events
+  double tEmpty = 30.;      // t location of center of range for selecting empty events
   double eMin4Empty = 40.0; // minimum energy in stage 4 for an empty event
-  double brickC = 6.5; // Distance in t from wedge for center of range to take
-                       // protons through bricks only
+  double brickC = 6.5;      // Distance in t from wedge for center of range to take
+                            // protons through bricks only
 
   float mxEstage;
   if (stuff.partType == "He") {
@@ -318,8 +287,7 @@ void procWEPLcal(calStuff stuff, TVcorrection TVcal,
 
       // Apply the pedestals and TV correction to the stage ADC values
       bool inBounds;
-      eStage[stage] = procEvt->CorFacs[stage] *
-                      TVcal.corrFactor(stage, Tcorr, Vcorr, inBounds) *
+      eStage[stage] = procEvt->CorFacs[stage] * TVcal.corrFactor(stage, Tcorr, Vcorr, inBounds) *
                       (thisEvent.ADC[stage] - procEvt->Peds[stage]);
       if (!inBounds || eStage[stage] > mxEstage) {
         good = false;
@@ -342,32 +310,26 @@ void procWEPLcal(calStuff stuff, TVcorrection TVcal,
     // if (dropEvt) continue;
 
     // calculate geometric WET "wt0" for the wedge phantom using tracker info.
-    double Uin =
-        Ust[0]; // First estimate of the u coordinate at entry into the phantom
-    double Tin = Geometry.extrap2D(
-        Uft, Tf, Uin); // extrapolate the front track to the phantom entrance
+    double Uin = Ust[0];                          // First estimate of the u coordinate at entry into the phantom
+    double Tin = Geometry.extrap2D(Uft, Tf, Uin); // extrapolate the front track to the phantom entrance
     double Vin = Geometry.extrap2D(Ufv, Vf, Uin);
-    double TinB = Geometry.extrap2D(
-        Uft, Tf, Ust[1]); // extrapolate to the front of the first brick
+    double TinB = Geometry.extrap2D(Uft, Tf, Ust[1]); // extrapolate to the front of the first brick
     double VinB = Geometry.extrap2D(Ufv, Vf, Ust[1]);
     if (fabs(Vin) > maxV || fabs(Tin) > maxT)
       continue; // if track is outside of FOW - skip it
 
-    double Tout = Geometry.extrap2D(
-        Ut, T, Uout); // extrapolate rear track to back of phantom
+    double Tout = Geometry.extrap2D(Ut, T, Uout); // extrapolate rear track to back of phantom
     double Vout = Geometry.extrap2D(Uv, V, Uout);
 
     if (fabs(Vout) > maxV ||
-        fabs(Tout) >
-            maxT /*|| fabs(TinB-Tout) > deltaInt + deltaSlope*sqrt(float(stuff.Nbricks))*/)
+        fabs(Tout) > maxT /*|| fabs(TinB-Tout) > deltaInt + deltaSlope*sqrt(float(stuff.Nbricks))*/)
       continue; // skip scattered protons //NO SCATTERING FILTER NEEDED
 
     bool emptyEvt = false;
     int cs;
 
     if ((Tin > Tw2 && Tin < Tw3) || (TinB < Tw1) ||
-        (TinB >
-         Tw4)) { // ONLY WEDGE SLOPE TO BE USED EVERYTHING ELSE CREATES ISSUES!
+        (TinB > Tw4)) { // ONLY WEDGE SLOPE TO BE USED EVERYTHING ELSE CREATES ISSUES!
       if (TinB > tBrickEnd)
         emptyEvt = true;
       cs = 1;
@@ -402,19 +364,16 @@ void procWEPLcal(calStuff stuff, TVcorrection TVcal,
     FLAT BRICKS NOT USED ANYMORE***************/
     else if (TinB >= Tw1 && Tin <= Tw2) { // in the -t wedge of the phantom; Uin
                                           // and Tin get overwritten here
-      if (getLineIntersection(procEvt->uhitT[0], thisEvent.Thit[0],
-                              procEvt->uhitT[1], thisEvent.Thit[1],
+      if (getLineIntersection(procEvt->uhitT[0], thisEvent.Thit[0], procEvt->uhitT[1], thisEvent.Thit[1],
                               Uin + BrickThickness, Tw1, Uin, Tw2, Uin, Tin)) {
         Vin = Geometry.extrap2D(Ufv, Vf, Uin);
         cs = 4;
       } else
         continue;
-    } else if (Tin >= Tw3 &&
-               TinB <= Tw4) { //&& Tout<tBrickEnd) {    // in the +t wedge of
-                              //the phantom; Uin and Tin get overwritten here
-                              //ALSO EXCLUDE PARTICLES THAT LEFT THE BRICKS
-      if (getLineIntersection(procEvt->uhitT[0], thisEvent.Thit[0],
-                              procEvt->uhitT[1], thisEvent.Thit[1], Uin, Tw3,
+    } else if (Tin >= Tw3 && TinB <= Tw4) { //&& Tout<tBrickEnd) {    // in the +t wedge of
+      // the phantom; Uin and Tin get overwritten here
+      // ALSO EXCLUDE PARTICLES THAT LEFT THE BRICKS
+      if (getLineIntersection(procEvt->uhitT[0], thisEvent.Thit[0], procEvt->uhitT[1], thisEvent.Thit[1], Uin, Tw3,
                               Uin + BrickThickness, Tw4, Uin, Tin)) {
         Vin = Geometry.extrap2D(Ufv, Vf, Uin);
         // if (stuff.Nbricks == 0 || (Tw4-TinB)>0.0) {  // stay away from the
@@ -567,8 +526,7 @@ void procWEPLcal(calStuff stuff, TVcorrection TVcal,
 
   } // End of the event loop
 
-  string histFileName = stuff.Outputdir + "/runCorrEnrgs_" +
-                        to_string((long long int)stuff.Nbricks) + ".gp";
+  string histFileName = stuff.Outputdir + "/runCorrEnrgs_" + to_string((long long int)stuff.Nbricks) + ".gp";
   FILE *oFile = fopen(histFileName.c_str(), "w");
   string setTerm;
   if (stuff.OsName == "Windows")
@@ -585,8 +543,7 @@ void procWEPLcal(calStuff stuff, TVcorrection TVcal,
       int ret = hStgEcorr[stage]->FWHMboundaries(xLow, xHigh);
       if (ret == 0) {
         float peak = hStgEcorr[stage]->mean(xLow, xHigh);
-        fprintf(oFile, "#Energy peak for stage %d is at E=%9.3f\n", stage,
-                peak);
+        fprintf(oFile, "#Energy peak for stage %d is at E=%9.3f\n", stage, peak);
       }
     }
     int ret = hTotEcorr->FWHMboundaries(xLow, xHigh);
@@ -616,16 +573,14 @@ void procWEPLcal(calStuff stuff, TVcorrection TVcal,
      << endl;}
       }
   */
-  histFileName = stuff.Outputdir + "/Phantom_" +
-                 to_string((long long int)stuff.Nbricks) + ".gp";
+  histFileName = stuff.Outputdir + "/Phantom_" + to_string((long long int)stuff.Nbricks) + ".gp";
   oFile = fopen(histFileName.c_str(), "w");
   if (oFile != NULL) {
     hwt0Prof->plot(oFile);
   } else {
     cout << "Unable to open the profile plot file " << histFileName << endl;
   }
-  hwt0Prof->print(stuff.Outputdir + "/Phantom_" +
-                  to_string((long long int)stuff.Nbricks) + ".txt");
+  hwt0Prof->print(stuff.Outputdir + "/Phantom_" + to_string((long long int)stuff.Nbricks) + ".txt");
 
   delete (procEvt);
   delete (hTotEcorr);
@@ -633,21 +588,16 @@ void procWEPLcal(calStuff stuff, TVcorrection TVcal,
     delete (hStgEcorr[stage]);
 };
 
-pCTcalib::pCTcalib(string inputFileName, string Outputdir, int max_events,
-                   int max_time, int n_debug, int n_plot, 
-                   bool useTemp, string version, string WcalibFile,
-                   string TVcorrFile, string minDate, string maxDate,
-                   int minRun, int maxRun, double tWedgeOffset, string partType,
-                   int pdstlr[5], bool realTimeCal, std::string OsName,
-                   bool redo, bool normalise) {
+pCTcalib::pCTcalib(string inputFileName, string Outputdir, int max_events, int max_time, int n_debug, int n_plot,
+                   bool useTemp, string version, string WcalibFile, string TVcorrFile, string minDate, string maxDate,
+                   int minRun, int maxRun, double tWedgeOffset, string partType, int pdstlr[5], bool realTimeCal,
+                   std::string OsName, bool redo, bool normalise) {
 
   cout << "\nEntering pCTcalib, the constructor for the pCT calibration "
           "program, version " << version << endl;
   if (redo)
-    cout << "This run will only analyze the existing calibration histograms."
-         << endl;
-  cout << "Filename for the list of calibration data files = " << inputFileName
-       << endl;
+    cout << "This run will only analyze the existing calibration histograms." << endl;
+  cout << "Filename for the list of calibration data files = " << inputFileName << endl;
   cout << "The output directory is " << Outputdir << endl;
   cout << "The maximum number of events is " << max_events << endl;
   cout << "The maximum time is " << max_time << endl;
@@ -659,15 +609,13 @@ pCTcalib::pCTcalib(string inputFileName, string Outputdir, int max_events,
   cout << "The input TV correction calibration file is " << TVcorrFile << endl;
   cout << "Input date range = " << minDate << " to " << maxDate << endl;
   cout << "The input run range is " << minRun << " to " << maxRun << endl;
-  cout << "The calibration wedge offset is assumed to be " << tWedgeOffset
-       << endl;
+  cout << "The calibration wedge offset is assumed to be " << tWedgeOffset << endl;
   cout << "The particle type is assumed to be " << partType << endl;
   cout << "Real-time pedestal and gain recalibration is done? " << realTimeCal << endl;
   cout << "The operating system is " << OsName << endl;
   for (int stage = 0; stage < nStage; ++stage) {
-    cout << "  For stage " << stage
-         << " the range in which to look for pedestals begins at "
-         << pdstlr[stage] << " ADC counts " << endl;
+    cout << "  For stage " << stage << " the range in which to look for pedestals begins at " << pdstlr[stage]
+         << " ADC counts " << endl;
   }
   CalFile = inputFileName;
   this->normalise = normalise;
@@ -771,19 +719,18 @@ pCTcalib::pCTcalib(string inputFileName, string Outputdir, int max_events,
     i2[1] = 240;
     i2[0] = 242;
   } else {
-   // NO EXTRAPOLATION
-      i1[4] = 200;
-      i1[3] = 288;
-      i1[2] = 288;
-      i1[1] = 280;
-      i1[0] = 280;
-      i3 = 330;
-      i2[4] = 240;
-      i2[3] = 304;
-      i2[2] = 304;
-      i2[1] = 292;
-      i2[0] = 292;
-      
+    // NO EXTRAPOLATION
+    i1[4] = 200;
+    i1[3] = 288;
+    i1[2] = 288;
+    i1[1] = 280;
+    i1[0] = 280;
+    i3 = 330;
+    i2[4] = 240;
+    i2[3] = 304;
+    i2[2] = 304;
+    i2[1] = 292;
+    i2[0] = 292;
   }
 
   if (partType == "H") {
@@ -794,8 +741,7 @@ pCTcalib::pCTcalib(string inputFileName, string Outputdir, int max_events,
     EG4stage[3] = 42.62;
     EG4stage[4] = 67.71;
   } else {
-    EG4stage[0] =
-        100.; // MC derived stage energies, used to calibrate to MeV for He
+    EG4stage[0] = 100.; // MC derived stage energies, used to calibrate to MeV for He
     EG4stage[1] = 111.;
     EG4stage[2] = 129.;
     EG4stage[3] = 166.;
@@ -813,8 +759,7 @@ pCTcalib::pCTcalib(string inputFileName, string Outputdir, int max_events,
   brickW = 0.30;  // half width of range in t for brick-only protons
   emptyW = 2.0;   // half width of range in t for empty protons
 
-  cout << "pCTcalib: reading the list of raw data file names from " << CalFile
-       << endl;
+  cout << "pCTcalib: reading the list of raw data file names from " << CalFile << endl;
   cout << "pCTcalib: the list of raw data file names for calibration is as "
           "follows:" << endl;
   int linecount = 0;
@@ -832,12 +777,10 @@ pCTcalib::pCTcalib(string inputFileName, string Outputdir, int max_events,
         FILE *cFile;
         cFile = fopen(vfn.c_str(), "r");
         if (cFile == NULL) {
-          cout << "Cannot open the calibration raw data file '" << line << "' "
-               << endl;
+          cout << "Cannot open the calibration raw data file '" << line << "' " << endl;
           exit(3);
         }
-        cout << "Calibration raw data file name " << linecount << " is " << vfn
-             << endl;
+        cout << "Calibration raw data file name " << linecount << " is " << vfn << endl;
         calFileNames.push_back(line);
         fclose(cFile);
         linecount++;
@@ -870,8 +813,7 @@ pCTcalib::pCTcalib(string inputFileName, string Outputdir, int max_events,
               break;
             }
             k1[i] = ival;
-            cout << "   pCTcalib: setting calibration parameter k1[" << i
-                 << "]=" << k1[i] << endl;
+            cout << "   pCTcalib: setting calibration parameter k1[" << i << "]=" << k1[i] << endl;
           }
         } else if (key == "j1" || key == "J1") {
           for (int i = 0; i < nStage; i++) {
@@ -883,8 +825,7 @@ pCTcalib::pCTcalib(string inputFileName, string Outputdir, int max_events,
               break;
             }
             j1[i] = ival;
-            cout << "   pCTcalib: setting calibration parameter j1[" << i
-                 << "]=" << j1[i] << endl;
+            cout << "   pCTcalib: setting calibration parameter j1[" << i << "]=" << j1[i] << endl;
           }
         } else if (key == "j2" || key == "J2") {
           for (int i = 0; i < nStage; i++) {
@@ -896,8 +837,7 @@ pCTcalib::pCTcalib(string inputFileName, string Outputdir, int max_events,
               break;
             }
             j2[i] = ival;
-            cout << "   pCTcalib: setting calibration parameter j2[" << i
-                 << "]=" << j2[i] << endl;
+            cout << "   pCTcalib: setting calibration parameter j2[" << i << "]=" << j2[i] << endl;
           }
         } else if (key == "j3" || key == "J3") {
           for (int i = 0; i < nStage; i++) {
@@ -909,8 +849,7 @@ pCTcalib::pCTcalib(string inputFileName, string Outputdir, int max_events,
               break;
             }
             j3[i] = ival;
-            cout << "   pCTcalib: setting calibration parameter j3[" << i
-                 << "]=" << j3[i] << endl;
+            cout << "   pCTcalib: setting calibration parameter j3[" << i << "]=" << j3[i] << endl;
           }
         } else if (key == "j4" || key == "J4") {
           for (int i = 0; i < nStage; i++) {
@@ -922,8 +861,7 @@ pCTcalib::pCTcalib(string inputFileName, string Outputdir, int max_events,
               break;
             }
             j4[i] = ival;
-            cout << "   pCTcalib: setting calibration parameter j4[" << i
-                 << "]=" << j4[i] << endl;
+            cout << "   pCTcalib: setting calibration parameter j4[" << i << "]=" << j4[i] << endl;
           }
         } else if (key == "i1" || key == "I1") {
           for (int i = 0; i < nStage; i++) {
@@ -935,8 +873,7 @@ pCTcalib::pCTcalib(string inputFileName, string Outputdir, int max_events,
               break;
             }
             i1[i] = ival;
-            cout << "   pCTcalib: setting calibration parameter i1[" << i
-                 << "]=" << i1[i] << endl;
+            cout << "   pCTcalib: setting calibration parameter i1[" << i << "]=" << i1[i] << endl;
           }
         } else if (key == "i2" || key == "I2") {
           for (int i = 0; i < nStage; i++) {
@@ -948,14 +885,12 @@ pCTcalib::pCTcalib(string inputFileName, string Outputdir, int max_events,
               break;
             }
             i2[i] = ival;
-            cout << "   pCTcalib: setting calibration parameter i2[" << i
-                 << "]=" << i2[i] << endl;
+            cout << "   pCTcalib: setting calibration parameter i2[" << i << "]=" << i2[i] << endl;
           }
         } else if (key == "i3" || key == "I3") {
           line = line.substr(sz);
           i3 = stoi(line, &sz);
-          cout << "   pCTcalib: setting calibration parameter i3=" << i3
-               << endl;
+          cout << "   pCTcalib: setting calibration parameter i3=" << i3 << endl;
         } else if (key == "EG4stage" || key == "EG4STAGE") {
           for (int i = 0; i < nStage; i++) {
             line = line.substr(sz);
@@ -966,8 +901,7 @@ pCTcalib::pCTcalib(string inputFileName, string Outputdir, int max_events,
               break;
             }
             EG4stage[i] = val;
-            cout << "   pCTcalib: setting calibration parameter EG4stage[" << i
-                 << "]=" << EG4stage[i] << endl;
+            cout << "   pCTcalib: setting calibration parameter EG4stage[" << i << "]=" << EG4stage[i] << endl;
           }
         } else if (key == "topW" || key == "TOPW" || key == "topw") {
           for (int i = 0; i < 2; i++) {
@@ -979,8 +913,7 @@ pCTcalib::pCTcalib(string inputFileName, string Outputdir, int max_events,
               break;
             }
             topW[i] = val;
-            cout << "   pCTcalib: setting calibration parameter topW[" << i
-                 << "]=" << topW[i] << endl;
+            cout << "   pCTcalib: setting calibration parameter topW[" << i << "]=" << topW[i] << endl;
           }
         } else if (key == "brickW" || key == "BRICKW" || key == "brickw") {
           line = line.substr(sz);
@@ -991,8 +924,7 @@ pCTcalib::pCTcalib(string inputFileName, string Outputdir, int max_events,
             break;
           }
           brickW = val;
-          cout << "   pCTcalib: setting calibration parameter brickW = "
-               << brickW << endl;
+          cout << "   pCTcalib: setting calibration parameter brickW = " << brickW << endl;
         } else if (key == "emptyW" || key == "EMPTYW" || key == "emptyw") {
           line = line.substr(sz);
           try {
@@ -1002,8 +934,7 @@ pCTcalib::pCTcalib(string inputFileName, string Outputdir, int max_events,
             break;
           }
           emptyW = val;
-          cout << "   pCTcalib: setting calibration parameter emptyW = "
-               << emptyW << endl;
+          cout << "   pCTcalib: setting calibration parameter emptyW = " << emptyW << endl;
         }
       }
     }
@@ -1013,8 +944,7 @@ pCTcalib::pCTcalib(string inputFileName, string Outputdir, int max_events,
       return;
     }
   } else {
-    cout << "Failed to open the list of calibration files in " << CalFile
-         << endl;
+    cout << "Failed to open the list of calibration files in " << CalFile << endl;
     return;
   }
   infile.close();
@@ -1026,12 +956,10 @@ pCTcalib::pCTcalib(string inputFileName, string Outputdir, int max_events,
   cout << "The beam particle type is " << partType << endl;
   float EG4tot = 0.;
   for (int i = 0; i < nStage; ++i) {
-    cout << "MC derived stage energy for an empty event, for stage " << i
-         << " is " << EG4stage[i] << endl;
+    cout << "MC derived stage energy for an empty event, for stage " << i << " is " << EG4stage[i] << endl;
     EG4tot += EG4stage[i];
   }
-  cout << "MC derived total energy for an empty event is " << EG4tot << endl
-       << endl;
+  cout << "MC derived total energy for an empty event is " << EG4tot << endl << endl;
 
   for (int i = 0; i < 4; ++i) {
     for (int j = 0; j < 4; ++j) {
@@ -1047,32 +975,26 @@ pCTcalib::pCTcalib(string inputFileName, string Outputdir, int max_events,
   now = localtime(&currentTime);
 
   Geometry = new pCTgeo(tWedgeOffset); // Create a class instance
-                                                   // with all of the geometry
-                                                   // information
+                                       // with all of the geometry
+                                       // information
 
-  TVcal = new TVcorrection(TVcorrFile.c_str(), 0, 0, 0,
-                           0); // The constants read in are not used in this
-                               // round, but we need to pass the object to
-                               // procEvt
+  TVcal = new TVcorrection(TVcorrFile.c_str(), 0, 0, 0, 0); // The constants read in are not used in this
+                                                            // round, but we need to pass the object to
+                                                            // procEvt
 
   pCTgeo GeoInst = *Geometry;
   if (!redo) {
-    procEvt = new EvtRecon(
-        GeoInst, TVcal, calFileNames[0], Outputdir, max_events, max_time,
-        n_debug, n_plot, 5, useTemp, false, partType, pdstlr,
-        realTimeCal,
-        OsName); // Process the raw data file to produce the event list
+    procEvt = new EvtRecon(GeoInst, TVcal, calFileNames[0], Outputdir, max_events, max_time, n_debug, n_plot, 5,
+                           useTemp, false, partType, pdstlr, realTimeCal,
+                           OsName); // Process the raw data file to produce the event list
     Ut[0] = procEvt->uhitT[2];
     Ut[1] = procEvt->uhitT[3];
     Uv[0] = procEvt->uhitV[2];
     Uv[1] = procEvt->uhitV[3];
-    cout << "pCTcalib: U values for T coordinates = " << Ut[0] << " and "
-         << Ut[1] << endl;
-    cout << "pCTcalib: U values for V coordinates = " << Uv[0] << " and "
-         << Uv[1] << endl;
+    cout << "pCTcalib: U values for T coordinates = " << Ut[0] << " and " << Ut[1] << endl;
+    cout << "pCTcalib: U values for V coordinates = " << Uv[0] << " and " << Uv[1] << endl;
     for (int stage = 0; stage < nStage; ++stage) {
-      cout << "Pedestal measured for stage " << stage << " is "
-           << procEvt->Peds[stage] << " ADC counts " << endl;
+      cout << "Pedestal measured for stage " << stage << " is " << procEvt->Peds[stage] << " ADC counts " << endl;
     }
   }
 
@@ -1085,8 +1007,7 @@ int pCTcalib::TVmapper() {
   }
 
   if (calFileNames.size() == 0) {
-    cout << "TVmaper: only " << calFileNames.size()
-         << " calibration file names found.  Need at least 1 for the TV map."
+    cout << "TVmaper: only " << calFileNames.size() << " calibration file names found.  Need at least 1 for the TV map."
          << endl;
     return -2;
   }
@@ -1096,22 +1017,17 @@ int pCTcalib::TVmapper() {
     for (int pix = 0; pix < nPix; pix++) {
       int tPix = pix / 10;
       int vPix = pix % 10;
-      string Title = "Stage " + to_string((long long int)Stage) + ", Pixel " +
-                     to_string((long long int)pix) + "; tPix=" +
-                     to_string((long long int)tPix) + " vPix=" +
-                     to_string((long long int)vPix);
+      string Title = "Stage " + to_string((long long int)Stage) + ", Pixel " + to_string((long long int)pix) +
+                     "; tPix=" + to_string((long long int)tPix) + " vPix=" + to_string((long long int)vPix);
       if (partType == "H") {
-        pxHistADC[Stage][pix] = new Histogram(2000, bin0[Stage], 4., Title,
-                                              "ADC counts", "protons");
+        pxHistADC[Stage][pix] = new Histogram(2000, bin0[Stage], 4., Title, "ADC counts", "protons");
       } else {
-        pxHistADC[Stage][pix] = new Histogram(2000, bin0[Stage], 8., Title,
-                                              "ADC counts", "He ions");
+        pxHistADC[Stage][pix] = new Histogram(2000, bin0[Stage], 8., Title, "ADC counts", "He ions");
       }
     }
   }
-  Histogram2D hTVmap(150, -150., 2., 80, -40., 1.,
-                     "V vs T distribution of tracks at energy detector",
-                     "T (mm)", "V (mm)", "N");
+  Histogram2D hTVmap(150, -150., 2., 80, -40., 1., "V vs T distribution of tracks at energy detector", "T (mm)",
+                     "V (mm)", "N");
 
   if (procEvt->useTmpFile)
     procEvt->reopenTmpFile();
@@ -1133,10 +1049,8 @@ int pCTcalib::TVmapper() {
 
     for (int stage = 0; stage < nStage; stage++) {
       // Extrapolate the rear track vector to the energy detector stage
-      double Tcorr =
-          Geometry->extrap2D(Ut, T, Geometry->energyDetectorU(stage));
-      double Vcorr =
-          Geometry->extrap2D(Uv, V, Geometry->energyDetectorU(stage));
+      double Tcorr = Geometry->extrap2D(Ut, T, Geometry->energyDetectorU(stage));
+      double Vcorr = Geometry->extrap2D(Uv, V, Geometry->energyDetectorU(stage));
       if (fabs(Tcorr) > 189.0)
         continue;
       if (fabs(Vcorr) > 49.0)
@@ -1147,8 +1061,7 @@ int pCTcalib::TVmapper() {
       int vPix = floor(0.1 * (Vcorr + 50.));
       int iPix = vPix + 10 * tPix;
       if (EvtNum % 1000000 == 0) {
-        cout << "TVmapper: Stage " << stage << ", Tcorr=" << Tcorr
-             << ", Vcorr=" << Vcorr << ", pixel number = ";
+        cout << "TVmapper: Stage " << stage << ", Tcorr=" << Tcorr << ", Vcorr=" << Vcorr << ", pixel number = ";
         cout << iPix << " U=" << Geometry->energyDetectorU(stage) << endl;
       }
       hTVmap.entry(Tcorr, Vcorr);
@@ -1157,11 +1070,10 @@ int pCTcalib::TVmapper() {
         perror("pCTcalib: invalid pixel");
         iPix = 0;
       }
-      pxHistADC[stage][iPix]->entry(thisEvent.ADC[stage] -
-                                    procEvt->Peds[stage]); // Histogram the raw
-                                                           // ADC minus pedestal
-                                                           // in each pixel of
-                                                           // each stage
+      pxHistADC[stage][iPix]->entry(thisEvent.ADC[stage] - procEvt->Peds[stage]); // Histogram the raw
+                                                                                  // ADC minus pedestal
+                                                                                  // in each pixel of
+                                                                                  // each stage
     }
   }
 
@@ -1170,9 +1082,8 @@ int pCTcalib::TVmapper() {
   if (n_plot > 0) {
     for (int stage = 0; stage < nStage; stage++) {
       for (int hst = 0; hst < nPix / 9 + 1; ++hst) {
-        string fileName = Outputdir + "/ADC_Stage_" +
-                          to_string((long long int)stage) + "_" +
-                          to_string((long long int)hst) + ".gp";
+        string fileName =
+            Outputdir + "/ADC_Stage_" + to_string((long long int)stage) + "_" + to_string((long long int)hst) + ".gp";
         oFile = fopen(fileName.c_str(), "w");
         if (oFile != NULL) {
           fprintf(oFile, setTerm.c_str());
@@ -1189,8 +1100,7 @@ int pCTcalib::TVmapper() {
           fprintf(oFile, "unset label\n");
           fclose(oFile);
         } else {
-          cout << "TVmapper: unable to open the ADC histogram file " << fileName
-               << endl;
+          cout << "TVmapper: unable to open the ADC histogram file " << fileName << endl;
         }
       }
     }
@@ -1208,13 +1118,11 @@ int pCTcalib::TVmapper() {
     cout << "TVmapper pixel stage ADC values:  " << pix;
     for (int stage = 0; stage < nStage; stage++) {
       float xLow, xHigh;
-      int ret = pxHistADC[stage][pix]->FWHMboundaries(
-          xLow, xHigh); // Find the full-width-half-max upper and lower bounds
+      int ret =
+          pxHistADC[stage][pix]->FWHMboundaries(xLow, xHigh); // Find the full-width-half-max upper and lower bounds
       if (ret == 0) {
-        float Sadc = pxHistADC[stage][pix]->mean(
-            xLow, xHigh); // Evaluate the histogram mean between those bounds
-        TVmap[stage][pix] =
-            EG4stage[stage] / Sadc; // Correction factor and conversion to MeV
+        float Sadc = pxHistADC[stage][pix]->mean(xLow, xHigh); // Evaluate the histogram mean between those bounds
+        TVmap[stage][pix] = EG4stage[stage] / Sadc;            // Correction factor and conversion to MeV
         cout << "  stg" << stage << "=" << Sadc;
       } else {
         TVmap[stage][pix] = 0.999;
@@ -1238,42 +1146,28 @@ void pCTcalib::enrgDep() { // Calculate energy depositions in each stage and
     return;
   }
   for (int stage = 0; stage < nStage; ++stage) {
-    string Title =
-        "pCTcalib::enrgDep Energy of stage " + to_string((long long int)stage);
+    string Title = "pCTcalib::enrgDep Energy of stage " + to_string((long long int)stage);
     if (partType == "H")
-      stgHistE[stage] =
-          new Histogram(400, 15., 0.175, Title, "E (MeV)", "protons");
+      stgHistE[stage] = new Histogram(400, 15., 0.175, Title, "E (MeV)", "protons");
     else
-      stgHistE[stage] =
-          new Histogram(400, 15., 0.7, Title, "E (MeV)", "He ions");
-    Title = "pCTcalib::enrgDep Energy of stage " +
-            to_string((long long int)stage) + " vs T";
-    stgEvsT[stage] =
-        new ProfilePlot(100, -150., 3.0, Title, "T (mm)", "E (MeV)");
-    Title = "pCTcalib::enrgDep Energy of stage " +
-            to_string((long long int)stage) + " vs V";
-    stgEvsV[stage] =
-        new ProfilePlot(100, -50., 1.0, Title, "V (mm)", "E (MeV)");
+      stgHistE[stage] = new Histogram(400, 15., 0.7, Title, "E (MeV)", "He ions");
+    Title = "pCTcalib::enrgDep Energy of stage " + to_string((long long int)stage) + " vs T";
+    stgEvsT[stage] = new ProfilePlot(100, -150., 3.0, Title, "T (mm)", "E (MeV)");
+    Title = "pCTcalib::enrgDep Energy of stage " + to_string((long long int)stage) + " vs V";
+    stgEvsV[stage] = new ProfilePlot(100, -50., 1.0, Title, "V (mm)", "E (MeV)");
   }
   if (partType == "H")
-    EsumH =
-        new Histogram(900, 0., 0.25, "pCTcalib::enrgDep Sum of stage energies",
-                      "Etot (MeV)", "protons");
+    EsumH = new Histogram(900, 0., 0.25, "pCTcalib::enrgDep Sum of stage energies", "Etot (MeV)", "protons");
   else
-    EsumH =
-        new Histogram(900, 0., 1.0, "pCTcalib::enrgDep Sum of stage energies",
-                      "Etot (MeV)", "He ions");
+    EsumH = new Histogram(900, 0., 1.0, "pCTcalib::enrgDep Sum of stage energies", "Etot (MeV)", "He ions");
   for (int iPix = 0; iPix < nPix; iPix++) {
     for (int stage = 0; stage < nStage; ++stage) {
-      string Title = "pCTcalib::enrgDep Energy of stage " +
-                     to_string((long long int)stage) + " for pixel " +
+      string Title = "pCTcalib::enrgDep Energy of stage " + to_string((long long int)stage) + " for pixel " +
                      to_string((long long int)iPix);
       if (partType == "H")
-        pxHistE[stage][iPix] =
-            new Histogram(200, 15., .35, Title, "E (MeV)", "protons");
+        pxHistE[stage][iPix] = new Histogram(200, 15., .35, Title, "E (MeV)", "protons");
       else
-        pxHistE[stage][iPix] =
-            new Histogram(200, 60., 1.4, Title, "E (MeV)", "He ions");
+        pxHistE[stage][iPix] = new Histogram(200, 60., 1.4, Title, "E (MeV)", "He ions");
     }
   }
 
@@ -1339,8 +1233,7 @@ void pCTcalib::enrgDep() { // Calculate energy depositions in each stage and
   nextEvt:
     ;
   }
-  cout << "pCTcalib::enrgDep, finished the loop over " << procEvt->nEvents
-       << " events." << endl;
+  cout << "pCTcalib::enrgDep, finished the loop over " << procEvt->nEvents << " events." << endl;
 
   for (int iPix = 0; iPix < nPix; ++iPix) {
     cout << "Corrected stage energies for pixel " << iPix;
@@ -1371,31 +1264,19 @@ void pCTcalib::enrgDep() { // Calculate energy depositions in each stage and
     stgHistE[3]->plot(oFile);
     fprintf(oFile, "set label 4 'Current date and time: %d-%d-%d    %d:%d' at "
                    "screen 0.55, 0.28\n",
-            now->tm_year + 1900, now->tm_mon + 1, now->tm_mday, now->tm_hour,
-            now->tm_min);
-    fprintf(oFile, "set label 5 'Run Number %d' at screen 0.55, 0.25 left\n",
-            procEvt->runNumber);
-    fprintf(oFile,
-            "set label 6 'FPGA Program Version %d' at screen 0.55, 0.22 left\n",
-            procEvt->program_version);
-    fprintf(
-        oFile,
-        "set label 7 'Stage Angle = %5.1f degrees' at screen 0.55, 0.19 left\n",
-        procEvt->stage_angle);
-    fprintf(oFile, "set label 8 'Start Time = %s ' at screen 0.55, 0.16 left\n",
-            procEvt->runStartTime.c_str());
-    fprintf(
-        oFile,
-        "set label 9 'Number of good events = %d' at screen 0.55, 0.13 left\n",
-        procEvt->nEvents);
+            now->tm_year + 1900, now->tm_mon + 1, now->tm_mday, now->tm_hour, now->tm_min);
+    fprintf(oFile, "set label 5 'Run Number %d' at screen 0.55, 0.25 left\n", procEvt->runNumber);
+    fprintf(oFile, "set label 6 'FPGA Program Version %d' at screen 0.55, 0.22 left\n", procEvt->program_version);
+    fprintf(oFile, "set label 7 'Stage Angle = %5.1f degrees' at screen 0.55, 0.19 left\n", procEvt->stage_angle);
+    fprintf(oFile, "set label 8 'Start Time = %s ' at screen 0.55, 0.16 left\n", procEvt->runStartTime.c_str());
+    fprintf(oFile, "set label 9 'Number of good events = %d' at screen 0.55, 0.13 left\n", procEvt->nEvents);
     stgHistE[4]->plot(oFile);
     fprintf(oFile, "unset multiplot\n");
     fprintf(oFile, "show label\n");
     fprintf(oFile, "unset label\n");
     fclose(oFile);
   } else {
-    cout << "pCTcalib::enrgDep Unable to open the stage energy histogram file "
-         << fileName << endl;
+    cout << "pCTcalib::enrgDep Unable to open the stage energy histogram file " << fileName << endl;
   }
 
   fileName = Outputdir + "/StageEvsT.gp";
@@ -1411,31 +1292,19 @@ void pCTcalib::enrgDep() { // Calculate energy depositions in each stage and
     stgEvsT[3]->plot(oFile);
     fprintf(oFile, "set label 4 'Current date and time: %d-%d-%d    %d:%d' at "
                    "screen 0.55, 0.28\n",
-            now->tm_year + 1900, now->tm_mon + 1, now->tm_mday, now->tm_hour,
-            now->tm_min);
-    fprintf(oFile, "set label 5 'Run Number %d' at screen 0.55, 0.25 left\n",
-            procEvt->runNumber);
-    fprintf(oFile,
-            "set label 6 'FPGA Program Version %d' at screen 0.55, 0.22 left\n",
-            procEvt->program_version);
-    fprintf(
-        oFile,
-        "set label 7 'Stage Angle = %5.1f degrees' at screen 0.55, 0.19 left\n",
-        procEvt->stage_angle);
-    fprintf(oFile, "set label 8 'Start Time = %s ' at screen 0.55, 0.16 left\n",
-            procEvt->runStartTime.c_str());
-    fprintf(
-        oFile,
-        "set label 9 'Number of good events = %d' at screen 0.55, 0.13 left\n",
-        procEvt->nEvents);
+            now->tm_year + 1900, now->tm_mon + 1, now->tm_mday, now->tm_hour, now->tm_min);
+    fprintf(oFile, "set label 5 'Run Number %d' at screen 0.55, 0.25 left\n", procEvt->runNumber);
+    fprintf(oFile, "set label 6 'FPGA Program Version %d' at screen 0.55, 0.22 left\n", procEvt->program_version);
+    fprintf(oFile, "set label 7 'Stage Angle = %5.1f degrees' at screen 0.55, 0.19 left\n", procEvt->stage_angle);
+    fprintf(oFile, "set label 8 'Start Time = %s ' at screen 0.55, 0.16 left\n", procEvt->runStartTime.c_str());
+    fprintf(oFile, "set label 9 'Number of good events = %d' at screen 0.55, 0.13 left\n", procEvt->nEvents);
     stgEvsT[4]->plot(oFile);
     fprintf(oFile, "unset multiplot\n");
     fprintf(oFile, "show label\n");
     fprintf(oFile, "unset label\n");
     fclose(oFile);
   } else {
-    cout << "pCTcalib::enrgDep Unable to open the stage energy histogram file "
-         << fileName << endl;
+    cout << "pCTcalib::enrgDep Unable to open the stage energy histogram file " << fileName << endl;
   }
 
   fileName = Outputdir + "/StageEvsV.gp";
@@ -1451,31 +1320,19 @@ void pCTcalib::enrgDep() { // Calculate energy depositions in each stage and
     stgEvsV[3]->plot(oFile);
     fprintf(oFile, "set label 4 'Current date and time: %d-%d-%d    %d:%d' at "
                    "screen 0.55, 0.28\n",
-            now->tm_year + 1900, now->tm_mon + 1, now->tm_mday, now->tm_hour,
-            now->tm_min);
-    fprintf(oFile, "set label 5 'Run Number %d' at screen 0.55, 0.25 left\n",
-            procEvt->runNumber);
-    fprintf(oFile,
-            "set label 6 'FPGA Program Version %d' at screen 0.55, 0.22 left\n",
-            procEvt->program_version);
-    fprintf(
-        oFile,
-        "set label 7 'Stage Angle = %5.1f degrees' at screen 0.55, 0.19 left\n",
-        procEvt->stage_angle);
-    fprintf(oFile, "set label 8 'Start Time = %s ' at screen 0.55, 0.16 left\n",
-            procEvt->runStartTime.c_str());
-    fprintf(
-        oFile,
-        "set label 9 'Number of good events = %d' at screen 0.55, 0.13 left\n",
-        procEvt->nEvents);
+            now->tm_year + 1900, now->tm_mon + 1, now->tm_mday, now->tm_hour, now->tm_min);
+    fprintf(oFile, "set label 5 'Run Number %d' at screen 0.55, 0.25 left\n", procEvt->runNumber);
+    fprintf(oFile, "set label 6 'FPGA Program Version %d' at screen 0.55, 0.22 left\n", procEvt->program_version);
+    fprintf(oFile, "set label 7 'Stage Angle = %5.1f degrees' at screen 0.55, 0.19 left\n", procEvt->stage_angle);
+    fprintf(oFile, "set label 8 'Start Time = %s ' at screen 0.55, 0.16 left\n", procEvt->runStartTime.c_str());
+    fprintf(oFile, "set label 9 'Number of good events = %d' at screen 0.55, 0.13 left\n", procEvt->nEvents);
     stgEvsV[4]->plot(oFile);
     fprintf(oFile, "unset multiplot\n");
     fprintf(oFile, "show label\n");
     fprintf(oFile, "unset label\n");
     fclose(oFile);
   } else {
-    cout << "pCTcalib::enrgDep Unable to open the stage energy histogram file "
-         << fileName << endl;
+    cout << "pCTcalib::enrgDep Unable to open the stage energy histogram file " << fileName << endl;
   }
 
   fileName = Outputdir + "/TotalEnergy.gp";
@@ -1483,8 +1340,7 @@ void pCTcalib::enrgDep() { // Calculate energy depositions in each stage and
   if (oFile != NULL) {
     EsumH->plot(oFile);
   } else {
-    cout << "pCTcalib::enrgDep Unable to open the total energy histogram file "
-         << fileName << endl;
+    cout << "pCTcalib::enrgDep Unable to open the total energy histogram file " << fileName << endl;
   }
 
   for (int stage = 0; stage < nStage; ++stage) {
@@ -1498,9 +1354,8 @@ void pCTcalib::enrgDep() { // Calculate energy depositions in each stage and
       cout << "pCTcalib::enrgDep, no data for stage " << stage << endl;
     }
     Est[stage] = Sadc;
-    cout << "pCTcalib::enrgDep, Energy in stage " << stage << " = "
-         << Est[stage] << "; dE=" << Est[stage] - EG4stage[stage] << " MeV"
-         << endl;
+    cout << "pCTcalib::enrgDep, Energy in stage " << stage << " = " << Est[stage]
+         << "; dE=" << Est[stage] - EG4stage[stage] << " MeV" << endl;
 
     delete stgHistE[stage];
     delete stgEvsT[stage];
@@ -1528,8 +1383,7 @@ void pCTcalib::writeTVfile() {
     cout << "pCTcalib::writeTVfile, doing nothing in this run." << endl;
     return;
   }
-  cout << "pCTcalib::writeTVfile, the TV calibration file will be opened in "
-       << Outputdir << endl;
+  cout << "pCTcalib::writeTVfile, the TV calibration file will be opened in " << Outputdir << endl;
   string TVfile = Outputdir + "/" + TVcorrFile;
   cout << "Opening TV correction file: " << TVfile << " for output." << endl;
 
@@ -1547,8 +1401,7 @@ void pCTcalib::writeTVfile() {
       exit(1);
     }
   }
-  TVcorrFile =
-      TVfile; // Update this path to be sure that Wcalib uses the same file.
+  TVcorrFile = TVfile; // Update this path to be sure that Wcalib uses the same file.
 
   for (int stage = 0; stage < nStage; ++stage) {
     for (int j = 0; j < nPix / 10; ++j) {
@@ -1574,15 +1427,12 @@ void pCTcalib::writeTVfile() {
   TVcalfile << "# maxDate = " << maxDate << endl;
   TVcalfile << "# minRun = " << minRun << endl;
   TVcalfile << "# maxRun = " << maxRun << endl;
-  TVcalfile << "# Date and time of this calibration run: "
-            << now->tm_year + 1900 << "-" << now->tm_mon + 1 << "-"
-            << now->tm_mday << "    " << now->tm_hour << ":" << now->tm_min
-            << endl;
+  TVcalfile << "# Date and time of this calibration run: " << now->tm_year + 1900 << "-" << now->tm_mon + 1 << "-"
+            << now->tm_mday << "    " << now->tm_hour << ":" << now->tm_min << endl;
   TVcalfile << "# This file was originally created in " << Outputdir
             << " directory. It contains TV correction maps evaluated" << endl;
   TVcalfile << "# using the 'empty' raw data file " << calFileNames[0] << endl;
-  TVcalfile << "# The pre-processing code version number is [" << programVersion
-            << "]" << endl;
+  TVcalfile << "# The pre-processing code version number is [" << programVersion << "]" << endl;
 
   TVcalfile.close();
 
@@ -1592,26 +1442,20 @@ void pCTcalib::writeTVfile() {
   delete procEvt;
 };
 
-int pCTcalib::Wcalib(float Thresholds[nStage], int pdstlr[nStage],
-                     int n_threads) {
+int pCTcalib::Wcalib(float Thresholds[nStage], int pdstlr[nStage], int n_threads) {
 
-  cout << endl
-       << "Entering pCTcalib::Wcalib to execute the WEPL calibration process"
-       << endl;
+  cout << endl << "Entering pCTcalib::Wcalib to execute the WEPL calibration process" << endl;
 
   if (calFileNames.size() != 6) {
-    cout << "Only " << calFileNames.size()
-         << " calibration raw data file names found.  Need all 6 to include "
-            "the WEPL calibration." << endl;
+    cout << "Only " << calFileNames.size() << " calibration raw data file names found.  Need all 6 to include "
+                                              "the WEPL calibration." << endl;
     return -1;
   }
   for (int nBricks = 0; nBricks < 5; nBricks++) {
-    cout << "The raw data file for " << nBricks << " bricks is "
-         << calFileNames[nBricks] << endl;
+    cout << "The raw data file for " << nBricks << " bricks is " << calFileNames[nBricks] << endl;
   }
 
-  cout << "pCTcalib::Wcalib: we will read TV correction constants from "
-       << TVcorrFile << endl;
+  cout << "pCTcalib::Wcalib: we will read TV correction constants from " << TVcorrFile << endl;
   TVcorrection TVcal(TVcorrFile.c_str(), 0, 0, 0, 0);
 
   struct {
@@ -1624,24 +1468,19 @@ int pCTcalib::Wcalib(float Thresholds[nStage], int pdstlr[nStage],
     for (int stage = 0; stage < nStage; ++stage) {
       float enrgB0 = 0.; // The analysis of energy slices further down assumes
                          // that the first energy bin starts at zero
-      string Title = "WEPL calibration array for stage " +
-                     to_string((long long int)stage) + " and nBricks=" +
+      string Title = "WEPL calibration array for stage " + to_string((long long int)stage) + " and nBricks=" +
                      to_string((long long int)nBricks);
-      string TitledEE = "dE-E spectra for stage" +
-                        to_string((long long int)stage) + " and nBricks=" +
+      string TitledEE = "dE-E spectra for stage" + to_string((long long int)stage) + " and nBricks=" +
                         to_string((long long int)nBricks);
-      dEEhist[nBricks].h[stage] = new Histogram2D(
-          nEnrg, 0., EnergyBinWidth, nEnrg, 0., EnergyBinWidth, TitledEE,
-          "Energy dE stage (MeV)", "Energy Bragg-peak stage (MeV)", "counts");
+      dEEhist[nBricks].h[stage] = new Histogram2D(nEnrg, 0., EnergyBinWidth, nEnrg, 0., EnergyBinWidth, TitledEE,
+                                                  "Energy dE stage (MeV)", "Energy Bragg-peak stage (MeV)", "counts");
 
       if (partType == "H")
-        REhist[nBricks].h[stage] = new Histogram2D(
-            nRange, 0., RangeBinWidth, nEnrg, enrgB0, EnergyBinWidth, Title,
-            "proton range (mm)", "energy (MeV)", "counts");
+        REhist[nBricks].h[stage] = new Histogram2D(nRange, 0., RangeBinWidth, nEnrg, enrgB0, EnergyBinWidth, Title,
+                                                   "proton range (mm)", "energy (MeV)", "counts");
       else
-        REhist[nBricks].h[stage] = new Histogram2D(
-            nRange, 0., RangeBinWidth, nEnrg, enrgB0, EnergyBinWidth, Title,
-            "He range (mm)", "energy (MeV)", "counts");
+        REhist[nBricks].h[stage] = new Histogram2D(nRange, 0., RangeBinWidth, nEnrg, enrgB0, EnergyBinWidth, Title,
+                                                   "He range (mm)", "energy (MeV)", "counts");
     }
   }
   calStuff stuff;
@@ -1671,11 +1510,9 @@ int pCTcalib::Wcalib(float Thresholds[nStage], int pdstlr[nStage],
       stuff.inputFileName = calFileNames[nBricks + 1];
       stuff.Nbricks = nBricks;
       if (n_threads <= 1)
-        procWEPLcal(stuff, TVcal, REhist[nBricks].h, dEEhist[nBricks].h,
-                    GeoInst);
+        procWEPLcal(stuff, TVcal, REhist[nBricks].h, dEEhist[nBricks].h, GeoInst);
       else
-        thr.push_back(thread(procWEPLcal, stuff, TVcal, REhist[nBricks].h,
-                             dEEhist[nBricks].h, GeoInst));
+        thr.push_back(thread(procWEPLcal, stuff, TVcal, REhist[nBricks].h, dEEhist[nBricks].h, GeoInst));
     }
     stuff.inputFileName = calFileNames[1];
     stuff.Nbricks = 0;
@@ -1690,8 +1527,7 @@ int pCTcalib::Wcalib(float Thresholds[nStage], int pdstlr[nStage],
     // Debug printout of some histogram projections
     if (n_plot > 0) {
       for (int nBricks = 0; nBricks < 5; ++nBricks) {
-        string fn =
-            Outputdir + "/Eproj_" + to_string((long long int)nBricks) + ".gp";
+        string fn = Outputdir + "/Eproj_" + to_string((long long int)nBricks) + ".gp";
         FILE *oFile = fopen(fn.c_str(), "w");
         if (oFile != NULL) {
           fprintf(oFile, setTerm.c_str());
@@ -1715,8 +1551,8 @@ int pCTcalib::Wcalib(float Thresholds[nStage], int pdstlr[nStage],
     // later
     for (int stage = 0; stage < nStage; ++stage) {
       for (int nBricks = 0; nBricks < 5; ++nBricks) {
-        string fn = Outputdir + "/calMap2D_" + to_string((long long int)stage) +
-                    "_B" + to_string((long long int)nBricks) + ".gp";
+        string fn = Outputdir + "/calMap2D_" + to_string((long long int)stage) + "_B" +
+                    to_string((long long int)nBricks) + ".gp";
         FILE *oFile = fopen(fn.c_str(), "w");
         if (oFile != NULL) {
           REhist[nBricks].h[stage]->plot(oFile);
@@ -1729,8 +1565,8 @@ int pCTcalib::Wcalib(float Thresholds[nStage], int pdstlr[nStage],
             "already generated." << endl;
     for (int stage = 0; stage < nStage; ++stage) {
       for (int nBricks = 0; nBricks < 5; ++nBricks) {
-        string fn = Outputdir + "/calMap2D_" + to_string((long long int)stage) +
-                    "_B" + to_string((long long int)nBricks) + ".gp";
+        string fn = Outputdir + "/calMap2D_" + to_string((long long int)stage) + "_B" +
+                    to_string((long long int)nBricks) + ".gp";
         REhist[nBricks].h[stage]->read(fn);
       }
     }
@@ -1743,17 +1579,14 @@ int pCTcalib::Wcalib(float Thresholds[nStage], int pdstlr[nStage],
   // them
   for (int stage = 0; stage < nStage; ++stage) {
     for (int nBricks = 1; nBricks < 5; ++nBricks) {
-      string Title = "Summed WEPL calibration array for stage " +
-                     to_string((long long int)stage);
-      cout << "pCTcalib::Wcalib, stage " << stage
-           << " add in the histogram for " << nBricks << " bricks" << endl;
+      string Title = "Summed WEPL calibration array for stage " + to_string((long long int)stage);
+      cout << "pCTcalib::Wcalib, stage " << stage << " add in the histogram for " << nBricks << " bricks" << endl;
       REhist[0].h[stage]->add(REhist[nBricks].h[stage], Title);
       delete REhist[nBricks].h[stage];
       dEEhist[0].h[stage]->add(dEEhist[nBricks].h[stage], Title);
       delete dEEhist[nBricks].h[stage];
     }
-    string fn =
-        Outputdir + "/calMap2Dorig_" + to_string((long long int)stage) + ".gp";
+    string fn = Outputdir + "/calMap2Dorig_" + to_string((long long int)stage) + ".gp";
     FILE *oFile = fopen(fn.c_str(), "w");
     if (oFile != NULL) {
       REhist[0].h[stage]->plot(oFile);
@@ -1765,9 +1598,8 @@ int pCTcalib::Wcalib(float Thresholds[nStage], int pdstlr[nStage],
     // all ranges)
     // However, we have to take care not to amplify nearly empty columns (i.e.
     // noise)
-    if (normalise) { // DEFAULT IS NO
-      int bMin =
-          0; // 20;  // Only count the area between these bin limits in energy
+    if (normalise) {    // DEFAULT IS NO
+      int bMin = 0;     // 20;  // Only count the area between these bin limits in energy
       int bMax = nEnrg; //-20
       Histogram hYproj = REhist[0].h[stage]->yProj(bMin, bMax);
       double area = hYproj.max();
@@ -1800,11 +1632,9 @@ int pCTcalib::Wcalib(float Thresholds[nStage], int pdstlr[nStage],
   // Analyze energy slices of the summed maps, and plot the slices
   for (int stage = 0; stage < nStage; ++stage) {
     int nrg = 0;
-    for (int hst = 0; hst < nEnrg / 6 + 1;
-         ++hst) { // Group by 6 slices, to plot 6 histograms per page
-      string fn = Outputdir + "/Slices_Stage" +
-                  to_string((long long int)stage) + "_" +
-                  to_string((long long int)hst) + ".gp";
+    for (int hst = 0; hst < nEnrg / 6 + 1; ++hst) { // Group by 6 slices, to plot 6 histograms per page
+      string fn =
+          Outputdir + "/Slices_Stage" + to_string((long long int)stage) + "_" + to_string((long long int)hst) + ".gp";
       FILE *oFile;
       if (n_plot > 0) {
         oFile = fopen(fn.c_str(), "w");
@@ -1829,18 +1659,14 @@ int pCTcalib::Wcalib(float Thresholds[nStage], int pdstlr[nStage],
             if (Slice.imode() == 0)
               Sadc = 0.; // Up against the wall at zero range
             else {
-              cout << ret << " Cannot find the FWHM bounds for stage " << stage
-                   << ", slice " << nrg << endl;
+              cout << ret << " Cannot find the FWHM bounds for stage " << stage << ", slice " << nrg << endl;
               float mode = Slice.mode();
-              Sadc = Slice.mean(mode - 2. * RangeBinWidth,
-                                mode + 2 * RangeBinWidth);
+              Sadc = Slice.mean(mode - 2. * RangeBinWidth, mode + 2 * RangeBinWidth);
             }
           } else {
-            cout << ret << " Cannot find the FWHM bounds for stage " << stage
-                 << ", slice " << nrg << endl;
+            cout << ret << " Cannot find the FWHM bounds for stage " << stage << ", slice " << nrg << endl;
             float mode = Slice.mode();
-            Sadc =
-                Slice.mean(mode - 2. * RangeBinWidth, mode + 2 * RangeBinWidth);
+            Sadc = Slice.mean(mode - 2. * RangeBinWidth, mode + 2 * RangeBinWidth);
           }
         }
         Rst[stage][nrg] = Sadc;
@@ -1862,12 +1688,9 @@ int pCTcalib::Wcalib(float Thresholds[nStage], int pdstlr[nStage],
     for (int nrg = 0; nrg < nEnrg; ++nrg)
       rngB[nrg] = float(nrg) * EnergyBinWidth;
     for (int stage = 0; stage < nStage; ++stage) {
-      string Title =
-          "Range vs Energy for Stage " + to_string((long long int)stage);
-      string fn = Outputdir + "/rngEnrgUncorr_" +
-                  to_string((long long int)stage) + ".gp";
-      plot2D(fn, Title, "Energy (MeV)", "Range (mm)", nEnrg, rngB, Rst[stage],
-             Sst[stage]);
+      string Title = "Range vs Energy for Stage " + to_string((long long int)stage);
+      string fn = Outputdir + "/rngEnrgUncorr_" + to_string((long long int)stage) + ".gp";
+      plot2D(fn, Title, "Energy (MeV)", "Range (mm)", nEnrg, rngB, Rst[stage], Sst[stage]);
     }
   }
 
@@ -1896,12 +1719,10 @@ int pCTcalib::Wcalib(float Thresholds[nStage], int pdstlr[nStage],
     }
   }
 
-  cout << "Wcalib: Interpolating the calibration curves through the kink region"
-       << endl;
+  cout << "Wcalib: Interpolating the calibration curves through the kink region" << endl;
   for (int stage = 0; stage < 4; ++stage) {
     if (false) { //(j1[stage] > nEnrg) {
-      cout << "Wcalib: skipping kink-region interpolation for stage " << stage
-           << " (no kink)." << endl;
+      cout << "Wcalib: skipping kink-region interpolation for stage " << stage << " (no kink)." << endl;
       continue;
     }
     quadFit qF;
@@ -1932,14 +1753,12 @@ int pCTcalib::Wcalib(float Thresholds[nStage], int pdstlr[nStage],
   double x0 = 4. * TVcal.Eempt[4]; // Sadc / Sweight; // mean energy deposition
                                    // for air (x 4)
 
-  qSpline Spl(&Rst[4][0], i1[4], i2[4],
-              x0); // Quadratic spline extrapolation for the last stage
+  qSpline Spl(&Rst[4][0], i1[4], i2[4], x0); // Quadratic spline extrapolation for the last stage
   for (int i = i2[4] + 1; i < nEnrg; i++) {
     Rst[4][i] = Spl.eval(float(i) + 0.5);
   }
 
-  for (int stage = 0; stage < 5;
-       stage++) { // Don't allow the extrapolations to curve back upwards
+  for (int stage = 0; stage < 5; stage++) { // Don't allow the extrapolations to curve back upwards
     int iMin = i2[stage];
     float rMin = Rst[stage][i2[stage]];
     for (int i = i2[stage]; i < nEnrg; i++) {
@@ -1953,8 +1772,7 @@ int pCTcalib::Wcalib(float Thresholds[nStage], int pdstlr[nStage],
     }
   }
 
-  cout << "Corrected stage 4 air W=0. E, dE: " << 0.25 * x0 << "  "
-       << Est[4] - x0 / 4 << endl;
+  cout << "Corrected stage 4 air W=0. E, dE: " << 0.25 * x0 << "  " << Est[4] - x0 / 4 << endl;
 
   // correct stage 0 low energy part for lack of data due to high threshold (up
   // to 13 MeV Aug 2016,  18 MeV Oct 2016)
@@ -1976,8 +1794,7 @@ int pCTcalib::Wcalib(float Thresholds[nStage], int pdstlr[nStage],
     if (abs(diff) > 0.005)
       continue;
     kGood = k;
-    cout << "pCTcalib: first good calibration point for stage 0 is at k="
-         << kGood << endl;
+    cout << "pCTcalib: first good calibration point for stage 0 is at k=" << kGood << endl;
     goto foundIt;
   nextVal:
     ;
@@ -1987,28 +1804,25 @@ int pCTcalib::Wcalib(float Thresholds[nStage], int pdstlr[nStage],
 foundIt:
   for (int k = 0; k < kGood; k++) {
     if (partType == "H")
-      Rst[0][k] = Rst[0][kGood] + Rend((kGood - k) * EnergyBinWidth) -
-                  float(kGood - k) * (52.16 - 51.12) / float(kGood);
+      Rst[0][k] =
+          Rst[0][kGood] + Rend((kGood - k) * EnergyBinWidth) - float(kGood - k) * (52.16 - 51.12) / float(kGood);
     else
-      Rst[0][k] = Rst[0][kGood] + RendHe((kGood - k) * EnergyBinWidth) -
-                  float(kGood - k) * (52.39 - 51.12) / float(kGood);
+      Rst[0][k] =
+          Rst[0][kGood] + RendHe((kGood - k) * EnergyBinWidth) - float(kGood - k) * (52.39 - 51.12) / float(kGood);
   }
 
   cout << "Thickness of the stages 0 - 3 (should be 51.12 +/- 1mm) :" << endl;
-  cout << Rst[0][0] - Rst[1][0] << " " << Rst[1][0] - Rst[2][0] << " "
-       << Rst[2][0] - Rst[3][0] << " " << Rst[3][0] - Rst[4][0] << endl;
+  cout << Rst[0][0] - Rst[1][0] << " " << Rst[1][0] - Rst[2][0] << " " << Rst[2][0] - Rst[3][0] << " "
+       << Rst[3][0] - Rst[4][0] << endl;
 
   // Plot the final calibration results
   float rngB[nEnrg];
   for (int nrg = 0; nrg < nEnrg; ++nrg)
     rngB[nrg] = float(nrg) * EnergyBinWidth;
   for (int stage = 0; stage < nStage; ++stage) {
-    string Title =
-        "Range vs Energy for Stage " + to_string((long long int)stage);
-    string fn =
-        Outputdir + "/rngEnrg_" + to_string((long long int)stage) + ".gp";
-    plot2D(fn, Title, "Energy (MeV)", "Range (mm)", nEnrg, rngB, Rst[stage],
-           Sst[stage]);
+    string Title = "Range vs Energy for Stage " + to_string((long long int)stage);
+    string fn = Outputdir + "/rngEnrg_" + to_string((long long int)stage) + ".gp";
+    plot2D(fn, Title, "Energy (MeV)", "Range (mm)", nEnrg, rngB, Rst[stage], Sst[stage]);
   }
 
   /// Lennart Volz, November 2018
@@ -2016,8 +1830,7 @@ foundIt:
   int Estep[3] = { 240, 120, 12 }; // work in the same way for helium and
                                    // proton, but could also be set manually for
                                    // optimization
-  float E[3] = { Estep[0] * EnergyBinWidth, Estep[1] * EnergyBinWidth,
-                 Estep[2] * EnergyBinWidth };
+  float E[3] = { Estep[0] * EnergyBinWidth, Estep[1] * EnergyBinWidth, Estep[2] * EnergyBinWidth };
   float dEElow[5][3];
   float dEEhigh[5][3];
   FILE oFile;
@@ -2025,40 +1838,28 @@ foundIt:
   for (int stage = 1; stage < 5; stage++) {
     float xlow[3], xhigh[3];
     for (int j = 0; j < 3; j++) {
-      Histogram dEESlice = dEEhist[0].h[stage]->rowSlice(
-          Estep[j]); // gets the dE stage distribution for a given energy E
+      Histogram dEESlice =
+          dEEhist[0].h[stage]->rowSlice(Estep[j]); // gets the dE stage distribution for a given energy E
       int ret = dEESlice.FWHMboundaries(xlow[j], xhigh[j]);
-      xlow[j] =
-          xlow[j] - (xhigh[j] - xlow[j]) *
-                        0.7848; // extend to 3 sigma region instead of 1 FWHM
-      xhigh[j] =
-          xhigh[j] + (xhigh[j] - xlow[j]) *
-                         0.7848; // might be more optimal to use 2.5 sigma
+      xlow[j] = xlow[j] - (xhigh[j] - xlow[j]) * 0.7848;   // extend to 3 sigma region instead of 1 FWHM
+      xhigh[j] = xhigh[j] + (xhigh[j] - xlow[j]) * 0.7848; // might be more optimal to use 2.5 sigma
 
       if (n_plot > 0) {
-        string fn = Outputdir + "/dEESlice_" + to_string((long long int)stage) +
-                    "_" + to_string((long long int)j) + ".gp";
+        string fn =
+            Outputdir + "/dEESlice_" + to_string((long long int)stage) + "_" + to_string((long long int)j) + ".gp";
         FILE *oFile = fopen(fn.c_str(), "w");
         dEESlice.plot(oFile);
         fclose(oFile);
       }
     }
-    dEElow[stage][0] =
-        (E[0] * (xlow[2] - xlow[1]) + E[1] * (xlow[0] - xlow[2]) +
-         E[2] * (xlow[1] - xlow[0])) /
-        ((E[0] - E[1]) * (E[0] - E[2]) * (E[1] - E[2]));
-    dEElow[stage][1] =
-        (xlow[1] - xlow[0]) / (E[1] - E[0]) - dEElow[stage][0] * (E[0] + E[1]);
-    dEElow[stage][2] =
-        xlow[0] - dEElow[stage][0] * E[0] * E[0] - dEElow[stage][1] * E[0];
-    dEEhigh[stage][0] =
-        (E[0] * (xhigh[2] - xhigh[1]) + E[1] * (xhigh[0] - xhigh[2]) +
-         E[2] * (xhigh[1] - xhigh[0])) /
-        ((E[0] - E[1]) * (E[0] - E[2]) * (E[1] - E[2]));
-    dEEhigh[stage][1] = (xhigh[1] - xhigh[0]) / (E[1] - E[0]) -
-                        dEEhigh[stage][0] * (E[0] + E[1]);
-    dEEhigh[stage][2] =
-        xhigh[0] - dEEhigh[stage][0] * E[0] * E[0] - dEEhigh[stage][1] * E[0];
+    dEElow[stage][0] = (E[0] * (xlow[2] - xlow[1]) + E[1] * (xlow[0] - xlow[2]) + E[2] * (xlow[1] - xlow[0])) /
+                       ((E[0] - E[1]) * (E[0] - E[2]) * (E[1] - E[2]));
+    dEElow[stage][1] = (xlow[1] - xlow[0]) / (E[1] - E[0]) - dEElow[stage][0] * (E[0] + E[1]);
+    dEElow[stage][2] = xlow[0] - dEElow[stage][0] * E[0] * E[0] - dEElow[stage][1] * E[0];
+    dEEhigh[stage][0] = (E[0] * (xhigh[2] - xhigh[1]) + E[1] * (xhigh[0] - xhigh[2]) + E[2] * (xhigh[1] - xhigh[0])) /
+                        ((E[0] - E[1]) * (E[0] - E[2]) * (E[1] - E[2]));
+    dEEhigh[stage][1] = (xhigh[1] - xhigh[0]) / (E[1] - E[0]) - dEEhigh[stage][0] * (E[0] + E[1]);
+    dEEhigh[stage][2] = xhigh[0] - dEEhigh[stage][0] * E[0] * E[0] - dEEhigh[stage][1] * E[0];
   }
 
   /// Write the Rst0 through Rst4 range vs energy tables to the calibration text
@@ -2112,25 +1913,16 @@ foundIt:
   tWcalfile << "# maxDate = " << maxDate << endl;
   tWcalfile << "# minRun = " << minRun << endl;
   tWcalfile << "# maxRun = " << maxRun << endl;
-  tWcalfile << "# Date and time of calibration run: " << now->tm_year + 1900
-            << "-" << now->tm_mon + 1 << "-" << now->tm_mday << "    "
-            << now->tm_hour << ":" << now->tm_min << endl;
-  tWcalfile << "# The pre-processing code version number is [" << programVersion
-            << "]" << endl;
-  tWcalfile << "# File used for empty run for calibrating TV corrections was "
-            << calFileNames[0] << endl;
-  tWcalfile << "# The file to where the TV corrections were written was "
-            << Outputdir + "/TVcorr.txt" << endl;
-  tWcalfile << "# File used for calibration with wedge and 0 bricks was "
-            << calFileNames[1] << endl;
-  tWcalfile << "# File used for calibration with wedge and 1 brick  was "
-            << calFileNames[2] << endl;
-  tWcalfile << "# File used for calibration with wedge and 2 bricks was "
-            << calFileNames[3] << endl;
-  tWcalfile << "# File used for calibration with wedge and 3 bricks was "
-            << calFileNames[4] << endl;
-  tWcalfile << "# File used for calibration with wedge and 4 bricks was "
-            << calFileNames[5] << endl;
+  tWcalfile << "# Date and time of calibration run: " << now->tm_year + 1900 << "-" << now->tm_mon + 1 << "-"
+            << now->tm_mday << "    " << now->tm_hour << ":" << now->tm_min << endl;
+  tWcalfile << "# The pre-processing code version number is [" << programVersion << "]" << endl;
+  tWcalfile << "# File used for empty run for calibrating TV corrections was " << calFileNames[0] << endl;
+  tWcalfile << "# The file to where the TV corrections were written was " << Outputdir + "/TVcorr.txt" << endl;
+  tWcalfile << "# File used for calibration with wedge and 0 bricks was " << calFileNames[1] << endl;
+  tWcalfile << "# File used for calibration with wedge and 1 brick  was " << calFileNames[2] << endl;
+  tWcalfile << "# File used for calibration with wedge and 2 bricks was " << calFileNames[3] << endl;
+  tWcalfile << "# File used for calibration with wedge and 3 bricks was " << calFileNames[4] << endl;
+  tWcalfile << "# File used for calibration with wedge and 4 bricks was " << calFileNames[5] << endl;
   tWcalfile << "# Threshold0 = " << stuff.Thr[0] << endl;
   tWcalfile << "# Threshold1 = " << stuff.Thr[1] << endl;
   tWcalfile << "# Threshold2 = " << stuff.Thr[2] << endl;
@@ -2150,15 +1942,12 @@ foundIt:
   return 0;
 };
 
-void pCTcalib::plot2D(string fn, string T, string TX, string TY, int N,
-                      float X[], float Y[], float E[]) {
+void pCTcalib::plot2D(string fn, string T, string TX, string TY, int N, float X[], float Y[], float E[]) {
 
   FILE *oFile = fopen(fn.c_str(), "w");
   if (oFile != NULL) {
     fprintf(oFile, "#*** This file is intended to be displayed by gnuplot.\n");
-    fprintf(
-        oFile,
-        "#*** Either double click on the file (works in Windows at least),\n");
+    fprintf(oFile, "#*** Either double click on the file (works in Windows at least),\n");
     fprintf(oFile, "#*** or else start up gnuplot and use the load command to "
                    "display the plot.\n");
     // fprintf(oFile,"set term X11 persist\n");

@@ -81,14 +81,13 @@ class Wepl {
   float rvse0[nEnrg], rvse1[nEnrg], rvse2[nEnrg], rvse3[nEnrg], rvse4[nEnrg];
 
   // Common parameters
-  float thr0, thr1, thr2, thr3,
-      thr4;  // Stage thresholds to define when a stage has a real signal
-  float RSP; // Known phantom RSP
+  float thr0, thr1, thr2, thr3, thr4; // Stage thresholds to define when a stage has a real signal
+  float RSP;                          // Known phantom RSP
 
 public:
   // Explicit constructor
-  Wepl(const char *WcalibFile, int year, int month, int day,
-       int run, string partType, bool dodEEFilter, string outputDir);
+  Wepl(const char *WcalibFile, int year, int month, int day, int run, string partType, bool dodEEFilter,
+       string outputDir);
 
   // Set energy thresholds in stages
   void SetEthresholds1(float, float, float, float, float);
@@ -104,8 +103,7 @@ public:
   vector<string> split(string str, char delimiter);
 };
 
-inline Wepl::Wepl(const char *WCalibFile, int year, int month,
-                  int day, int run, string partType, bool dodEEFilter,
+inline Wepl::Wepl(const char *WCalibFile, int year, int month, int day, int run, string partType, bool dodEEFilter,
                   string outputDir) {
   this->partType = partType;
   this->dodEEFilter = dodEEFilter;
@@ -188,8 +186,7 @@ inline Wepl::Wepl(const char *WCalibFile, int year, int month,
     dEEparams[3][5] = 79.5232;
   }
 
-  cout << "Wepl::Wepl: Reading WEPL calibration file: " << WCalibFile
-       << " for particle type " << partType << endl;
+  cout << "Wepl::Wepl: Reading WEPL calibration file: " << WCalibFile << " for particle type " << partType << endl;
   FILE *fp = fopen(WCalibFile, "r");
   if (fp == NULL) {
     cerr << "Error opening W correction file " << WCalibFile << endl;
@@ -208,8 +205,7 @@ inline Wepl::Wepl(const char *WCalibFile, int year, int month,
   rewind(fp);
   if (nwords >= 5 * nEnrg) {
     wedge_calibration = true;
-    cout << "Wepl::Wepl: the calibration phantom is assumed to be the wedge."
-         << endl;
+    cout << "Wepl::Wepl: the calibration phantom is assumed to be the wedge." << endl;
     string minDate = "";
     string maxDate = "";
     int minRun = 0;
@@ -228,12 +224,10 @@ inline Wepl::Wepl(const char *WCalibFile, int year, int month,
       fscanf(fp, "%f", &rvse4[k]);
     fclose(fp);
 
-    string fileName =
-        outputDir + "/CalWepl.gp"; // To plot the calibration curves
+    string fileName = outputDir + "/CalWepl.gp"; // To plot the calibration curves
     FILE *oFile = fopen(fileName.c_str(), "w");
     if (oFile != NULL) {
-      fprintf(oFile,
-              "#*** This file is intended to be displayed by gnuplot.\n");
+      fprintf(oFile, "#*** This file is intended to be displayed by gnuplot.\n");
       fprintf(oFile, "#*** Either double click on the file (works in Windows "
                      "at least),\n");
       fprintf(oFile, "#*** or else start up gnuplot and use the load command "
@@ -286,8 +280,7 @@ inline Wepl::Wepl(const char *WCalibFile, int year, int month,
     string line;
     ifstream infile(WCalibFile);
     if (infile) {
-      cout << endl << "Echoing comment lines from the WEPL calibration file "
-           << WCalibFile << ": " << endl;
+      cout << endl << "Echoing comment lines from the WEPL calibration file " << WCalibFile << ": " << endl;
       while (getline(infile, line)) {
         size_t found = line.find_first_not_of(" ");
         if (found == line.npos)
@@ -307,10 +300,8 @@ inline Wepl::Wepl(const char *WCalibFile, int year, int month,
               maxRun = strtol(value.c_str(), &ePtr, 10);
             if (key == "particle") {
               if (value.compare(partType) != 0) {
-                cout
-                    << "********* WARNING: the WEPL calibration particle type '"
-                    << value << "' does not match the beam particle type '"
-                    << partType << "'" << endl;
+                cout << "********* WARNING: the WEPL calibration particle type '" << value
+                     << "' does not match the beam particle type '" << partType << "'" << endl;
               }
             }
             if (key == "EnergyBinWidth") {
@@ -326,45 +317,40 @@ inline Wepl::Wepl(const char *WCalibFile, int year, int month,
             if (key == "Threshold0") {
               float f_value = stof(value);
               if (f_value != thr0) {
-                cout << "Wepl.h: we are overwriting the threshold setting "
-                     << thr0 << " for stage 0 by the value " << f_value
-                     << " from the file " << WCalibFile << endl;
+                cout << "Wepl.h: we are overwriting the threshold setting " << thr0 << " for stage 0 by the value "
+                     << f_value << " from the file " << WCalibFile << endl;
                 thr0 = f_value;
               }
             }
             if (key == "Threshold1") {
               float f_value = stof(value);
               if (f_value != thr1) {
-                cout << "Wepl.h: we are overwriting the threshold setting "
-                     << thr1 << " for stage 1 by the value " << f_value
-                     << " from the file " << WCalibFile << endl;
+                cout << "Wepl.h: we are overwriting the threshold setting " << thr1 << " for stage 1 by the value "
+                     << f_value << " from the file " << WCalibFile << endl;
                 thr1 = f_value;
               }
             }
             if (key == "Threshold2") {
               float f_value = stof(value);
               if (f_value != thr2) {
-                cout << "Wepl.h: we are overwriting the threshold setting "
-                     << thr2 << " for stage 2 by the value " << f_value
-                     << " from the file " << WCalibFile << endl;
+                cout << "Wepl.h: we are overwriting the threshold setting " << thr2 << " for stage 2 by the value "
+                     << f_value << " from the file " << WCalibFile << endl;
                 thr2 = f_value;
               }
             }
             if (key == "Threshold3") {
               float f_value = stof(value);
               if (f_value != thr3) {
-                cout << "Wepl.h: we are overwriting the threshold setting "
-                     << thr3 << " for stage 3 by the value " << f_value
-                     << " from the file " << WCalibFile << endl;
+                cout << "Wepl.h: we are overwriting the threshold setting " << thr3 << " for stage 3 by the value "
+                     << f_value << " from the file " << WCalibFile << endl;
                 thr3 = f_value;
               }
             }
             if (key == "Threshold4") {
               float f_value = stof(value);
               if (f_value != thr4) {
-                cout << "Wepl.h: we are overwriting the threshold setting "
-                     << thr4 << " for stage 4 by the value " << f_value
-                     << " from the file " << WCalibFile << endl;
+                cout << "Wepl.h: we are overwriting the threshold setting " << thr4 << " for stage 4 by the value "
+                     << f_value << " from the file " << WCalibFile << endl;
                 thr4 = f_value;
               }
             }
@@ -429,9 +415,8 @@ inline Wepl::Wepl(const char *WCalibFile, int year, int month,
               checked = true;
             } else {
               cout << "WEPL: the WEPL calibration file date and run are not "
-                      "appropriate for these data with year=" << year
-                   << " month= " << month << " day= " << day << " run= " << run
-                   << endl;
+                      "appropriate for these data with year=" << year << " month= " << month << " day= " << day
+                   << " run= " << run << endl;
               exit(-1);
             }
           }
@@ -447,8 +432,7 @@ inline Wepl::Wepl(const char *WCalibFile, int year, int month,
   } else {
     wedge_calibration = false;
     RSP = 1.031;
-    fscanf(fp, "%d %d %d %d %d %d %d %d %d", &Np0, &Np1, &Np2, &Np3, &Np4,
-           &Npc0, &Npc1, &Npc2, &Npc3);
+    fscanf(fp, "%d %d %d %d %d %d %d %d %d", &Np0, &Np1, &Np2, &Np3, &Np4, &Npc0, &Npc1, &Npc2, &Npc3);
     for (int i = 0; i < Np0; ++i)
       fscanf(fp, "%f %f", &e0[i], &wetd0[i]);
     for (int i = 0; i < Np1; ++i)
@@ -487,9 +471,8 @@ inline Wepl::Wepl(const char *WCalibFile, int year, int month,
       for (int k = 0; k < 10; ++k)
         fscanf(fp, "%f", &ac3[k][i]);
     }
-    cout << "From WEPL stairs calibration file: " << Np0 << " " << Np1 << " "
-         << Np2 << " " << Np3 << " " << Np4 << " " << Npc0 << " " << Npc1 << " "
-         << Npc2 << " " << Npc3 << endl;
+    cout << "From WEPL stairs calibration file: " << Np0 << " " << Np1 << " " << Np2 << " " << Np3 << " " << Np4 << " "
+         << Npc0 << " " << Npc1 << " " << Npc2 << " " << Npc3 << endl;
     fclose(fp);
   }
   if (wedge_calibration) {
@@ -499,13 +482,10 @@ inline Wepl::Wepl(const char *WCalibFile, int year, int month,
     cout << "Based on the number of parameters in the WEPL calibration file, "
             "the stairs calibration method is assumed." << endl;
   }
-  cout << "The RSP of the WEPL calibration phantom is assumed to be " << RSP
-       << endl;
+  cout << "The RSP of the WEPL calibration phantom is assumed to be " << RSP << endl;
 }
 
-inline float Wepl::EtoWEPL(float Estage[5]) {
-  return (wedge_calibration ? EtoWEPL2(Estage) : EtoWEPL1(Estage));
-}
+inline float Wepl::EtoWEPL(float Estage[5]) { return (wedge_calibration ? EtoWEPL2(Estage) : EtoWEPL1(Estage)); }
 
 inline float Wepl::EtoWEPL1(float Estage[5]) // Return calibrated WEPL from the
                                              // stairs calibration.
@@ -648,14 +628,11 @@ inline float Wepl::EtoWEPL2(float Estage[5]) // Return calibrated WEPL from the
   if (Estage[4] > thr4) {
     if (Estage[4] > cut4)
       return (1000 + (rvse4[k] * RSP)); // 1000
-    if (Estage[3] < cut3 || Estage[2] < cut2 || Estage[1] < cut1 ||
-        Estage[0] < cut0)
+    if (Estage[3] < cut3 || Estage[2] < cut2 || Estage[1] < cut1 || Estage[0] < cut0)
       return (2000 + (rvse4[k] * RSP)); //-1000;
     if (dodEEFilter) {
-      if (Estage[3] < (dEEparams[3][0] * Estage[4] * Estage[4] +
-                       dEEparams[3][1] * Estage[4] + dEEparams[3][2]) ||
-          Estage[3] > (dEEparams[3][3] * Estage[4] * Estage[4] +
-                       dEEparams[3][4] * Estage[4] + dEEparams[3][5]))
+      if (Estage[3] < (dEEparams[3][0] * Estage[4] * Estage[4] + dEEparams[3][1] * Estage[4] + dEEparams[3][2]) ||
+          Estage[3] > (dEEparams[3][3] * Estage[4] * Estage[4] + dEEparams[3][4] * Estage[4] + dEEparams[3][5]))
         return (5000 + (rvse4[k] * RSP)); //-1000
     }
     k = int(binFac * Estage[4]);
@@ -666,10 +643,8 @@ inline float Wepl::EtoWEPL2(float Estage[5]) // Return calibrated WEPL from the
     if (Estage[2] < cut2 || Estage[1] < cut1 || Estage[0] < cut0)
       return (2000 + rvse3[k] * RSP); //-1000
     if (dodEEFilter) {
-      if (Estage[2] < (dEEparams[2][0] * Estage[3] * Estage[3] +
-                       dEEparams[2][1] * Estage[3] + dEEparams[2][2]) ||
-          Estage[2] > (dEEparams[2][3] * Estage[3] * Estage[3] +
-                       dEEparams[2][4] * Estage[3] + dEEparams[2][5]))
+      if (Estage[2] < (dEEparams[2][0] * Estage[3] * Estage[3] + dEEparams[2][1] * Estage[3] + dEEparams[2][2]) ||
+          Estage[2] > (dEEparams[2][3] * Estage[3] * Estage[3] + dEEparams[2][4] * Estage[3] + dEEparams[2][5]))
         return (5000 + (rvse3[k] * RSP)); //-1000
     }
     k = int(binFac * Estage[3]);
@@ -680,10 +655,8 @@ inline float Wepl::EtoWEPL2(float Estage[5]) // Return calibrated WEPL from the
     if (Estage[1] < cut1 || Estage[0] < cut0)
       return (2000 + (rvse2[k] * RSP)); //-1000;
     if (dodEEFilter) {
-      if (Estage[1] < (dEEparams[1][0] * Estage[2] * Estage[2] +
-                       dEEparams[1][1] * Estage[2] + dEEparams[1][2]) ||
-          Estage[1] > (dEEparams[1][3] * Estage[2] * Estage[2] +
-                       dEEparams[1][4] * Estage[2] + dEEparams[1][5]))
+      if (Estage[1] < (dEEparams[1][0] * Estage[2] * Estage[2] + dEEparams[1][1] * Estage[2] + dEEparams[1][2]) ||
+          Estage[1] > (dEEparams[1][3] * Estage[2] * Estage[2] + dEEparams[1][4] * Estage[2] + dEEparams[1][5]))
         return (5000 + (rvse2[k] * RSP)); //-1000;
     }
     k = int(binFac * Estage[2]);
@@ -694,10 +667,8 @@ inline float Wepl::EtoWEPL2(float Estage[5]) // Return calibrated WEPL from the
     if (Estage[0] < cut0)
       return (2000 + (rvse1[k] * RSP)); //-1000;
     if (dodEEFilter) {
-      if (Estage[0] < (dEEparams[0][0] * Estage[1] * Estage[1] +
-                       dEEparams[0][1] * Estage[1] + dEEparams[0][2]) ||
-          Estage[0] > (dEEparams[0][3] * Estage[1] * Estage[1] +
-                       dEEparams[0][4] * Estage[1] + dEEparams[0][5]))
+      if (Estage[0] < (dEEparams[0][0] * Estage[1] * Estage[1] + dEEparams[0][1] * Estage[1] + dEEparams[0][2]) ||
+          Estage[0] > (dEEparams[0][3] * Estage[1] * Estage[1] + dEEparams[0][4] * Estage[1] + dEEparams[0][5]))
         return (5000 + (rvse1[k] * RSP)); //-1000;
     }
     k = int(binFac * Estage[1]);
@@ -711,16 +682,14 @@ inline float Wepl::EtoWEPL2(float Estage[5]) // Return calibrated WEPL from the
     return 2000;
 }
 
-inline void Wepl::SetEthresholds1(float t0, float t1, float t2, float t3,
-                                  float t4) {
+inline void Wepl::SetEthresholds1(float t0, float t1, float t2, float t3, float t4) {
   thr0 = t0;
   thr1 = t1;
   thr2 = t2;
   thr3 = t3;
   thr4 = t4;
   cout << "Wepl::SetEthresholds1: WEPL detector stage energy thresholds are "
-          "set to " << thr0 << " " << thr1 << " " << thr2 << " " << thr3 << " "
-       << thr4 << " MeV" << endl;
+          "set to " << thr0 << " " << thr1 << " " << thr2 << " " << thr3 << " " << thr4 << " MeV" << endl;
 }
 
 vector<string> Wepl::split(string str, char delimiter) {

@@ -6,9 +6,9 @@ set(name main)
 set(WITH_VIS true)
 ############ What's below should not need to be changed ############
 
-# http://www.cmake.org/cmake/help/cmake_tutorial.html
-# http://www.cmake.org/cmake/help/cmake2.6docs.html
-# http://www.cmake.org/Wiki/CMake_FAQ
+#http: // www.cmake.org/cmake/help/cmake_tutorial.html
+#http: // www.cmake.org/cmake/help/cmake2.6docs.html
+#http: // www.cmake.org/Wiki/CMake_FAQ
 
 set(mymain ${name}.cpp)
 set(myexe  ${name}    )

@@ -4,9 +4,8 @@
 
 #include "pedGainCalib.h"
 
-pedGainCalib::pedGainCalib(string Outputdir, int pdstlr[5], float oldPed[5],
-                           int thread, float t1, float t2, float t3, float t4,
-                           string partType, string OsName) {
+pedGainCalib::pedGainCalib(string Outputdir, int pdstlr[5], float oldPed[5], int thread, float t1, float t2, float t3,
+                           float t4, string partType, string OsName) {
 
   // Two ranges in t occupied by unobstructed (empty) protons
   emtrng1 = t1; // negative t side
@@ -23,59 +22,38 @@ pedGainCalib::pedGainCalib(string Outputdir, int pdstlr[5], float oldPed[5],
   for (int stage = 0; stage < 5; stage++) {
     Ped[stage] = oldPed[stage];
     corrFac[stage] = 1.0;
-    cout << "pedGainCalib " << thread
-         << ": setting the default pedestal for stage " << stage << " to "
-         << Ped[stage] << endl;
+    cout << "pedGainCalib " << thread << ": setting the default pedestal for stage " << stage << " to " << Ped[stage]
+         << endl;
   }
 
   // Define histograms for pedestal calculation
-  hPed[0] = new Histogram(400, pdstlr[0], 5., "Pedestal region for stage 0",
-                          "ADC", "events");
-  hPed[1] = new Histogram(400, pdstlr[1], 5., "Pedestal region for stage 1",
-                          "ADC", "events");
-  hPed[2] = new Histogram(400, pdstlr[2], 5., "Pedestal region for stage 2",
-                          "ADC", "events");
-  hPed[3] = new Histogram(400, pdstlr[3], 5., "Pedestal region for stage 3",
-                          "ADC", "events");
-  hPed[4] = new Histogram(400, pdstlr[4], 5., "Pedestal region for stage 4",
-                          "ADC", "events");
+  hPed[0] = new Histogram(400, pdstlr[0], 5., "Pedestal region for stage 0", "ADC", "events");
+  hPed[1] = new Histogram(400, pdstlr[1], 5., "Pedestal region for stage 1", "ADC", "events");
+  hPed[2] = new Histogram(400, pdstlr[2], 5., "Pedestal region for stage 2", "ADC", "events");
+  hPed[3] = new Histogram(400, pdstlr[3], 5., "Pedestal region for stage 3", "ADC", "events");
+  hPed[4] = new Histogram(400, pdstlr[4], 5., "Pedestal region for stage 4", "ADC", "events");
 
   // Define histograms for gain calibration
   if (partType == "H") {
-    hEnrg[0] = new Histogram(400, 15., 0.175, "Energy distribution for stage 0",
-                             "Energy (MeV)", "proton events");
-    hEnrg[1] = new Histogram(400, 15., 0.175, "Energy distribution for stage 1",
-                             "Energy (MeV)", "proton events");
-    hEnrg[2] = new Histogram(400, 15., 0.175, "Energy distribution for stage 2",
-                             "Energy (MeV)", "proton events");
-    hEnrg[3] = new Histogram(400, 15., 0.175, "Energy distribution for stage 3",
-                             "Energy (MeV)", "proton events");
-    hEnrg[4] = new Histogram(400, 25., 0.175, "Energy distribution for stage 4",
-                             "Energy (MeV)", "proton events");
-    hEnrgTot = new Histogram(800, 0., 0.3, "Sum of stage energies",
-                             "Energy (MeV)", "proton events");
+    hEnrg[0] = new Histogram(400, 15., 0.175, "Energy distribution for stage 0", "Energy (MeV)", "proton events");
+    hEnrg[1] = new Histogram(400, 15., 0.175, "Energy distribution for stage 1", "Energy (MeV)", "proton events");
+    hEnrg[2] = new Histogram(400, 15., 0.175, "Energy distribution for stage 2", "Energy (MeV)", "proton events");
+    hEnrg[3] = new Histogram(400, 15., 0.175, "Energy distribution for stage 3", "Energy (MeV)", "proton events");
+    hEnrg[4] = new Histogram(400, 25., 0.175, "Energy distribution for stage 4", "Energy (MeV)", "proton events");
+    hEnrgTot = new Histogram(800, 0., 0.3, "Sum of stage energies", "Energy (MeV)", "proton events");
   } else {
-    hEnrg[0] = new Histogram(400, 60., 0.7, "Energy distribution for stage 0",
-                             "Energy (MeV)", "He events");
-    hEnrg[1] = new Histogram(400, 60., 0.7, "Energy distribution for stage 1",
-                             "Energy (MeV)", "He events");
-    hEnrg[2] = new Histogram(400, 60., 0.7, "Energy distribution for stage 2",
-                             "Energy (MeV)", "He events");
-    hEnrg[3] = new Histogram(400, 60., 0.7, "Energy distribution for stage 3",
-                             "Energy (MeV)", "He events");
-    hEnrg[4] = new Histogram(400, 60., 0.7, "Energy distribution for stage 4",
-                             "Energy (MeV)", "He events");
-    hEnrgTot = new Histogram(800, 0., 1.2, "Sum of stage energies",
-                             "Energy (MeV)", "He events");
+    hEnrg[0] = new Histogram(400, 60., 0.7, "Energy distribution for stage 0", "Energy (MeV)", "He events");
+    hEnrg[1] = new Histogram(400, 60., 0.7, "Energy distribution for stage 1", "Energy (MeV)", "He events");
+    hEnrg[2] = new Histogram(400, 60., 0.7, "Energy distribution for stage 2", "Energy (MeV)", "He events");
+    hEnrg[3] = new Histogram(400, 60., 0.7, "Energy distribution for stage 3", "Energy (MeV)", "He events");
+    hEnrg[4] = new Histogram(400, 60., 0.7, "Energy distribution for stage 4", "Energy (MeV)", "He events");
+    hEnrgTot = new Histogram(800, 0., 1.2, "Sum of stage energies", "Energy (MeV)", "He events");
   }
 
   // Profile plot to make sure that the phantom does not extend into the regions
   // used for gain calibration
-  hProfT = new ProfilePlot(100, -150., 3.0, "Stage 0 energy profile in T",
-                           "T (mm)", "mean energy (MeV)");
-  hTedet =
-      new Histogram(100, -150., 3.0, "T of ions used for gain recalibration",
-                    "T (mm)", "ions");
+  hProfT = new ProfilePlot(100, -150., 3.0, "Stage 0 energy profile in T", "T (mm)", "mean energy (MeV)");
+  hTedet = new Histogram(100, -150., 3.0, "T of ions used for gain recalibration", "T (mm)", "ions");
 
   sprintf(fileName, "%s/Pedestals_%d.gp", Outputdir.c_str(), thread);
   sprintf(fileName2, "%s/Energies_%d.gp", Outputdir.c_str(), thread);
@@ -93,8 +71,7 @@ void pedGainCalib::rawPh(pCTraw &rawEvt) { // Called for each raw event read in
   hPed[4]->entry(rawEvt.enrg_fpga[1].pulse_sum[1]);
 }
 
-void pedGainCalib::getPeds(const char *inFileName, int run_number,
-                           int program_version, float proj_angle, int nKeep,
+void pedGainCalib::getPeds(const char *inFileName, int run_number, int program_version, float proj_angle, int nKeep,
                            string start_time) { // Called after comopletion of
                                                 // the loop over all input raw
                                                 // data
@@ -115,23 +92,12 @@ void pedGainCalib::getPeds(const char *inFileName, int run_number,
     hPed[3]->plot(oFile, true);
     fprintf(oFile, "set label 4 'Current date and time: %d-%d-%d    %d:%d' at "
                    "screen 0.55, 0.28\n",
-            now->tm_year + 1900, now->tm_mon + 1, now->tm_mday, now->tm_hour,
-            now->tm_min);
-    fprintf(oFile, "set label 5 'Run Number %d' at screen 0.55, 0.25 left\n",
-            run_number);
-    fprintf(oFile,
-            "set label 6 'FPGA Program Version %d' at screen 0.55, 0.22 left\n",
-            program_version);
-    fprintf(
-        oFile,
-        "set label 7 'Stage Angle = %5.1f degrees' at screen 0.55, 0.19 left\n",
-        proj_angle);
-    fprintf(oFile, "set label 8 'Start Time = %s ' at screen 0.55, 0.16 left\n",
-            start_time.c_str());
-    fprintf(
-        oFile,
-        "set label 9 'Number of good events = %d' at screen 0.55, 0.13 left\n",
-        nKeep);
+            now->tm_year + 1900, now->tm_mon + 1, now->tm_mday, now->tm_hour, now->tm_min);
+    fprintf(oFile, "set label 5 'Run Number %d' at screen 0.55, 0.25 left\n", run_number);
+    fprintf(oFile, "set label 6 'FPGA Program Version %d' at screen 0.55, 0.22 left\n", program_version);
+    fprintf(oFile, "set label 7 'Stage Angle = %5.1f degrees' at screen 0.55, 0.19 left\n", proj_angle);
+    fprintf(oFile, "set label 8 'Start Time = %s ' at screen 0.55, 0.16 left\n", start_time.c_str());
+    fprintf(oFile, "set label 9 'Number of good events = %d' at screen 0.55, 0.13 left\n", nKeep);
     hPed[4]->plot(oFile, true);
     fprintf(oFile, "unset multiplot\n");
     fprintf(oFile, "show label\n");
@@ -154,8 +120,7 @@ void pedGainCalib::getPeds(const char *inFileName, int run_number,
            << ": ERROR: could not find the peak of the pedestal distribution "
               "for stage ************" << stage << endl;
     }
-    cout << "getPeds thread " << threadNumber
-         << ": measured pedestal for stage " << stage << " is " << Ped[stage]
+    cout << "getPeds thread " << threadNumber << ": measured pedestal for stage " << stage << " is " << Ped[stage]
          << endl;
     // fprintf(oFile,"%10.2f,",Ped[stage]);
   }
@@ -163,13 +128,11 @@ void pedGainCalib::getPeds(const char *inFileName, int run_number,
   // fclose(oFile);
 }
 
-void pedGainCalib::weplEvt(float Vedet, float Tedet,
-                           float Ene[5]) { // Called for each event in the
-                                           // temporary file of proton histories
+void pedGainCalib::weplEvt(float Vedet, float Tedet, float Ene[5]) { // Called for each event in the
+                                                                     // temporary file of proton histories
   float Esum = 0.;
-  if ((Tedet > emtrng1 && Tedet < emtrng2) ||
-      (Tedet > emtrng3 && Tedet < emtrng4)) { // Analyze full-energy protons
-                                              // outside of the phantom region
+  if ((Tedet > emtrng1 && Tedet < emtrng2) || (Tedet > emtrng3 && Tedet < emtrng4)) { // Analyze full-energy protons
+                                                                                      // outside of the phantom region
     if (fabs(Vedet) < 40.) {
       for (int stage = 0; stage < 5; stage++) {
         float stgEne = Ene[stage];
@@ -184,12 +147,10 @@ void pedGainCalib::weplEvt(float Vedet, float Tedet,
     hProfT->entry(Tedet, Ene[0]);
 }
 
-void pedGainCalib::getGains(TVcorrection *TVcorr, const char *inFileName,
-                            int run_number, int program_version, int proj_angle,
-                            int nKeep,
-                            string start_time) { // Called prior to the final
-                                                 // loop over protons histories
-                                                 // to calculate WEPL
+void pedGainCalib::getGains(TVcorrection *TVcorr, const char *inFileName, int run_number, int program_version,
+                            int proj_angle, int nKeep, string start_time) { // Called prior to the final
+                                                                            // loop over protons histories
+                                                                            // to calculate WEPL
   // Save plots of the histograms so that the gains can be visualized
   oFile = fopen(fileName2, "w");
   if (oFile != NULL) {
@@ -227,8 +188,7 @@ void pedGainCalib::getGains(TVcorrection *TVcorr, const char *inFileName,
     fprintf(oFile, "unset label\n");
     fclose(oFile);
   } else {
-    cout << "getGains thread " << threadNumber
-         << ": unable to open the profile plot file " << fileName3 << endl;
+    cout << "getGains thread " << threadNumber << ": unable to open the profile plot file " << fileName3 << endl;
   }
 
   double EBragg = 6.0;
@@ -252,15 +212,13 @@ void pedGainCalib::getGains(TVcorrection *TVcorr, const char *inFileName,
       //            cout << "getGains thread " << threadNumber << ": mode= " <<
       // mode << " and peak=" << Peak[stage] << endl;
     }
-    cout << "getGains thread " << threadNumber
-         << ": measured peak location for stage " << stage << " is "
+    cout << "getGains thread " << threadNumber << ": measured peak location for stage " << stage << " is "
          << Peak[stage] << endl;
     if (Peak[stage] > 0.01) {
       corrFac[stage] = TVcorr->Eempt[stage] / Peak[stage];
     } else {
-      cout << "getGains thread " << threadNumber
-           << ", ERROR: unable to find a peak position; leaving the gains "
-              "unchanged. **********" << endl;
+      cout << "getGains thread " << threadNumber << ", ERROR: unable to find a peak position; leaving the gains "
+                                                    "unchanged. **********" << endl;
       corrFac[stage] = 1.0;
     }
   }

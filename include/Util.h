@@ -84,14 +84,11 @@ public:
   static double expandTime(string Time) {
     char *ePtr;
     if (Time.size() < 15) {
-      cout << "Util::expandTime:  input string " << Time
-           << " is not long enough." << endl;
+      cout << "Util::expandTime:  input string " << Time << " is not long enough." << endl;
       return 0.0;
     }
-    if (Time.c_str()[2] != ':' || Time.c_str()[5] != ':' ||
-        Time.c_str()[8] != '.') {
-      cout << "Util::expandTime:  input string " << Time
-           << " does not have the expected format." << endl;
+    if (Time.c_str()[2] != ':' || Time.c_str()[5] != ':' || Time.c_str()[8] != '.') {
+      cout << "Util::expandTime:  input string " << Time << " does not have the expected format." << endl;
       return 0.0;
     }
     int Hour = strtol(Time.substr(0, 2).c_str(), &ePtr, 10);
@@ -119,13 +116,11 @@ public:
         if (tokens.size() < 2)
           continue;
         startTime = expandTime(tokens.at(1));
-        cout << "The start time of the run is " << startTime
-             << " from the log file " << endl;
+        cout << "The start time of the run is " << startTime << " from the log file " << endl;
         break;
       }
       if (startTime <= 0.0) {
-        cout << "Util::getStartAngle: unable to find the run start time."
-             << endl;
+        cout << "Util::getStartAngle: unable to find the run start time." << endl;
         infile.close();
         return 0.0;
       }
@@ -138,8 +133,7 @@ public:
           continue;
         double endTime = expandTime(tokens.at(1));
         float stageAngle = atof(tokens.at(8).c_str());
-        cout << "From the log file the stage angle at time " << endTime
-             << " is " << stageAngle << endl;
+        cout << "From the log file the stage angle at time " << endTime << " is " << stageAngle << endl;
         infile.close();
         float offset = stageAngle - (endTime - startTime) * 6.0;
         cout << "The stage angle at the start of run was " << offset << endl;
@@ -149,8 +143,7 @@ public:
       cout << "Util::getStartAngle: unable to find the stage angle." << endl;
       return 0.0;
     } else {
-      cout << "Util::getStartAngle: unable to open the log file " << logFile
-           << endl;
+      cout << "Util::getStartAngle: unable to open the log file " << logFile << endl;
       return 0.0;
     }
   }
