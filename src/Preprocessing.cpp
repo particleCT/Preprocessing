@@ -32,7 +32,7 @@ Preprocessing::Preprocessing(std::string inputFileName, std::string study_name, 
                              std::string WcalibFile, std::string TVcorrFile, int n_threads, float StgThrIn[5],
                              int fileBins, int analysisLevel, bool callUser, bool continuous_scan, float initialAngle,
                              bool realTimeCal, int max_events, int max_time, int n_debug, int n_plot, float proj_angle,
-                             bool dodEEFilter, int pdstlr[5], std::string OsName, float Version) {
+                             bool dodEEFilter, int pdstlr[5], std::string OsName, float beamEnergy, float Version) {
 
   cout << "*********** Entering the driver program for pCT preprocessing **************" << endl;
   energyOutput = 0;
@@ -56,6 +56,7 @@ Preprocessing::Preprocessing(std::string inputFileName, std::string study_name, 
   this->n_plot = n_plot;
   this->proj_angle = proj_angle;
   this->dodEEFilter = dodEEFilter;
+  this->beamEnergy = beamEnergy;
   this->OsName = OsName;
 
   start_time = time(NULL);
@@ -173,18 +174,17 @@ void Preprocessing::WriteBinaryFile3(bool timeStampOutput, bool energyOutput, bo
     version_id += 100;
   if (eventIDOutput)
     version_id += 1000;
-  int current_time = time(NULL);
-  int phantom_name_size = sizeof(PHANTOM_NAME);
-  int data_source_size = sizeof(DATA_SOURCE);
-  int prepared_by_size = sizeof(PREPARED_BY);
+  int current_time      = time(NULL);
+  int phantom_name_size = strlen(PHANTOM_NAME);
+  int data_source_size  = strlen(DATA_SOURCE);
+  int prepared_by_size  = strlen(PREPARED_BY);
 
   // Write headers:
-  data_file.write(magic_number, 4);                                            // magic number identifier (note that it
-                                                                               // doesn't include null terminator '\0')
+  data_file.write(magic_number, 4);                                            // magic number identifier (note that it doesn't include null terminator '\0')
   data_file.write(reinterpret_cast<char *>(&version_id), sizeof(int));         // format version identifier
   data_file.write(reinterpret_cast<char *>(&event_counter), sizeof(int));      // number of events in file
   data_file.write(reinterpret_cast<char *>(&projection_angle), sizeof(float)); // projection angle
-  data_file.write(reinterpret_cast<char *>(&versionNumber), sizeof(float));    // beam energy
+  data_file.write(reinterpret_cast<char *>(&beamEnergy), sizeof(float));    // beam energy
   data_file.write(reinterpret_cast<char *>(&study_date), sizeof(int));         // generation date
   data_file.write(reinterpret_cast<char *>(&current_time), sizeof(int));       // pre-process date
   data_file.write(reinterpret_cast<char *>(&phantom_name_size), sizeof(int));

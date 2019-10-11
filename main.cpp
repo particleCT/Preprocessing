@@ -261,6 +261,13 @@ int main(int argc, char *argv[]) {
       .show_default();
   cfg.addItem('a', "angle", initialAngle);
 
+  float beamEnergy = 200.; // Unless a value is supplied by the user, this angle will be taken from the input file
+  parser.add_opt('p', "energy")
+      .stow(beamEnergy)
+      .help("set the energy (Mev/u) to override the value from the input file", "FLOAT")
+      .show_default();
+  cfg.addItem('e', "energy", beamEnergy);
+
   float proj_angle = -999.; // Unless a value is supplied by the user, this angle will be taken from the input file
   parser.add_opt('p', "projection")
       .stow(proj_angle)
@@ -480,10 +487,9 @@ int main(int argc, char *argv[]) {
   }
   if (Calibrate) {
     cout << "Calibration run.  The list of input files is from " << CalFile << endl;
-    if (redoCal)
-      cout << "The analysis of existing calibration histograms will be redone" << endl;
-  } else
-    cout << "Preprocessing run, the input file name is " << inputFileName << endl;
+    if (redoCal)  cout << "The analysis of existing calibration histograms will be redone" << endl;
+  } 
+  else cout << "Preprocessing run, the input file name is " << inputFileName << endl;
   cout << "The TV calibration file is " << TVcorrFile << endl;
   cout << "The WEPL calibration file is " << WcalibFile << endl;
 
@@ -610,7 +616,7 @@ int main(int argc, char *argv[]) {
     Preprocessing pCTpreprocessor(inputFileName, study_name, Outputdir, WcalibFile, TVcorrFile, n_threads, thr,
                                   fileBins, analysisLevel, callUser, continuous_scan, initialAngle, reCalibrate,
                                   max_events, max_time, n_debug, n_plot, proj_angle, dodEEFilter, pdstlr, OsName,
-                                  Version);
+                                  beamEnergy, Version);
     int errorCode =
         pCTpreprocessor.ProcessFile(phantomSize, partType, wedgeOff, fileFraction, numbTkrFPGA, numbEdetFPGA, KillCh);
 

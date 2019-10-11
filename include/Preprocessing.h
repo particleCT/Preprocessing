@@ -58,6 +58,7 @@ class Preprocessing { // Top level program from the pCT preprocessing task.
   generalparam config;
   size_t file_size;
   float Version;
+  float beamEnergy;
   int n_threads;
   double Uhit[4];
   std::string study_name;
@@ -99,7 +100,7 @@ public:
   Preprocessing(std::string inputFileName, std::string study_name, std::string Outputdir, std::string WcalibFile,
                 std::string TVcorrFile, int n_threads, float StgThr[5], int angleBins, int analysisLevel, bool callUser,
                 bool continuous_scan, float initialAngle, bool realTimeCal, int max_events, int max_time, int n_debug,
-                int n_plot, float proj_angle, bool dodEEFilter, int pdstlr[5], std::string OsName, float Version);
+                int n_plot, float proj_angle, bool dodEEFilter, int pdstlr[5], std::string OsName, float BeamEnergy, float Version);
 
   int ProcessFile(float phantomSize, std::string partType, float wedgeOffset, float fileFraction, int numbTkrFPGA,
                   int numbEdetFPGA, std::string KillCh);
