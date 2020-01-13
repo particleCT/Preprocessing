@@ -24,6 +24,7 @@ class pedGainCalib {
                string partType);
   ~pedGainCalib();  
 
+  //Variables
   TFile* pedGainCalibRootFile = TFile::Open("pedGainCalib.root","update");
   double Ped[5];
   TH1D* hPed[5];
@@ -31,8 +32,6 @@ class pedGainCalib {
   TH1D* hEnrgTot;
   TProfile* hProfT;
   TH1D* hTedet;
-
-
   FILE *oFile;
   string setTerm;
   char fileName[256];
@@ -41,20 +40,13 @@ class pedGainCalib {
   int threadNumber;
   float emtrng1, emtrng2, emtrng3, emtrng4;
   string partType;
-
   float corrFac[5]; // Gain correction factor derived here for each stage
-  inline double newPed(int stage) { return Ped[stage]; }
-
+  
+  // functions
   void rawPh(pCTraw &rawEvt);
-
-  void getPeds(const char *inFileName, int run_number, int program_version, float proj_angle, int nKeep,
-               string start_time);
-
+  void getPeds(const char *inFileName, int run_number, int program_version, float proj_angle, int nKeep, string start_time);
   void weplEvt(float Vedet, float Tedet, float Ene[5]);
-
-  void getGains(TVcorrection *TVcorr, const char *inFileName, int run_number, int program_version, int proj_angle,
-                int nKeep, string start_time);
-
+  void getGains(TVcorrection *TVcorr, const char *inFileName, int run_number, int program_version, int proj_angle, int nKeep, string start_time);
 
 }; // end of class pedGainCalib
 #endif

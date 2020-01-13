@@ -23,8 +23,7 @@ void EvtRecon::ReadInputFile(pCTgeo* Geometry, TVcorrection *const TVcorr , stri
     if (evtFile == NULL) {
       cout << "EvtRecon: failed to open the temporary file " << evtFileName << endl;
       exit(1);
-    }
-    
+    }    
     cout << "EvtRecon_" << config.item_int["Nbricks"] << ": Opened file " << evtFileName << " for temporary storage of event data." << endl;
   }
 
@@ -63,24 +62,23 @@ void EvtRecon::ReadInputFile(pCTgeo* Geometry, TVcorrection *const TVcorr , stri
     cout << "Estimated number of bytes needed for temporary storage = " << estLength << endl;
     evtList.reserve(estLength);
   }
-
   Event tmpEvt;
-  // Set the range in T that should be occupied by unobstructed protons. Only
-  // the +T side!
-  // September 12, 2018 we started moving the edge of the bricks 2 cm past the
-  // wedge,
-  // so this range had to be moved.  It should be okay also for earlier runs
-  // with the wedge phantom.
+  // Set the range in T that should be occupied by unobstructed protons. Only the +T side!
+  // September 12, 2018 we started moving the edge of the bricks 2 cm past the wedge,
+  // so this range had to be moved.  It should be okay also for earlier runs with the wedge phantom.
+
   float wedgeLimit = Geometry->getTWedgeBreaks(4) + 25.0; // NO BRICK OFFSET //+5.
   float openRange = 20.0;
   cout << "EvtRecon_ " << config.item_int["Nbricks"] << ": range in T used for recalibration is " << wedgeLimit << " to " << wedgeLimit + openRange << " mm\n";
   float pedestals[nStage];
   int pdstlr[5];
+
   for (int stage = 0; stage < nStage; stage++) pedestals[stage] = 0.;
   for (int stage = 0; stage < nStage; stage++) pdstlr[stage] = config.item_int[Form("pedrng%d",stage)];
 
   pedGainCalib Calibrate(config.item_str["outputDir"], pdstlr, pedestals, config.item_int["Nbricks"], -150., -151., wedgeLimit, wedgeLimit + openRange,
                          config.item_str["partType"]); // Specifies range in t where particles miss the wedge phantom
+
 
   // Here is the start of the event loop
   while (!rawEvt.stop_reading) {
@@ -103,8 +101,7 @@ void EvtRecon::ReadInputFile(pCTgeo* Geometry, TVcorrection *const TVcorr , stri
 
       Calibrate.rawPh(rawEvt); // Accumulate pedestal histograms
 
-      TkrHits pCThits(rawEvt, Geometry, debug); // Reconstruct the tracker hits
-                                                // from the raw strip data
+      TkrHits pCThits(rawEvt, Geometry, debug); // Reconstruct the tracker hits from the raw strip data
       if (debug) pCThits.dumpHits(rawEvt.event_number);
 
       pCT_Tracking pCTtracks(pCThits, Geometry); // Track pattern recognition
@@ -113,7 +110,7 @@ void EvtRecon::ReadInputFile(pCTgeo* Geometry, TVcorrection *const TVcorr , stri
         pCTtracks.displayEvent(rawEvt.event_number, pCThits, config.item_str["outputDir"]);
 
       // Store the reconstructed track and raw energy information into the output list
-      if (cuts.cutEvt(false, pCTtracks, pCThits)) {
+      if (cuts.cutEvt(pCTtracks, pCThits)) {
         for (int lyr = 0; lyr < 4; lyr++) {
           tmpEvt.Thit[lyr] = pCTtracks.TTracks[pCTtracks.itkT].X[lyr];
           uhitT[lyr] = pCTtracks.TTracks[pCTtracks.itkT].U[lyr];
@@ -145,9 +142,10 @@ void EvtRecon::ReadInputFile(pCTgeo* Geometry, TVcorrection *const TVcorr , stri
 
   cuts.summary(); // Summarize the event counts
   Calibrate.getPeds(inputFileName.c_str(), runNumber, program_version, stage_angle, nEvents, runStartTime);
-  for (int stage = 0; stage < 5; stage++) Peds[stage] = Calibrate.newPed(stage);
-  if (config.item_int["useTemp"]) fclose(evtFile);
+  for (int stage = 0; stage < 5; stage++) Peds[stage] = Calibrate.Ped[stage];
 
+  
+  if (config.item_int["useTemp"]) fclose(evtFile);
   if (config.item_int["doGains"]) {
     cout << "Starting the gain analysis for nBlocks= " << config.item_int["Nbricks"] << endl;
     if (config.item_int["useTemp"]) {
@@ -162,8 +160,8 @@ void EvtRecon::ReadInputFile(pCTgeo* Geometry, TVcorrection *const TVcorr , stri
       cout << "EvtRecon nBlocks=" << config.item_int["Nbricks"] << ": Temporary data file size=" << file_size << endl;
     }
     for (int EvtNum = 0; EvtNum < nEvents; EvtNum++) {
-      if (EvtNum % 1000000 == 0)
-        cout << "EvtRecon_" << config.item_int["Nbricks"] << " gain analysis, processing event " << EvtNum << endl;
+      if (EvtNum % 1000000 == 0) cout << "EvtRecon_" << config.item_int["Nbricks"] << " gain analysis, processing event " << EvtNum << endl;
+	
       Event thisEvent;
       if (config.item_int["useTemp"])
         readTmp(thisEvent);
@@ -181,7 +179,7 @@ void EvtRecon::ReadInputFile(pCTgeo* Geometry, TVcorrection *const TVcorr , stri
           cout << thisEvent.ADC[stage] << "  ";
         cout << endl;
       }
-    
+
       // Calculate the calibrated WEPL
       float Ene[5], Vedet[5], Tedet[5];
       double UV[4], UT[4], V[4], T[4];
@@ -205,9 +203,10 @@ void EvtRecon::ReadInputFile(pCTgeo* Geometry, TVcorrection *const TVcorr , stri
       }
       float vPh = Geometry->extrap2D(UV, V, -76.2);
       float tPh = Geometry->extrap2D(UT, T, -76.2);
-      if (nGood == 5)
-        Calibrate.weplEvt(vPh, tPh, Ene);
+      if (nGood == 5) Calibrate.weplEvt(vPh, tPh, Ene);
+        
     }
+
     if (config.item_int["recalibrate"]) {
       Calibrate.getGains(TVcorr, inputFileName.c_str(), rawEvt.run_number, rawEvt.program_version, 0., cuts.nKeep, rawEvt.start_time);
 
@@ -234,7 +233,6 @@ void EvtRecon::ReadInputFile(pCTgeo* Geometry, TVcorrection *const TVcorr , stri
 
 ////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////
-
 
 void EvtRecon::writeTmp(Event &evt) {
   memcpy(&outBuff[0], evt.Thit, 4 * sizeof(float));

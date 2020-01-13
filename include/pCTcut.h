@@ -26,7 +26,7 @@ class pCTcut {
   pCTcut( pCTconfig cfg); // Class constructor called prior to the event loop
   pCTconfig config;
   // classes
-  bool cutEvt(bool userKill, pCT_Tracking&, TkrHits&);
+  bool cutEvt(pCT_Tracking&, TkrHits&);
   bool EnrgCut(float [5], float, float, float, float );
     
   void summary();

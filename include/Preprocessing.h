@@ -19,8 +19,6 @@
 // from strip clusters
 // - pCT_Tracking.cpp and pCT_Tracking.h: pattern recognition for the tracking;
 // includes printing and plotting
-// - UserAnalysis.h: optional entry points for private user data analysis, to
-// keep those hacks separate from public code
 //
 // - TDB: the geometry and calibration constants need to be accessed from a
 // database with date key
@@ -28,29 +26,6 @@
 // Compile it with g++ using -std=c++0x -lpthread -g -rdynamic (the -g and
 // -rdynamic can be omitted if all is working well)
 //
-/*struct generalparam { // Variables needed by the pCTevents program, put together
-                      // to reduce the size of the parameter list.
-  // This is to enable passing of the raw data processing task "pCTevents" to multiple threads.
-  std::string inFileName; // Raw data file name
-  std::string Outputdir;  // User supplied location for output files and input of
-                          // calibration files
-  int threadNum;          // To identify which thread is printing out stuff
-  int n_debug;            // Number of events for debug print-out
-  int n_plot;             // Number of events for which to plot tracking information
-  int max_events;         // Maximum number of events to process (for each thread)
-  int max_time;
-  bool continuous_scan; // True if a continuous scan is being executed, in which
-                        // case the time-stamp is used to calculate the
-                        // projection angle
-  float proj_angle;     // Projection angle from the raw data file or else
-                        // overridden by a value supplied by the user command line
-  int analysisLevel;    // Analysis level supplied by the user command line
-  bool callUser;        // Command line option to call, or not call, the UserAnalysis
-                        // entry points. Only applies to thread 0 in any case.
-  bool reCalibrate;     // Update the gain calibrations on the fly during
-                        // processing.
-  int pdstlr[5];        // Lower end of the pedestal histogram range
-  };*/
 
 #include "pCTconfig.h"
 

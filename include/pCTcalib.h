@@ -47,7 +47,7 @@ class pCTcalib {
   void plot2D(string fn, string T, string TX, string TY, int N, float X[], float Y[], float E[]);
   int TVmapper();
   void enrgDep();
-  void writeTVfile();
+  void writeCalibfile();
   bool getLineIntersection(double, double, double, double, double, double, double, double, double &, double &);
   bool EnrgCut(float [5], float, float, float, float);
 
@@ -66,10 +66,16 @@ class pCTcalib {
   pCTcut *cuts;
   
   //Variables
-  float TVmap[nStage][nPix]; // 5 TV maps with 1cm pixels, 10x38 cm2 area, total 10x38=380 pixels per stage
-  float tPlaneShifts[4][4] = {{0}};
-  float Est[nStage] = {0};
-  float EnS;
+  float Est[nStage] = {0}; // energy in each stage
+  float EnS; // energy sum in all stage
+
+  float Rst[nStage][nEnrg] = {{0.}}; // 5 arrays to store range vs E
+  float Sst[nStage][nEnrg] = {{0.}}; // Peak width for each energy (sigma)
+  float est[nEnrg] = { 0. };         // Corresponding E array in MeV/4
+
+  float dEElow[5][3];
+  float dEEhigh[5][3];
+    
   TFile* pCTcalibRootFile = new TFile("pCTcalib.root", "recreate"); // General File for Recalibration
   TH1D *pxHistE_root[nStage][nPix];
   TH1D *pxHistADC_root[nStage][nPix];

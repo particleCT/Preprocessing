@@ -31,8 +31,6 @@
 // 6 calibration run raw data files.
 // - EvtRecon does the raw data event reconstruction in the case of calibration
 // runs.
-// - UserAnalysis.h: optional entry points for private user data analysis, to
-// keep those hacks separate from public code
 // - Histogram.cpp and Histogram.h: simple facilities for making histograms and
 // profile plots
 //
@@ -225,14 +223,6 @@ int main(int argc, char *argv[]) {
     .show_default();
   cfg.addItem('j', "n_plot", n_plot);
 
-  int UserAna = 0;
-  parser.add_opt('u', "user")
-    .stow(UserAna)
-    .help("execute the UserAnalysis entry points? yes or no", "INT")
-    .show_default();
-
-  cfg.addItem('u', "user", UserAna);
-
   int analysisLevel = 2;
   parser.add_opt('l', "level")
     .stow(analysisLevel)
@@ -413,34 +403,30 @@ int main(int argc, char *argv[]) {
   }
 
   // Parse the command options
-  try {
-    parser.parse(argc, argv);
-  }
+  try { parser.parse(argc, argv); }
   catch (arg::Error e) {
     cout << " Error parsing command line: " << e.get_msg() << '\n';
     return 1;
   }
 
-  if (numbTkrFPGA != 12)
-    cout << "Non-standard number of tracker FPGAs in the readout = " << numbTkrFPGA << endl;
-  if (numbEdetFPGA != 2)
-    cout << "Non-standard number of energy detector FPGAs in the readout = " << numbEdetFPGA << endl;
-
+  // Printing out some number
+  //////////////////////////////////////////////////////
+  if (numbTkrFPGA  != 12) cout << "Non-standard number of tracker FPGAs in the readout = " << numbTkrFPGA << endl;
+  if (numbEdetFPGA != 2)  cout << "Non-standard number of energy detector FPGAs in the readout = " << numbEdetFPGA << endl;
+    
   // Weird validation
-  if (partType == "p" || partType == "proton" || partType == "hydrogen" || partType == "Hydrogen") partType = "H";
-  if (partType == "helium" || partType == "alpha" || partType == "Helium") partType = "He";    
-  if (partType == "H" || partType == "He") {
-    cout << "The beam particle type assumed for analysis and calibration is " << cfg.item_str["partType"] << endl;
-  } else {
-    cout << "Unrecognized particle type '" << partType << "'" << endl;
-    exit(2);
-  }
-
   if (reCalibrate) cout << "Energy detector stage gains will be recalibrated on the fly during processing." << endl;
   else cout << "Energy detector stage gains will NOT be recalibrated on the fly during processing." << endl;
-
-  // Get the list of required, position-sensitive arguments, in this case just the input filename
-  vector<string> requiredArgs = parser.args();
+  if (fileBins <= 0) {
+    cout << "************ The number of files was specified to be 0 or negative. Resetting to equal 1 bin. **********" << endl;
+    fileBins = 1; // Protects from crashing due to bad input
+  }
+  if (max_events > 0) {
+    cout << "The maximum number of events to analyze is set to " << max_events << endl;
+  } else cout << "No restriction is set on the maximum number of events to analyze." << endl;
+  if (max_time > 0) {
+    cout << "The maximum time stamp to analyze is set to " << max_time << " seconds." << endl;
+  } else cout << "No restriction is set on the maximum time stamp to analyze." << endl;
 
   // Most of the floating point variables are specified double precision on the assumption
   // that this is going to execute anyway on a 64-bit machine.  An exception is the
@@ -454,10 +440,22 @@ int main(int argc, char *argv[]) {
   cout << "  long long is " << sizeof(long long) << " bytes\n";
   cout << "  long is " << sizeof(long) << " bytes\n";
 
-  // Unlike in the original program, the user has to enter the full filename,
-  // including path
+
+  if (partType == "p" || partType == "proton" || partType == "hydrogen" || partType == "Hydrogen") partType = "H";
+  if (partType == "helium" || partType == "alpha" || partType == "Helium") partType = "He";    
+  if (partType == "H" || partType == "He") {
+    cout << "The beam particle type assumed for analysis and calibration is " << cfg.item_str["partType"] << endl;
+  } else {
+    cout << "Unrecognized particle type '" << partType << "'" << endl;
+    exit(2);
+  }
+
+  // The user has to enter the full filename including path
   string CalFile = "CalFileList.txt"; // For calibration runs the input filenames are taken from here
   string inputFileName;
+
+  // Get the list of required, position-sensitive arguments, in this case just the input filename
+  vector<string> requiredArgs = parser.args();
   if (requiredArgs.size() == 0) {
     if (!Calibrate) {
       cout << "pCT_Preprocessing: no input raw data file was specified!\n";
@@ -468,24 +466,9 @@ int main(int argc, char *argv[]) {
     CalFile = requiredArgs[0];
   }
   if (Calibrate) cout << "Calibration run.  The list of input files is from " << CalFile << endl;
-
   else cout << "Preprocessing run, the input file name is " << inputFileName << endl;
   cout << "The TV calibration file is " << TVcorrFile << endl;
   cout << "The WEPL calibration file is " << WcalibFile << endl;
-
-  if (fileBins <= 0) {
-    cout << "************ The number of files was specified to be 0 or "
-            "negative.  Resetting to equal 1 bin. **********" << endl;
-    fileBins = 1; // Protects from crashing due to bad input
-  }
-  if (max_events > 0) {
-    cout << "The maximum number of events to analyze is set to " << max_events << endl;
-  } else cout << "No restriction is set on the maximum number of events to analyze." << endl;
-
-  if (max_time > 0) {
-    cout << "The maximum time stamp to analyze is set to " << max_time << " seconds." << endl;
-  } else cout << "No restriction is set on the maximum time stamp to analyze." << endl;
-
 
   if (continuous_scan) {
     cout << "The data are assumed to be from a continuous scan." << endl;
@@ -496,8 +479,7 @@ int main(int argc, char *argv[]) {
           logFile = inputFileName.substr(0, found) + ".log";
         }
       }
-      FILE *ftst = fopen(logFile.c_str(), "r"); // Just to test whether the log
-                                                // file really exists. . .
+      FILE *ftst = fopen(logFile.c_str(), "r"); // Just to test whether the log file really exists. . .
       if (ftst != NULL) {
         fclose(ftst);
         Util util;
@@ -517,8 +499,6 @@ int main(int argc, char *argv[]) {
   cout << "The number of events for which to plot the tracker hits and tracks is " << n_plot << endl;
 
   if (Calibrate) cout << "Set the number of events to plot > 0 to get loads of debug histograms in calibration runs." << endl;
-  else if (UserAna) cout << "The user routine will be called for each raw event." << endl;
-
   cout << "Fraction of the input file to be analyzed is " << fileFraction << endl;
 
   cout << "The phantom size for preprocessing is assumed to be " << phantomSize << " mm in radius." << endl;
@@ -536,9 +516,9 @@ int main(int argc, char *argv[]) {
     cfg.addItem('g', "inputFileName", inputFileName);
 
   
-  ////  ////  ////  ////  ////  ////  ////  ////  ////  ////  ////  ////  ////
+  ////////////////////////////////////////////////////
   // Calibration run
-  ////  ////  ////  ////  ////  ////  ////  ////  ////  ////  ////  ////  ////
+  ////////////////////////////////////////////////////
   if (Calibrate) { // Calibration Run
     cout << "Running the pCT TV and WEPL calibration sequence" << endl;
     if (Normalize) cout << "Will normalize columns in the WET vs E plot to have equal area." << endl;
@@ -551,17 +531,17 @@ int main(int argc, char *argv[]) {
     
     pCTcalib calibProcessor(cfg, CalFile);
     if (calibProcessor.TVmapper() == 0) { // First the TVmapper
-      calibProcessor.enrgDep();
-      calibProcessor.writeTVfile();
+      calibProcessor.enrgDep(); // Verify the energy dependence      
       calibProcessor.Wcalib();
+      calibProcessor.writeCalibfile();
     }
     else {
       cout << "The calibration run failed in calibProcessor.TVmapper; WEPL calibration will not be run." << endl;
     }
   }
-  ////  ////  ////  ////  ////  ////  ////  ////  ////  ////  ////  ////  ////
+  ////////////////////////////////////////////////////
   // Real run
-  ////  ////  ////  ////  ////  ////  ////  ////  ////  ////  ////  ////  ////
+  ////////////////////////////////////////////////////
   else { 
     cout << "Executing a pCT data pre-processing run" << endl;
     // Here we call the complete preprocessing program

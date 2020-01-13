@@ -99,7 +99,7 @@ bool pCTcut::EnrgCut(float Estage[5], float Etot, float cut0, float cut1, float 
 // Tracking cuts
 ////////////////////////////////////////////////////////////////////
 // Call for each raw event after the tracking is completed
-bool pCTcut::cutEvt(bool userKill, pCT_Tracking &pCTtracks, TkrHits &pCThits) {
+bool pCTcut::cutEvt(pCT_Tracking &pCTtracks, TkrHits &pCThits) {
   event_counter++;
   bool good = false;
   if (pCTtracks.nTracks >= minTkrs && pCTtracks.nTracks <= maxTkrs) { // Exactly 1 V track and 1 T track.  No 2-track events allowed.
@@ -142,11 +142,8 @@ bool pCTcut::cutEvt(bool userKill, pCT_Tracking &pCTtracks, TkrHits &pCThits) {
       nLT8hits++;
       if (nLyrXtraV < mxXlyr && nLyrXtraT < mxXlyr && nLyrXtraV + nLyrXtraT < mxTotXlyr) {
 	nGoodXtra++;
-	if (!userKill) { // Here we have a 'good' event for image
-	  // reconstruction
-	  nKeep++;
-	  good = true;
-	}
+	nKeep++;
+	good = true;
       }
     }
   } else { // Here, just select on the number of hits in the rear tracker

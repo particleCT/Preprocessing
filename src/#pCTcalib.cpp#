@@ -187,7 +187,7 @@ int pCTcalib::TVmapper() {
         perror("pCTcalib: invalid pixel");
         iPix = 0;
       }
-      // Histogram the raw ADC minus pedestal in each pixel of each stage
+      //Histogram the raw ADC minus pedestal in each pixel of each stage
       //pxHistADC[stage][iPix]->entry(thisEvent.ADC[stage] - procEvt->Peds[stage]); 
       pxHistADC_root[stage][iPix]->Fill(thisEvent.ADC[stage] - procEvt->Peds[stage]); 
     }

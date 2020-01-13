@@ -25,7 +25,6 @@
 #include "pCTcut.h"
 #include "TVcorrection.h"
 #include "pedGainCalib.h"
-#include "UserAnalysis.h"
 #include "Preprocessing.h"
 #include "BadEvent.h"
 
@@ -41,9 +40,6 @@ Preprocessing::Preprocessing(pCTconfig cfg): config(cfg){
   now = localtime(&start_time);
   printf("Current local time and date: %s", asctime(now));
 
-  if (config.item_int["user"]) cout << "The user analysis entry points will be called, to accumulate histograms, etc.\n";
-  else cout << "The user analysis entry points will not be called and user histograms will not be accumulated or output.\n";
-    
   if (config.item_int["continuous"]) {
     cout << "A continuous scan will be analyzed\n";
      cout << "The initial stage angle, at time 0, is " << initialAngle << " degrees." << endl;
@@ -330,12 +326,10 @@ void Preprocessing::WriteRootFile(bool timeStampOutput, bool energyOutput, bool 
 // Routine called to read the raw data, analyze it, write results to a temporary
 // file, and analyze the WEPL calibration pedestals and gains.  Ideally this would be a private member
 // of the Preprocessing class, but then the compiler doesn't allow it to be passed to multiple threads.
-void pCTevents(pCTconfig config, pCTgeo* Geometry, UserAnalysis &user, pCTraw rawEvt, pedGainCalib *Calibrate,
+void pCTevents(pCTconfig config, pCTgeo* Geometry, pCTraw rawEvt, pedGainCalib *Calibrate,
                TVcorrection *const TVcorr, int &nKeep, double Uhit[]) {
 
   // Multiple instances of this program can execute in parallel threads.
-  // The user instance is passed by reference but is modified here only for
-  // thread 0, to avoid conflicts.
   // Uhit is passed by reference so that the U coordinates can be returned by
   // thread 0, to save space by avoiding writing them in the temporary file.
   //      Therefore, each instance needs to be given separate memory locations
@@ -392,7 +386,6 @@ void pCTevents(pCTconfig config, pCTgeo* Geometry, UserAnalysis &user, pCTraw ra
       /////////////////////////////////////////////////
 
       rawEvt.readOneEvent(debug);
-
       Calibrate->rawPh(rawEvt); // Accumulating histograms for pedestal analysis
 
       bool daqErr = rawEvt.bad_fpga_address || rawEvt.tag_mismatch || rawEvt.CRC_error || rawEvt.chip_error ||
@@ -412,10 +405,8 @@ void pCTevents(pCTconfig config, pCTgeo* Geometry, UserAnalysis &user, pCTraw ra
         // Decide whether to read another event
         cout << "Preprocessing skipping reconstruction at event count "
              << rawEvt.event_counter << " due to DAQ error\n";
-        rawEvt.doWeStop(config.item_int["max_events"], config.item_int["max_time"]); // This will set the
-                                                           // stop_reading flag
-                                                           // inside the rawEvt
-                                                           // instance
+        rawEvt.doWeStop(config.item_int["max_events"], config.item_int["max_time"]); // This will set the stop_reading flag inside the rawEvt instance
+
         if (rawEvt.stop_reading) cout << "Preprocessing stopping after " << rawEvt.event_counter << " events.\n";
 	
         continue;
@@ -423,8 +414,7 @@ void pCTevents(pCTconfig config, pCTgeo* Geometry, UserAnalysis &user, pCTraw ra
       unsigned int timeStampOut = rawEvt.time_tag / 16; // Reduced precision to fit into 32 bits
       unsigned int eventIdOut = rawEvt.event_number;
 
-      // Calculate the stage angle in the case of a continuous scan, assuming a
-      // known constant rotation velocity
+      // Calculate the stage angle in the case of a continuous scan, assuming a known constant rotation velocity
       float theta;
       if (config.item_int["continuous"]) {
         double theta2 = ((double)(rawEvt.time_tag)) * Geometry->timeRes() * Geometry->stageSpeed();
@@ -451,17 +441,11 @@ void pCTevents(pCTconfig config, pCTgeo* Geometry, UserAnalysis &user, pCTraw ra
       if (rawEvt.event_counter < config.item_int["n_plot"])
         pCTtracks.displayEvent(rawEvt.event_number, pCThits, config.item_str["outputDir"]);
 
-      ////////////////////////////////////////////
-      // PERFORM THE PRIVATE USER EVENT ANALYSIS
-      ////////////////////////////////////////////
-
-      bool userKill = false;
-      if (config.item_int["user"]) userKill = user.rawEvent(rawEvt, pCThits, pCTtracks, Geometry, theta); // user's opportunity to cut unwanted events
       ////////////////////////////////////////////////////////////////////
       // WRITE OUT ONLY EVENTS THAT ARE SUITABLE FOR IMAGE RECONSTRUCTION
       ////////////////////////////////////////////////////////////////////
 
-      if (config.item_int["level"] > 0 && cuts.cutEvt(userKill, pCTtracks, pCThits)) {
+      if (config.item_int["level"] > 0 && cuts.cutEvt(pCTtracks, pCThits)) {
         if (rawEvt.event_counter % 100000 == 0)
           cout << "Event " << rawEvt.event_number << ", GoodEvtCount " << cuts.nKeep
                << " timeTag " << rawEvt.time_tag << ", theta  " << theta << endl;
@@ -587,19 +571,18 @@ void pCTevents(pCTconfig config, pCTgeo* Geometry, UserAnalysis &user, pCTraw ra
     cout <<"We are updating the energy detector pedestal settings to the "
       "on-the-fly measurement values.\n";
     for (int stage = 0; stage < 5; stage++) {
-      double newPed = Calibrate->newPed(stage);
-      if (newPed == 0.) {
+      if (Calibrate->Ped[stage] == 0.) {
         cout <<"Keeping the TVcorr pedestal value " << TVcorr->ped[stage]
              << " for stage " << stage << endl;
       } else {
         cout <<"Pedestal from calibration file = " << TVcorr->ped[stage]
-             << "     Drift= " << newPed - TVcorr->ped[stage] << endl;
+             << "     Drift= " << Calibrate->Ped[stage] - TVcorr->ped[stage] << endl;
       }
     }
   }
   else cout<<"Not enough events to recalibrate the pedestals." << endl;
   for (int stage = 0; stage < 5; stage++) {
-    cout <<"The energy detector pedestal for stage " << stage << " is " << Calibrate->newPed(stage) << endl;
+    cout <<"The energy detector pedestal for stage " << stage << " is " << Calibrate->Ped[stage] << endl;
   }
 
   /////////////////////////////////////////////////////////
@@ -662,7 +645,7 @@ void pCTevents(pCTconfig config, pCTgeo* Geometry, UserAnalysis &user, pCTraw ra
         Vedet[stage] = Geometry->extrap2D(&Uhit[2], Vback, Geometry->energyDetectorU(stage));
         Tedet[stage] = Geometry->extrap2D(&Uhit[2], Tback, Geometry->energyDetectorU(stage));
         bool inBounds;
-        Ene[stage] = ((float)phSum[stage] - Calibrate->newPed(stage)) *
+        Ene[stage] = ((float)phSum[stage] - Calibrate->Ped[stage]) *
                      TVcorr->corrFactor(stage, Tedet[stage], Vedet[stage], inBounds);
       }
 
@@ -738,12 +721,6 @@ int Preprocessing::ProcessFile(float phantomSize, string partType, float wedgeOf
   rawEvt.readRunHeader(config.item_str["inputFileName"].c_str());    // Look for the run header bits and parse them
   pCTgeo* Geometry = new pCTgeo(0.);   // Create a class instance with all of the geometry information
 
-  // Create an instance of the class UserAnalysis.  This provides entry points
-  // for users to insert private code to peak at the
-  // data during processing without messing up the public program structure.
-  UserAnalysis user(config.item_str["inputFileName"].c_str(), Geometry, partType, analysisLevel);
-  
-  //if (config.callUser) user.initialize(rawEvt); // Entry point for users to initialize their private analysis code
     
 
   if (config.item_int["level"] < 0 || config.item_int["level"] > 2)
@@ -831,13 +808,9 @@ int Preprocessing::ProcessFile(float phantomSize, string partType, float wedgeOf
   /////////////////////////////////////////////////////////////////
 
   int nKeep;
-  // Uhit is filled and returned for use below, just to save space in the
-  // temporary file.
-  // The user analysis entry points execute only if config.callUser is true.
-  pCTevents(config, Geometry, std::ref(user), rawEvt, Calibrate, TVcorr, std::ref(nKeep), Uhit);
+  // Uhit is filled and returned for use below, just to save space in the temporary file.
+  pCTevents(config, Geometry, rawEvt, Calibrate, TVcorr, std::ref(nKeep), Uhit);
   if (config.item_int["level"] < 2) {
-    //if (config.callUser) user.summary(config.item_str["outputDir"]);
-      
     cout << "Preprocessing.cpp: pCT_Preprocessing all done with the raw data "
             "monitoring task." << endl;
     return 0;
@@ -1011,7 +984,7 @@ int Preprocessing::ProcessFile(float phantomSize, string partType, float wedgeOf
       float Vedet = Geometry->extrap2D(&Uhit[2], Vback, Geometry->energyDetectorU(stage));
       float Tedet = Geometry->extrap2D(&Uhit[2], Tback, Geometry->energyDetectorU(stage));
       float TVCorrFactor = TVcorr->corrFactor(stage, Tedet, Vedet, inBounds);
-      Ene[stage] = Calibrate->corrFac[stage] * ((float)phSum[stage] - Calibrate->newPed(stage)) * TVCorrFactor;      
+      Ene[stage] = Calibrate->corrFac[stage] * ((float)phSum[stage] - Calibrate->Ped[stage]) * TVCorrFactor;      
     }
     
     float Wet;
@@ -1061,9 +1034,6 @@ int Preprocessing::ProcessFile(float phantomSize, string partType, float wedgeOf
       if (timeStampOutput)  TS[k].push_back(timeStamp);
       if (eventIDOutput) EventIDs[k].push_back(event_id);
     }
-    
-    //if(config.callUser) user.weplEvent(theta, Wet, Ene, Thit, Uhit, Vhit, OTR); // in this method the user can insert private analysis code
-        
   }
   delete WEPL;
   fclose(fptmp);
@@ -1081,7 +1051,6 @@ int Preprocessing::ProcessFile(float phantomSize, string partType, float wedgeOf
        << endl;
 
   if(config.item_int["level"] == 1) {
-    //if (config.callUser) user.summary(config.item_str["outputDir"]);
     cout << "Preprocess.cpp: The pCT_Preprocessing monitoring task is all done. . ." << endl;
     
     return 0;
@@ -1110,16 +1079,6 @@ int Preprocessing::ProcessFile(float phantomSize, string partType, float wedgeOf
 		  WetBinary[k].data(), ProjAngle[k].data(), TS[k].data(), EventIDs[k].data());
   }
 
-  //////////////////////////////////////
-  // BEGIN USER SUMMARIES AND PRINTOUTS
-  //////////////////////////////////////
-
-  //if (config.callUser) user.summary(config.item_str["outputDir"]);
-    
-
-  //////////////////////////////////////
-  // END USER SUMMARIES AND PRINTOUTS
-  //////////////////////////////////////
 
   time_t end_time = time(NULL);
   now = localtime(&end_time);
