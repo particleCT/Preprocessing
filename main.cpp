@@ -56,7 +56,7 @@
 #include "arg.h" // Command line options
 #include "Preprocessing.h"
 #include "pCTcalib.h"
-#include "pctConfig.h"
+#include "pCTconfig.h"
 #include "Util.h"
 
 using namespace std;
@@ -82,8 +82,9 @@ int main(int argc, char *argv[]) {
   cout << endl;
 
   const string configFile = "pCT_config.txt";
-  pctConfig cfg(configFile); // Create a class instance for parsing the configuration file
+  pCTconfig cfg(configFile); // Create a class instance for parsing the configuration file
   arg::Parser parser; // Create a class instance for parsing the command line (see the program arg.cc and header arg.h)
+
   parser.set_header(" \n ******** pCT preprocessing version " + version + " **********");
   parser.add_help("");
   parser.add_help(" There is one positional argument: file_name");
@@ -135,24 +136,28 @@ int main(int argc, char *argv[]) {
       .help("stage 0 start of pedestal region (ADC counts)", "INT")
       .show_default();
   cfg.addItem('5', "pedrng0", pdstlr[0]);
+
   pdstlr[1] = -500;
   parser.add_opt('6', "pedrng1")
       .stow(pdstlr[1])
       .help("stage 1 start of pedestal region (ADC counts)", "INT")
       .show_default();
   cfg.addItem('6', "pedrng1", pdstlr[1]);
+
   pdstlr[2] = -500;
   parser.add_opt('7', "pedrng2")
       .stow(pdstlr[2])
       .help("stage 2 start of pedestal region (ADC counts)", "INT")
       .show_default();
   cfg.addItem('7', "pedrng2", pdstlr[2]);
+
   pdstlr[3] = -500;
   parser.add_opt('8', "pedrng3")
       .stow(pdstlr[3])
       .help("stage 3 start of pedestal region (ADC counts)", "INT")
       .show_default();
   cfg.addItem('8', "pedrng3", pdstlr[3]);
+
   pdstlr[4] = -500;
   parser.add_opt('9', "pedrng4")
       .stow(pdstlr[4])
@@ -207,28 +212,32 @@ int main(int argc, char *argv[]) {
   cfg.addItem('M', "max_time", max_time);
 
   int n_debug = 1;
-  parser.add_opt('d', "debug").stow(n_debug).help("set the number of events for debug printout", "INT").show_default();
+  parser.add_opt('d', "debug")
+    .stow(n_debug)
+    .help("set the number of events for debug printout", "INT")
+    .show_default();
   cfg.addItem('d', "n_debug", n_debug);
 
   int n_plot = 0;
-  parser.add_opt('j', "plot").stow(n_plot).help("set the number of tracker events to plot", "INT").show_default();
+  parser.add_opt('j', "plot")
+    .stow(n_plot)
+    .help("set the number of tracker events to plot", "INT")
+    .show_default();
   cfg.addItem('j', "n_plot", n_plot);
 
-  string UserAna = "no";
+  int UserAna = 0;
   parser.add_opt('u', "user")
-      .stow(UserAna)
-      .help("execute the UserAnalysis entry points? yes or no", "STRING")
-      .show_default();
+    .stow(UserAna)
+    .help("execute the UserAnalysis entry points? yes or no", "INT")
+    .show_default();
 
   cfg.addItem('u', "user", UserAna);
 
   int analysisLevel = 2;
   parser.add_opt('l', "level")
-      .stow(analysisLevel)
-      .help("0= monitor raw data only, 1= monitor raw and WEPL, 2= output "
-            "projection data",
-            "INT")
-      .show_default();
+    .stow(analysisLevel)
+    .help("0= monitor raw data only, 1= monitor raw and WEPL, 2= output ","INT")
+    .show_default();
   cfg.addItem('l', "level", analysisLevel);
 
   string logFile = "";
@@ -382,9 +391,9 @@ int main(int argc, char *argv[]) {
 
   int useTemp = 1;
   parser.add_opt('E', "useTemp")
-      .stow(useTemp) // Add an option to the command line parser
-      .help("Use a temporary file instead of local storage for the CALIBRATION process? yes or no", "INT")
-      .show_default();
+    .stow(useTemp) // Add an option to the command line parser
+    .help("Use a temporary file instead of local storage for the CALIBRATION process? yes or no", "INT")
+    .show_default();
   cfg.addItem('E', "useTemp", useTemp); // Also add the option to the list used for parsing the config file
 
   int dodEEFilter = 1; // changed default to yes
@@ -396,13 +405,13 @@ int main(int argc, char *argv[]) {
 
   parser.add_opt_help();
   parser.add_opt_version(version);
-  
+
   // Read the default configuration from the config file
   if (cfg.Configure() != 0) {
     cout << "Was not able to read a default configuration from " << configFile << endl;
     cout << "The hardwired default configuration will be used." << endl;
   }
-  
+
   // Parse the command options
   try {
     parser.parse(argc, argv);
@@ -464,8 +473,6 @@ int main(int argc, char *argv[]) {
   cout << "The TV calibration file is " << TVcorrFile << endl;
   cout << "The WEPL calibration file is " << WcalibFile << endl;
 
-  bool callUser = (UserAna == "yes" || UserAna == "Yes" || UserAna == "y" || UserAna == "Y" || UserAna == "YES");
-
   if (fileBins <= 0) {
     cout << "************ The number of files was specified to be 0 or "
             "negative.  Resetting to equal 1 bin. **********" << endl;
@@ -510,7 +517,7 @@ int main(int argc, char *argv[]) {
   cout << "The number of events for which to plot the tracker hits and tracks is " << n_plot << endl;
 
   if (Calibrate) cout << "Set the number of events to plot > 0 to get loads of debug histograms in calibration runs." << endl;
-  else if (callUser) cout << "The user routine will be called for each raw event." << endl;
+  else if (UserAna) cout << "The user routine will be called for each raw event." << endl;
 
   cout << "Fraction of the input file to be analyzed is " << fileFraction << endl;
 
@@ -526,6 +533,9 @@ int main(int argc, char *argv[]) {
   } else
     cout << "No dE-E filtering of nuclear interactions will be used" << endl;
 
+    cfg.addItem('g', "inputFileName", inputFileName);
+
+  
   ////  ////  ////  ////  ////  ////  ////  ////  ////  ////  ////  ////  ////
   // Calibration run
   ////  ////  ////  ////  ////  ////  ////  ////  ////  ////  ////  ////  ////
@@ -538,8 +548,6 @@ int main(int argc, char *argv[]) {
     cfg.addItem('b', "NBricks", Nbricks); 
     int doGains = 1; 
     cfg.addItem('g', "doGains", doGains);
-    string inputFileName; 
-    cfg.addItem('g', "inputFileName", inputFileName);
     
     pCTcalib calibProcessor(cfg, CalFile);
     if (calibProcessor.TVmapper() == 0) { // First the TVmapper
@@ -557,10 +565,7 @@ int main(int argc, char *argv[]) {
   else { 
     cout << "Executing a pCT data pre-processing run" << endl;
     // Here we call the complete preprocessing program
-    Preprocessing pCTpreprocessor(inputFileName, study_name, Outputdir, WcalibFile, TVcorrFile, thr,
-                                  fileBins, analysisLevel, callUser, continuous_scan, initialAngle, reCalibrate,
-                                  max_events, max_time, n_debug, n_plot, proj_angle, dodEEFilter, pdstlr,
-                                  beamEnergy, Version);
+    Preprocessing pCTpreprocessor(cfg);
     int errorCode = pCTpreprocessor.ProcessFile(phantomSize, partType, wedgeOff, fileFraction, numbTkrFPGA, numbEdetFPGA, KillCh);
     return errorCode;
   }

@@ -19,22 +19,23 @@
 #include "Histogram.h"
 #include "pCTgeo.h"
 #include "EvtRecon.h"
+#include "pCTcut.h"
 #include "TGraphErrors.h"
-#include "pctConfig.h"
+#include "pCTconfig.h"
 using namespace std;
 
 #define nRange 260
 #define nEnrg 340
-
+class pCTcut;
 class EvtRecon;
 class pCTcalib {
  public:
   
   // Functions
-  pCTcalib(pctConfig cfg, string inputFileNameIn);
+  pCTcalib(pCTconfig cfg, string inputFileNameIn);
   ~pCTcalib();
 
-  pctConfig config;
+  pCTconfig config;
   int Wcalib();
   void procWEPLcal(Histogram2D *[nStage], TH2D*[nStage], TH2D*[nStage]);
 
@@ -58,9 +59,13 @@ class pCTcalib {
   double brickW;  // half width of range in t for brick-only protons
   double emptyW;  // half width of range in t for selecting empty events
 
+  // Other classes
   EvtRecon *procEvt;
   pCTgeo *Geometry;
   TVcorrection *TVcal;
+  pCTcut *cuts;
+  
+  //Variables
   float TVmap[nStage][nPix]; // 5 TV maps with 1cm pixels, 10x38 cm2 area, total 10x38=380 pixels per stage
   float tPlaneShifts[4][4] = {{0}};
   float Est[nStage] = {0};

@@ -2,13 +2,12 @@
 #include "EvtRecon.h"
 #include "BadEvent.h"
 
+// Constructors/Destructor
+EvtRecon::EvtRecon(pCTconfig conf): config(conf){}
+EvtRecon::~EvtRecon() { delTmpFile(); }
+
 ////////////////////////////////////////////////////////////////////////////////////
-// Constructors Event Recon
-////////////////////////////////////////////////////////////////////////////////////
-EvtRecon::EvtRecon(pctConfig conf): config(conf)
-{}
-////////////////////////////////////////////////////////////////////////////////////
- // Read a file and fill the different temporary files needed
+// Read a file and fill the different temporary files needed
 ////////////////////////////////////////////////////////////////////////////////////
 void EvtRecon::ReadInputFile(pCTgeo* Geometry, TVcorrection *const TVcorr , string inputFileName){
   
@@ -44,7 +43,7 @@ void EvtRecon::ReadInputFile(pCTgeo* Geometry, TVcorrection *const TVcorr , stri
   file_size = ftell(in_file);
   rewind(in_file);
   cout << "EvtRecon_" << config.item_int["Nbricks"] << ": Input raw data file size=" << file_size << endl;
-  pCTcut cuts(config.item_int["Nbricks"], 1, 2, 2); // Initialize the code for event selection
+  pCTcut cuts(config);//.item_int["Nbricks"], 1, 2, 2); // Initialize the code for event selection
   // Create an instance of the class for parsing and storing the raw data from
   // the input file
   pCTraw rawEvt(in_file, file_size, 0, num_tkr_fpga, num_enrg_fpga);

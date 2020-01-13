@@ -2,35 +2,44 @@
 #define _EVTRECON_H_
 
 // Unpack and reconstruct raw data, and store the results in an event list
-
 #include <iostream>
 #include <vector>
 #include <cstdio>
 #include <cmath>
-
 #include "TkrHits.h"
-
 #include "pCT_Tracking.h"
 #include "pCTcut.h"
 #include "pCTgeo.h"
 #include "pedGainCalib.h"
 #include "pCTcalib.h"
-#include "pctConfig.h"
+#include "pCTconfig.h"
 
 using namespace std;
-
 struct Event{
   float Thit[4];
   float Vhit[4];
   int ADC[5];
 };
+
 class pCTcalib;
-
 class EvtRecon {
-
  public:
+  EvtRecon(pCTconfig conf);
+  ~EvtRecon();
 
-  EvtRecon(pctConfig conf);
+  pCTconfig config;  
+  //Functions   
+  void ReadInputFile(pCTgeo* Geometry, TVcorrection *const TVcorr, string);
+  void readTmp(Event &evt);
+  void dumpTmp(Event evt);
+  void reopenTmpFile();
+  void rewindTmpFile();
+  string to_str(int i) { // To fix some stupid compiler problem on my linux box
+    long long int j = i;
+    return to_string(j);
+  }
+  
+  // Variable
   time_t start_time;
   struct tm *now;
   FILE *in_file;
@@ -42,21 +51,7 @@ class EvtRecon {
   void writeTmp(Event &evt);
   void delTmpFile();
   bool gainAnalysis;
-  int Nblk, n_debug, max_time;
-  inline ~EvtRecon() { delTmpFile(); }
-
-  pctConfig config;  
-  //Functions   
-  void ReadInputFile(pCTgeo* Geometry, TVcorrection *const TVcorr, string);
-  void readTmp(Event &evt);
-  void dumpTmp(Event evt);
-  void reopenTmpFile();
-  void rewindTmpFile();
-  string to_str(int i) { // To fix some stupid compiler problem on my linux box
-    long long int j = i;
-    return to_string(j);
-    }
-  // Variable
+  int Nblk, n_debug, max_time; 
   bool useTmpFile;       
   vector<Event> evtList; // This list doesn't get used if a temporary file is employed instead
   int nEvents;

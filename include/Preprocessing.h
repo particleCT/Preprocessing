@@ -28,7 +28,7 @@
 // Compile it with g++ using -std=c++0x -lpthread -g -rdynamic (the -g and
 // -rdynamic can be omitted if all is working well)
 //
-struct generalparam { // Variables needed by the pCTevents program, put together
+/*struct generalparam { // Variables needed by the pCTevents program, put together
                       // to reduce the size of the parameter list.
   // This is to enable passing of the raw data processing task "pCTevents" to multiple threads.
   std::string inFileName; // Raw data file name
@@ -50,17 +50,22 @@ struct generalparam { // Variables needed by the pCTevents program, put together
   bool reCalibrate;     // Update the gain calibrations on the fly during
                         // processing.
   int pdstlr[5];        // Lower end of the pedestal histogram range
-};
+  };*/
+
+#include "pCTconfig.h"
 
 class Preprocessing { // Top level program from the pCT preprocessing task.
  public:
-  Preprocessing(std::string, std::string, std::string, std::string, std::string,
+  /*Preprocessing(std::string, std::string, std::string, std::string, std::string,
 		float*, int,  int, bool, bool, float, bool , int, int, 
-		int, int, float, bool, int*, float, float);
+		int, int, float, bool, int*, float, float);*/
 
+  Preprocessing(pCTconfig cfg);
+
+  pCTconfig config;
   int ProcessFile(float, std::string, float, float, int, int, std::string);
   int ret;
-  generalparam config;
+  //generalparam config;
   size_t file_size;
   float Version, beamEnergy, StgThr[5], initialAngle, proj_angle;
   int fileBins, analysisLevel, max_events, max_time, n_debug, n_plot;
@@ -83,7 +88,6 @@ class Preprocessing { // Top level program from the pCT preprocessing task.
                         unsigned int EventIDs[]); // float AngleNb
 
   void WriteRootFile(bool timeStampOutput, bool energyOutput, bool eventIDOutput, int fileNb,
-		       const char OutputFilename[], const char DATA_SOURCE[], const char PHANTOM_NAME[],
 		       int study_date, int event_counter, double u[], float V0[], float V1[], float V2[], float V3[],
 		       float T0[], float T1[], float T2[], float T3[], float E1[], float E2[], float E3[], float E4[],
 		       float E5[], float WetBinary[], float ProjAngle[], unsigned int TimeStamp[],

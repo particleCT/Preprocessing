@@ -2,7 +2,7 @@
 #include "pCTcalib.h"
 
 pCTcalib::~pCTcalib() {pCTcalibRootFile->Close(); }
-pCTcalib::pCTcalib(pctConfig cfg, string inputFileName): config(cfg)
+pCTcalib::pCTcalib(pCTconfig cfg, string inputFileName): config(cfg)
 {
   cout << "\nEntering pCTcalib, the constructor for the pCT calibration "<<endl;    
   cout << "Filename for the list of calibration data files = " << inputFileName << endl;
@@ -102,7 +102,12 @@ pCTcalib::pCTcalib(pctConfig cfg, string inputFileName): config(cfg)
   cout << "MC derived total energy for an empty event is " << EG4tot << endl << endl;
   currentTime = time(NULL);
   now = localtime(&currentTime);
+
+  // Initialize class
   Geometry = new pCTgeo(config.item_float["wedgeoffset"]);                 // Create a class instance with all of the geometry information
+  cuts     = new pCTcut(config);
+  TVcal    = new TVcorrection(config.item_str["TVcorr"].c_str(), 0, 0, 0, 0);
+  procEvt  = new EvtRecon(config);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -126,85 +131,6 @@ bool pCTcalib::getLineIntersection(double p0u, double p0t,                   // 
 }
 
 //////////////////////////////////////////////////////////////////////
-// Filter not used right now
-//////////////////////////////////////////////////////////////////////
-bool pCTcalib::EnrgCut(float Estage[5], float Etot, float cut0, float cut1, float cut3) {
-
-  bool dropEvent = false;
-  // Cut on energy deposit not compatible with Bragg-Peak (cut0, cut1) adapted from Vladimir Bashkirov
-  // For helium: Use the stages as dE-E detector and check if the particle's energy
-  // deposit is compatible with the parameterized stage response
-  // (Last modified: Lennart Volz, December 2017)
-
-  if (Estage[4] >  config.item_float["thr4"]) { // Particule stop in stage 4
-    if (Estage[3] < cut0 || Estage[2] < cut0 || Estage[1] < cut0 || Estage[0] < cut0 || Estage[4] > cut3) dropEvent = true;
-    /*if (config.item_str["partType"] == "He") {
-      if (Estage[3] < (0.00045 * Estage[4] * Estage[4] - 0.42 * Estage[4] + 237) ||
-          Estage[3] > (0.00045 * Estage[4] * Estage[4] - 0.42 * Estage[4] + 260)) dropEvent = true;
-	  }*/
-    
-    // DELTA E-E FILTER DOES NOT SIGNIFICANTLY CHANGE CALIBRATION
-    /*	if (config.item_str["partType"] == "H") {
-	if (Estage[3]<(0.0034*Estage[4] * Estage[4] - 0.672145*Estage[4]
-	+ 69.) || Estage[3]>(0.00351528*Estage[4] * Estage[4] -
-	0.703048*Estage[4] + 79.5048)) dropEvent = true;
-	}*/
-  }
-  else if (Estage[3] > config.item_float["thr3"]) { // Particule stop in stage 3
-    if (Estage[2] < cut0 || Estage[1] < cut0 || Estage[0] < cut0 || Estage[3] > cut3) dropEvent = true;
-    /*if (config.item_str["partType"] == "He") {
-      if (Estage[2] < (0.00085 * Estage[3] * Estage[3] - 0.5664 * Estage[3] + 226) ||
-          Estage[2] > (0.00085 * Estage[3] * Estage[3] - 0.5664 * Estage[3] + 254)) dropEvent = true;
-        
-	  }*/
-    // DELTA	E-E FILTER DOES	NOT SIGNIFICANTLY CHANGE CALIBRATION
-    /*	if (config.item_str["partType"] == "H") {
-	if (Estage[2]<(0.0038*Estage[3] * Estage[3] - 0.71*Estage[3] +
-	67.92) || Estage[2]>(0.0039*Estage[3] * Estage[3] - 0.74*Estage[4] +
-	78.37)) dropEvent = true;
-	}*/
-          
-  }
-  else if (Estage[2] > config.item_float["thr2"]) { // Particule stop in stage 2
-    if (Estage[1] < cut0 || Estage[0] < cut0 || Estage[2] > cut3) dropEvent = true;
-    /*if (config.item_str["partType"] == "He") {
-      if (Estage[1] < (0.00085 * Estage[2] * Estage[2] - 0.5664 * Estage[2] + 220) ||
-          Estage[1] > (0.00085 * Estage[2] * Estage[2] - 0.5664 * Estage[2] + 248))
-        dropEvent = true;
-    }*/
-    // DELTA	E-E FILTER DOES	NOT SIGNIFICANTLY CHANGE CALIBRATION
-    /*	if (config.item_str["partType"] == "H") {
-	if (Estage[1]<(0.0040*Estage[2] * Estage[2] - 0.71*Estage[2] +
-	66.17) || Estage[1]>(0.0036*Estage[2] * Estage[2] - 0.73*Estage[2] +
-	76.57)) dropEvent = true;
-	}*/
-    
-      
-  }
-  else if (Estage[1] > config.item_float["thr1"]) { // Particule stop in stage 1
-    if (Estage[0] < cut1 || Estage[1] > cut3) dropEvent = true;
-      /*if (config.item_str["partType"] == "He") {
-      if (Estage[0] < (0.00085 * Estage[1] * Estage[1] - 0.5664 * Estage[1] + 220) ||
-          Estage[0] > (0.00085 * Estage[1] * Estage[1] - 0.5664 * Estage[1] + 246))
-        dropEvent = true;
-	}*/
-  }
-  else if (Estage[0]> config.item_float["thr0"]){ // Particule stop in stage 0
-      if(Estage[0] > cut3) dropEvent = true; //
-  }
-
-  // Maximal energy filter
-  if (config.item_str["partType"] == "He") {
-    if (Etot > 801.52) dropEvent = true; // Intitial Energy of helium at HIT = 200.36 MeV/u
-  }
-  else{ // Particle is H
-    if(Etot > 200.) dropEvent = true; // Initial Energy of protons at HIT = 200.11 MeV
-  }
-
-  return dropEvent;
-}
-//////////////////////////////////////////////////////////////////////
-
 //////////////////////////////////////////////////////////////////////
 void pCTcalib::procWEPLcal(Histogram2D *REhist[nStage],TH2D* REhist_root[nStage], TH2D* dEEhist[nStage]) {
   // Routine passed to process the WEPL calibration.
@@ -482,10 +408,10 @@ int pCTcalib::TVmapper() {
     return -2;
   }
 
-  TVcal = new TVcorrection(config.item_str["TVcorr"].c_str(), 0, 0, 0, 0);
+
   config.item_int["Nbricks"] = 5; // This is for the empty one
   config.item_int["doGains"] = false;
-  procEvt = new EvtRecon(config);
+
   procEvt->ReadInputFile(Geometry, TVcal, calFileNames[0]);      
   Ut[0] = procEvt->uhitT[2]; Ut[1] = procEvt->uhitT[3];
   Uv[0] = procEvt->uhitV[2]; Uv[1] = procEvt->uhitV[3];
