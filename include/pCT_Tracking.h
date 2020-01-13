@@ -56,7 +56,7 @@ class pCT_Tracking {
 
   // This is the pattern recognition, which works only in 2D, separately for the
   // V-U and T-U views.
-  std::vector<Tkr2D> Tracking2D(int Idx, TkrHits &pCThits, pCTgeo const &Geometry);
+  std::vector<Tkr2D> Tracking2D(int Idx, TkrHits &pCThits, pCTgeo* Geometry);
 
 public:
   // To use these results for image reconstruction, require nTracks==1 and then
@@ -89,7 +89,7 @@ public:
     return TTracks[tk].X[3] + slope * (u - TTracks[tk].U[3]);
   }
 
-  pCT_Tracking(TkrHits &pCThits, pCTgeo const &Geometry);
+  pCT_Tracking(TkrHits &pCThits, pCTgeo* Geometry);
 
   // Method to print out the list of tracks
   void dumpTracks(int eventNumber);

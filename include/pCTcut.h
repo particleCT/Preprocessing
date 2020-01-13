@@ -6,8 +6,7 @@ using namespace std;
 
 class pCTcut {
   int event_counter;
-  int n1track; // Various counters for summarizing the number of events killed
-               // by cuts
+  int n1track; // Various counters for summarizing the number of events killed by cuts
   int nLT8hits;
   int nGoodXtra;
   int nBack;
@@ -22,8 +21,7 @@ public:
   int nKeep;
 
   pCTcut(int thread, int cut1 = 3, int cut2 = 5, int cut3 = 8) { // Class constructor called prior to the event loop
-    n1track = 0; // Various counters for summarizing the number of events killed
-                 // by cuts
+    n1track = 0; // Various counters for summarizing the number of events killed by cuts
     nLT8hits = 0;
     nGoodXtra = 0;
     nBack = 0;
@@ -40,12 +38,11 @@ public:
     maxTkrs = 1; // Maximum number of good tracks
   }
 
-  bool cutEvt(bool userKill, pCT_Tracking &pCTtracks,
-              TkrHits &pCThits) { // Call for each raw event after the tracking is completed
+  // Call for each raw event after the tracking is completed
+  bool cutEvt(bool userKill, pCT_Tracking &pCTtracks, TkrHits &pCThits) { 
     event_counter++;
     bool good = false;
-    if (pCTtracks.nTracks >= minTkrs &&
-        pCTtracks.nTracks <= maxTkrs) { // Exactly 1 V track and 1 T track.  No 2-track events allowed.
+    if (pCTtracks.nTracks >= minTkrs && pCTtracks.nTracks <= maxTkrs) { // Exactly 1 V track and 1 T track.  No 2-track events allowed.
       n1track++;
       int nXtraHits = 0; // Number of unused hits in the tracker
       int nLyrXtraV = 0; // Number of layers with extra hits in V

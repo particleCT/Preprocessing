@@ -42,5 +42,5 @@ pCTgeo.h: t-layer gap locations for layer 1:  84.996  -3.269  -91.529
 pCTgeo.h: t-layer gap locations for layer 2:  -76.976  11.299  99.574
 pCTgeo.h: t-layer gap locations for layer 3:  -80.886  7.394  95.674
 pCTgeo.h: calibration brick and wedge thickness = 50.8
-pCTgeo.h: calibration phantom wedge break locations in t are -104.5, -4.75, 4.75, 104.5, 
+pCTgeo.h: calibration phantom wedge break locations in t are -155.3, -55.55, -46.05, 53.7, 
 pCTgeo.h: thickness of each energy detector stage = 51 mm

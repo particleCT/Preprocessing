@@ -21,8 +21,6 @@
 // includes printing and plotting
 // - UserAnalysis.h: optional entry points for private user data analysis, to
 // keep those hacks separate from public code
-// - Histogram.cpp and Histogram.h: simple facilities for making histograms and
-// profile plots
 //
 // - TDB: the geometry and calibration constants need to be accessed from a
 // database with date key
@@ -55,54 +53,42 @@ struct generalparam { // Variables needed by the pCTevents program, put together
 };
 
 class Preprocessing { // Top level program from the pCT preprocessing task.
+ public:
+  Preprocessing(std::string, std::string, std::string, std::string, std::string,
+		float*, int,  int, bool, bool, float, bool , int, int, 
+		int, int, float, bool, int*, float, float);
+
+  int ProcessFile(float, std::string, float, float, int, int, std::string);
+  int ret;
   generalparam config;
   size_t file_size;
-  float Version;
-  float beamEnergy;
-  int n_threads;
+  float Version, beamEnergy, StgThr[5], initialAngle, proj_angle;
+  int fileBins, analysisLevel, max_events, max_time, n_debug, n_plot;
+  bool callUser, continuous_scan, eventOrder, energyOutput, timeStampOutput, eventIDOutput, dodEEFilter;
   double Uhit[4];
-  std::string study_name;
-  std::string Outputdir;
+  std::string study_name, Outputdir;
   std::string WcalibFile;
   std::string TVcorrFile;
-  std::string OsName;
-  float StgThr[5];
-  int fileBins;
-  int analysisLevel;
-  bool callUser;
-  bool continuous_scan;
-  float initialAngle;
-  int max_events;
-  int max_time;
-  int n_debug;
-  int n_plot;
-  float proj_angle;
+
   FILE *in_file;
   char inFileName[256];
   time_t start_time;
   struct tm *now;
-  float dTheta;
-  bool eventOrder;
-  bool energyOutput;
-  bool timeStampOutput;
-  bool eventIDOutput;
-  bool dodEEFilter;
-
   static int findEvt(FILE *fp);
-  void WriteBinaryFile3(bool timeStampOutput, bool energyOutput, bool eventIDOutput, float AngleNb,
+  void WriteBinaryFile(bool timeStampOutput, bool energyOutput, bool eventIDOutput, float AngleNb,
                         const char OutputFilename[], const char DATA_SOURCE[], const char PHANTOM_NAME[],
                         int study_date, int event_counter, double u[], float V0[], float V1[], float V2[], float V3[],
                         float T0[], float T1[], float T2[], float T3[], float E1[], float E2[], float E3[], float E4[],
                         float E5[], float WetBinary[], float ProjAngle[], unsigned int TimeStamp[],
                         unsigned int EventIDs[]); // float AngleNb
 
-public:
-  Preprocessing(std::string inputFileName, std::string study_name, std::string Outputdir, std::string WcalibFile,
-                std::string TVcorrFile, int n_threads, float StgThr[5], int angleBins, int analysisLevel, bool callUser,
-                bool continuous_scan, float initialAngle, bool realTimeCal, int max_events, int max_time, int n_debug,
-                int n_plot, float proj_angle, bool dodEEFilter, int pdstlr[5], std::string OsName, float BeamEnergy, float Version);
+  void WriteRootFile(bool timeStampOutput, bool energyOutput, bool eventIDOutput, int fileNb,
+		       const char OutputFilename[], const char DATA_SOURCE[], const char PHANTOM_NAME[],
+		       int study_date, int event_counter, double u[], float V0[], float V1[], float V2[], float V3[],
+		       float T0[], float T1[], float T2[], float T3[], float E1[], float E2[], float E3[], float E4[],
+		       float E5[], float WetBinary[], float ProjAngle[], unsigned int TimeStamp[],
+		       unsigned int EventIDs[]); // float AngleNb
 
-  int ProcessFile(float phantomSize, std::string partType, float wedgeOffset, float fileFraction, int numbTkrFPGA,
-                  int numbEdetFPGA, std::string KillCh);
+
 };
 #endif

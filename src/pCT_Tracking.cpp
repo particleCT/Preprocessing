@@ -4,7 +4,7 @@
 #include "pCT_Tracking.h"
 
 // This is the pattern recognition, which works only in 2D, separately for the V-U and T-U views.
-std::vector<Tkr2D> pCT_Tracking::Tracking2D(int Idx, TkrHits &pCThits, pCTgeo const &Geometry) {
+std::vector<Tkr2D> pCT_Tracking::Tracking2D(int Idx, TkrHits &pCThits, pCTgeo *Geometry) {
 
   /* Idx = 0 for V-U view
      Idx = 1 for T-U view
@@ -147,8 +147,8 @@ std::vector<Tkr2D> pCT_Tracking::Tracking2D(int Idx, TkrHits &pCThits, pCTgeo co
             double t1 = pCThits.Lyr[lyr].Y[Idx].at(j);
             double u1 = pCThits.Lyr[lyr].U[Idx].at(j);
             for (int gap = 0; gap < 3; gap++) {
-              double t2 = Geometry.tBoardGap(gap, otherLyr[lyr]);
-              double u2 = Geometry.uT(otherLyr[lyr]);
+              double t2 = Geometry->tBoardGap(gap, otherLyr[lyr]);
+              double u2 = Geometry->uT(otherLyr[lyr]);
               double slope = (t2 - t1) / (u2 - u1);
               if (abs(slope) < mxSlopeFront[Idx]) {
                 double intercept = t1 - slope * u1;
@@ -198,8 +198,8 @@ std::vector<Tkr2D> pCT_Tracking::Tracking2D(int Idx, TkrHits &pCThits, pCTgeo co
             double t1 = pCThits.Lyr[lyr].Y[Idx].at(j);
             double u1 = pCThits.Lyr[lyr].U[Idx].at(j);
             for (int gap = 0; gap < 3; gap++) {
-              double t2 = Geometry.tBoardGap(gap, otherLyr[lyr]);
-              double u2 = Geometry.uT(otherLyr[lyr]);
+              double t2 = Geometry->tBoardGap(gap, otherLyr[lyr]);
+              double u2 = Geometry->uT(otherLyr[lyr]);
               double slope = (t2 - t1) / (u2 - u1);
               if (abs(slope) < mxSlopeBack[Idx]) {
                 double intercept = t1 - slope * u1;
@@ -254,11 +254,11 @@ std::vector<Tkr2D> pCT_Tracking::Tracking2D(int Idx, TkrHits &pCThits, pCTgeo co
           double u1 = pCThits.Lyr[lyr].U[Idx].at(j);
           double u2;
           if (Idx == 1)
-            u2 = Geometry.uT(otherLyr[lyr]);
+            u2 = Geometry->uT(otherLyr[lyr]);
           else
-            u2 = Geometry.uV(otherLyr[lyr]);
-          double slope = (t1 - Geometry.BeamVertex(Idx)[Idx]) / (u1 - Geometry.BeamVertex(Idx)[2]);
-          double intercept = Geometry.BeamVertex(Idx)[Idx] - slope * Geometry.BeamVertex(Idx)[2];
+            u2 = Geometry->uV(otherLyr[lyr]);
+          double slope = (t1 - Geometry->BeamVertex(Idx)[Idx]) / (u1 - Geometry->BeamVertex(Idx)[2]);
+          double intercept = Geometry->BeamVertex(Idx)[Idx] - slope * Geometry->BeamVertex(Idx)[2];
           double miss = intercept - back[i].intercept;
           if (abs(miss) < deltaMx) {
             double t2 = intercept + slope * u2;
@@ -312,9 +312,9 @@ std::vector<Tkr2D> pCT_Tracking::Tracking2D(int Idx, TkrHits &pCThits, pCTgeo co
           double u3 = pCThits.Lyr[lyr].U[Idx].at(j);
           double u4;
           if (Idx == 1)
-            u4 = Geometry.uT(otherLyr[lyr]);
+            u4 = Geometry->uT(otherLyr[lyr]);
           else
-            u4 = Geometry.uV(otherLyr[lyr]);
+            u4 = Geometry->uV(otherLyr[lyr]);
           double t4 = quadExtrap(u1, u2, u3, u4, t1, t2, t3);
           double slope = (t4 - t3) / (u4 - u3);
           if (abs(slope) < mxSlopeBack[Idx]) {
@@ -360,7 +360,7 @@ std::vector<Tkr2D> pCT_Tracking::Tracking2D(int Idx, TkrHits &pCThits, pCTgeo co
   return tmp;
 } // End of Tracking2D
 
-pCT_Tracking::pCT_Tracking(TkrHits &pCThits, pCTgeo const &Geometry) { // This class constructor finds all the tracks
+pCT_Tracking::pCT_Tracking(TkrHits &pCThits, pCTgeo* Geometry) { // This class constructor finds all the tracks
 
   nTracks = 0;
 

@@ -19,7 +19,7 @@
 using namespace std;
 
 class pctConfig {
-
+public:
   struct cfgItm {
     string key;
     string longKey;
@@ -30,8 +30,10 @@ class pctConfig {
   };
   vector<cfgItm> itemList;
   string configFileName;
+  map<string, string> item_str;
+  map<string, int> item_int;
+  map<string, float> item_float;
 
-public:
   pctConfig(string fileName) {
     configFileName = fileName;
     return;
@@ -42,8 +44,7 @@ public:
     tmpItem.key = key;
     tmpItem.longKey = longKey;
     tmpItem.type = "STRING";
-    tmpItem.valString = &value; // Save a pointer to the item value, so that it
-                                // can be altered later.
+    tmpItem.valString = &value; // Save a pointer to the item value, so that it can be altered later.
     itemList.push_back(tmpItem);
   }
   void addItem(char key, const char *longKey, int &value) { // For the case that the value is integer
@@ -53,6 +54,7 @@ public:
     tmpItem.type = "INT";
     tmpItem.valInt = &value;
     itemList.push_back(tmpItem);
+
   }
   void addItem(char key, const char *longKey, float &value) { // For the case that the value is float
     cfgItm tmpItem;
@@ -61,9 +63,9 @@ public:
     tmpItem.type = "FLOAT";
     tmpItem.valFloat = &value;
     itemList.push_back(tmpItem);
+    
   }
-  int Configure() { // Read the config file and try to match keys with those in
-                    // the list that has been built with addItem.
+  int Configure() { // Read the config file and try to match keys with those in the list that has been built with addItem.
     Util U;
     string line;
     ifstream infile(configFileName);
@@ -84,16 +86,17 @@ public:
         U.getKeyValue(line, key, value);
         for (int i = 0; i < itemList.size(); ++i) {
           if (key.compare(itemList[i].key) == 0 || key.compare(itemList[i].longKey) == 0) {
-            // cout << "pctConfig::Configure: key found in list at position " <<
-            // i << ", value=" << value << endl;
             if (itemList[i].type == "STRING") {
+	      item_str.insert(pair<string,string>(key, value));
               *itemList[i].valString = value;
               break;
             } else if (itemList[i].type == "INT") {
               *itemList[i].valInt = stoi(value);
+	      item_int.insert(pair<string,int>(key, stoi(value)));
               break;
             } else if (itemList[i].type == "FLOAT") {
               *itemList[i].valFloat = stof(value);
+	      item_float.insert(pair<string,float>(key, stof(value)));
               break;
             } else
               cout << "pctConfig::Configure: no match found for key " << key << endl;

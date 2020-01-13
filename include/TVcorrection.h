@@ -27,10 +27,10 @@ class TVcorrection {
                              // 10x38=380 pixels
 
 public:
-  float ped[5];   // Calibrated pedestals (the program will generally use values
-                  // generated on the fly, however)
+  float ped[5];   // Calibrated pedestals (the program will generally use values  generated on the fly, however)
   float Eempt[6]; // ADC pedestals and energy depositions from Empty run
 
+  // Constructor
   TVcorrection(const char *TVfile, int year, int month, int day,
                int run) { // pass 0 for all of year, month, day, run to avoid
                           // checks on those values
@@ -126,9 +126,14 @@ public:
     cout << "   Pedestals = " << ped[0] << " " << ped[1] << " " << ped[2] << " " << ped[3] << " " << ped[4] << endl;
   }
 
-  float corrFactorInt(float TVmapr[nStage][nPix], int stage, float T, float V,
-                      bool &inBounds) { // Can be called with an external TVmap
-    inBounds = true;                    // No class members or variables are referenced by this function
+
+  //////////////////////////////////////////////////////
+  // End of the constructor
+  //////////////////////////////////////////////////////
+  float corrFactorInt(float TVmapr[nStage][nPix], int stage, float T, float V,bool &inBounds) {
+    // Can be called with an external TVmap
+    // No class members or variables are referenced by this function
+    inBounds = true;                    
     int tPix = floor(0.1 * (T + 190.));
     if (tPix < 0) {
       tPix = 0;

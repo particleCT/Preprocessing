@@ -9,21 +9,28 @@
 #include <cmath>
 
 #include "TkrHits.h"
-#include "pCTgeo.h"
+
 #include "pCT_Tracking.h"
 #include "pCTcut.h"
+#include "pCTgeo.h"
 #include "pedGainCalib.h"
+#include "pCTcalib.h"
+#include "pctConfig.h"
 
 using namespace std;
 
-struct Event {
+struct Event{
   float Thit[4];
   float Vhit[4];
   int ADC[5];
 };
+class pCTcalib;
 
 class EvtRecon {
 
+ public:
+
+  EvtRecon(pctConfig conf);
   time_t start_time;
   struct tm *now;
   FILE *in_file;
@@ -35,14 +42,12 @@ class EvtRecon {
   void writeTmp(Event &evt);
   void delTmpFile();
   bool gainAnalysis;
-  int Nblk;
-  string OsName;
-
-public:
+  int Nblk, n_debug, max_time;
   inline ~EvtRecon() { delTmpFile(); }
-  EvtRecon(pCTgeo &Geometry, TVcorrection *const TVcorr, string inputFileName, string OutputDir, int max_events,
-           int max_time, int n_debug, int n_plot, int nBlocks, bool useTemp, bool doGains, string partType,
-           int pdstlr[5], bool reCalibrate, std::string OsName);
+
+  pctConfig config;  
+  //Functions   
+  void ReadInputFile(pCTgeo* Geometry, TVcorrection *const TVcorr, string);
   void readTmp(Event &evt);
   void dumpTmp(Event evt);
   void reopenTmpFile();
@@ -50,24 +55,19 @@ public:
   string to_str(int i) { // To fix some stupid compiler problem on my linux box
     long long int j = i;
     return to_string(j);
-  }
-
-  bool useTmpFile;       // Set true to use temporary files for event storage instead
-                         // of local memory (needed for huge runs or little computers)
-  vector<Event> evtList; // This list doesn't get used if a temporary file is
-                         // employed instead
+    }
+  // Variable
+  bool useTmpFile;       
+  vector<Event> evtList; // This list doesn't get used if a temporary file is employed instead
   int nEvents;
-  float uhitV[4]; // u value at each V layer, assumed to be the same for all
-                  // events
-  float uhitT[4]; // u value at each T layer, assumed to be the same for all
-                  // events
+  float uhitV[4]; // u value at each V layer, assumed to be the same for all events
+  float uhitT[4]; // u value at each T layer, assumed to be the same for all events
   int runNumber;
   string runStartTime;
   int study_date;
   float stage_angle;
   int program_version;
-  float Peds[5];    // Energy detector pedestals measured from the processed data
-                    // set
+  float Peds[5];    // Energy detector pedestals measured from the processed data set
   float CorFacs[5]; // Gain correction factors
 };
 

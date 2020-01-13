@@ -7,9 +7,14 @@
 
 #include "pCTraw.h"
 #include "BadEvent.h"
+#include <fstream>
 
+std::ofstream pCTrawLogFile;
+pCTraw::~pCTraw() {pCTrawLogFile.close();}
 pCTraw::pCTraw(FILE *in_file, size_t file_size, int thread, int numbTkrFPGA, int numbEdetFPGA) { // Class constructor
   std::cout << "pCTraw constructor thread " << thread << ", file_size=" << file_size << std::endl;
+  
+  pCTrawLogFile.open("pCTRaw.log");  
   BITS_PER_BYTE = 8; // CHAR_BIT;
   stream_position = 0;
   current_bits = 0;
@@ -57,7 +62,7 @@ void pCTraw::pCTkillStrip(int FPGA, int chip, int channel) { // Kill a (noisy) c
                                                              // tracker readout
   killCh[FPGA][chip].push_back(channel);
   killTotal++;
-  std::cout << "pCTraw for thread " << threadNumber << " killing tracker channel " << channel << " in chip " << chip
+  pCTrawLogFile << "pCTraw for thread " << threadNumber << " killing tracker channel " << channel << " in chip " << chip
             << " of FPGA " << FPGA << std::endl;
 }
 
@@ -68,7 +73,7 @@ void pCTraw::pCTkillStrip(int FPGA, int chip, int channel) { // Kill a (noisy) c
 bool pCTraw::parseDate(int &year, int &month, int &day) {
 
   std::string Date = start_time;
-  // std::cout << "pCTraw::parseDate: input date string is " << Date <<
+  // pCTrawLogFile << "pCTraw::parseDate: input date string is " << Date <<
   // std::endl;
   std::vector<std::string> tokens;
   size_t found = Date.find_first_not_of(" ");
@@ -92,24 +97,24 @@ bool pCTraw::parseDate(int &year, int &month, int &day) {
       }
     }
     if (month > 12) {
-      std::cout << "pCTraw::parseDate: no match for the month in " << tokens[1] << std::endl;
+      pCTrawLogFile << "pCTraw::parseDate: no match for the month in " << tokens[1] << std::endl;
 
       return false;
     }
     char *pEnd;
     day = strtol(tokens[2].c_str(), &pEnd, 10);
     if (day == 0) {
-      std::cout << "pCTraw::parseDate: no match for the day in " << tokens[2] << std::endl;
+      pCTrawLogFile << "pCTraw::parseDate: no match for the day in " << tokens[2] << std::endl;
       return false;
     }
     year = strtol(tokens[4].c_str(), &pEnd, 10);
     if (year == 0) {
-      std::cout << "pCTraw::parseDate: no match for the year in " << tokens[4] << std::endl;
+      pCTrawLogFile << "pCTraw::parseDate: no match for the year in " << tokens[4] << std::endl;
       return false;
     }
     return true;
   } else {
-    std::cout << "pCTraw::parseDate: not enough tokens found in date " << start_time << std::endl;
+    pCTrawLogFile << "pCTraw::parseDate: not enough tokens found in date " << start_time << std::endl;
     return false;
   }
 }
@@ -117,35 +122,35 @@ bool pCTraw::parseDate(int &year, int &month, int &day) {
 // Method to print out all of the raw data for a single event (except for
 // individual energy samples)
 void pCTraw::dumpEvt() {
-  std::cout << "Dump of event number " << event_number << ", event count " << event_counter << "\n";
+  pCTrawLogFile << "Dump of event number " << event_number << ", event count " << event_counter << "\n";
   if (DAQ_error)
-    std::cout << "  ** There was a DAQ error present in the event\n";
-  std::cout << "  Time tag=" << time_tag << " Delta-t=" << delta_t << "  Raw length=" << raw_length << "\n";
-  std::cout << "  Error flags=" << bad_fpga_address << " " << tag_mismatch << " " << CRC_error << "\n";
+    pCTrawLogFile << "  ** There was a DAQ error present in the event\n";
+  pCTrawLogFile << "  Time tag=" << time_tag << " Delta-t=" << delta_t << "  Raw length=" << raw_length << "\n";
+  pCTrawLogFile << "  Error flags=" << bad_fpga_address << " " << tag_mismatch << " " << CRC_error << "\n";
   for (int i = 0; i < numbEdetFPGA; i++) {
     int nsamp = enrg_fpga[i].num_samples;
     int nchan = enrg_fpga[i].num_channels;
-    std::cout << "  Energy FPGA " << i << "  peds_out= " << enrg_fpga[i].peds_out << " error= " << enrg_fpga[i].error
+    pCTrawLogFile << "  Energy FPGA " << i << "  peds_out= " << enrg_fpga[i].peds_out << " error= " << enrg_fpga[i].error
               << " type= " << enrg_fpga[i].type << "\n";
-    std::cout << "    tag=" << enrg_fpga[i].tag << "  Number samples=" << nsamp << "  Number channels=" << nchan
+    pCTrawLogFile << "    tag=" << enrg_fpga[i].tag << "  Number samples=" << nsamp << "  Number channels=" << nchan
               << "\n";
     for (int j = 0; j < nchan; j++) {
-      std::cout << "      " << j << "  ped=" << enrg_fpga[i].pedestal[j] << "  ph=" << enrg_fpga[i].pulse_sum[j]
+      pCTrawLogFile << "      " << j << "  ped=" << enrg_fpga[i].pedestal[j] << "  ph=" << enrg_fpga[i].pulse_sum[j]
                 << "\n";
     }
   }
   for (int i = 0; i < numbTkrFPGA; i++) {
     int nchips = tkr_fpga[i].num_chips;
-    std::cout << "  Tracker FPGA " << i << "  Number chips=" << nchips << "  error=" << tkr_fpga[i].error
+    pCTrawLogFile << "  Tracker FPGA " << i << "  Number chips=" << nchips << "  error=" << tkr_fpga[i].error
               << "  tag=" << tkr_fpga[i].tag << "\n";
     for (int j = 0; j < nchips; j++) {
       int nclus = tkr_fpga[i].chip[j].num_clusts;
       int address = tkr_fpga[i].chip[j].address;
-      std::cout << "    " << j << "  chip " << address << " # clust=" << nclus
+      pCTrawLogFile << "    " << j << "  chip " << address << " # clust=" << nclus
                 << " Overflow=" << tkr_fpga[i].chip[j].cluster_overflow << "  error=" << tkr_fpga[i].chip[j].error
                 << "  parity error=" << tkr_fpga[i].chip[j].parity_error << "\n";
       for (int c = 0; c < nclus; c++) {
-        std::cout << "          cluster " << c << " 1st strip=" << tkr_fpga[i].chip[j].cluster[c].first
+        pCTrawLogFile << "          cluster " << c << " 1st strip=" << tkr_fpga[i].chip[j].cluster[c].first
                   << "   # strips=" << tkr_fpga[i].chip[j].cluster[c].length + 1 << "\n";
       }
     }
@@ -171,7 +176,7 @@ void pCTraw::readRunHeader(const char *inFileName) { // This is called once afte
 
   // Search for the run header start string
   if (!findRunHdr())
-    std::cout << "Unable to find the run header start string in file " << inFileName << std::endl;
+    pCTrawLogFile << "Unable to find the run header start string in file " << inFileName << std::endl;
 
   if (read_file_header(extracted_bits, inFileName) == 0) {
 
@@ -180,7 +185,7 @@ void pCTraw::readRunHeader(const char *inFileName) { // This is called once afte
     extracted_bits =
         just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
     run_number = read_run_number(extracted_bits);
-    std::cout << "Input data file run header found.  Run number = " << run_number << std::endl;
+    pCTrawLogFile << "Input data file run header found.  Run number = " << run_number << std::endl;
 
     // reading Run start time:32 bits
     required_bits = 32;
@@ -197,13 +202,13 @@ void pCTraw::readRunHeader(const char *inFileName) { // This is called once afte
 
     int flgMsk[2] = { 0x01, 0x02 };
     TimeTags = extracted_bits & flgMsk[0];
-    std::cout << "The input data file is assumed to be real data from the Phase-II pCT scanner.\n";
+    pCTrawLogFile << "The input data file is assumed to be real data from the Phase-II pCT scanner.\n";
 
     // bool time_tags = read_statusBits(extracted_bits);
     if (TimeTags)
-      std::cout << "Time tags are included in the data stream.\n";
+      pCTrawLogFile << "Time tags are included in the data stream.\n";
     else
-      std::cout << "From the run header, time tags are NOT included in the "
+      pCTrawLogFile << "From the run header, time tags are NOT included in the "
                    "data stream!\n";
 
     // reading program version number:8 bits
@@ -211,19 +216,19 @@ void pCTraw::readRunHeader(const char *inFileName) { // This is called once afte
     extracted_bits =
         just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
     program_version = read_programVersion(extracted_bits);
-    std::cout << "Event builder FPGA firmware version number = " << program_version << std::endl;
+    pCTrawLogFile << "Event builder FPGA firmware version number = " << program_version << std::endl;
 
     // reading projection_angle:12 bits
     required_bits = 12;
     extracted_bits =
         just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
     stage_angle = read_projection_angle(extracted_bits) / 10.;
-    std::cout << "Projection angle from the run header = " << stage_angle << " degrees.\n";
+    pCTrawLogFile << "Projection angle from the run header = " << stage_angle << " degrees.\n";
   } else {
-    std::cout << "Failed to find the run header in the pCT raw data file " << inFileName << std::endl;
-    std::cout << "Will rewind the file and try to proceed without the run "
+    pCTrawLogFile << "Failed to find the run header in the pCT raw data file " << inFileName << std::endl;
+    pCTrawLogFile << "Will rewind the file and try to proceed without the run "
                  "header information. . ." << std::endl;
-    std::cout << "The data are assumed to be real and to include time tags." << std::endl;
+    pCTrawLogFile << "The data are assumed to be real and to include time tags." << std::endl;
 
     TimeTags = true;
     rewind(in_file);
@@ -272,12 +277,12 @@ bool pCTraw::findEvtHdr(bool debug) {
     extracted_bits =
         extract_N_bits(in_file, stream_position, current_bits, queued_bits, required_bits, file_size, stop_reading);
     if (debug)
-      std::cout << std::hex << "   extracted_bits=" << extracted_bits << " current_bits=" << current_bits
+      pCTrawLogFile << std::hex << "   extracted_bits=" << extracted_bits << " current_bits=" << current_bits
                 << " queued_bits=" << queued_bits << std::dec << std::endl;
     Eureka =
         read_BegOfEvent(extracted_bits, current_bits, temp_container, queued_bits, temp_queued, event_counter, debug);
     if (debug)
-      std::cout << "   stream_position=" << stream_position << " file_size=" << file_size << std::endl;
+      pCTrawLogFile << "   stream_position=" << stream_position << " file_size=" << file_size << std::endl;
   }
   evtStart = stream_position;
   DAQ_error = false;
@@ -298,7 +303,7 @@ void pCTraw::readOneEvent(bool debug) { // This is called once for each event
         just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
     time_tag = read_timeTag(extracted_bits);
     if (debug)
-      std::cout << "   Time tag = " << time_tag << std::endl;
+      pCTrawLogFile << "   Time tag = " << time_tag << std::endl;
   } else {
     time_tag = 0;
   }
@@ -309,7 +314,7 @@ void pCTraw::readOneEvent(bool debug) { // This is called once for each event
       just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
   delta_t = read_timeDelta(extracted_bits);
   if (debug)
-    std::cout << "   Time since last trigger = " << delta_t << std::endl;
+    pCTrawLogFile << "   Time since last trigger = " << delta_t << std::endl;
 
   // reading Event header: 24 bits
   required_bits = 24;
@@ -317,18 +322,18 @@ void pCTraw::readOneEvent(bool debug) { // This is called once for each event
       just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
   int TrgBits;
   if (debug)
-    std::cout << std::hex << "   Event header bits = " << extracted_bits << std::dec << std::endl;
+    pCTrawLogFile << std::hex << "   Event header bits = " << extracted_bits << std::dec << std::endl;
   event_number = read_eventHeader(extracted_bits, TrgBits);
   if (debug)
-    std::cout << "Event number: " << event_number << std::endl;
+    pCTrawLogFile << "Event number: " << event_number << std::endl;
   int trgMsk[6] = { 0x01, 0x02, 0x04, 0x08, 0x10, 0x20 };
   for (int i = 0; i < 6; i++)
     trigger_bits[i] = (trgMsk[i] & TrgBits) != 0; // Will be all zero for program_version<64
   if (debug) {
-    std::cout << "Entering pCTraw::readOneEvent, TimeTags=" << TimeTags << " Run Number=" << run_number
+    pCTrawLogFile << "Entering pCTraw::readOneEvent, TimeTags=" << TimeTags << " Run Number=" << run_number
               << " Event number=" << event_number;
-    std::cout << " Program version=" << program_version << " Stage angle=" << stage_angle;
-    std::cout << " Start time=" << start_time << " Event count=" << event_counter << std::endl;
+    pCTrawLogFile << " Program version=" << program_version << " Stage angle=" << stage_angle;
+    pCTrawLogFile << " Start time=" << start_time << " Event count=" << event_counter << std::endl;
   }
   // reading 12 tracker FPGA headers: 12 bits
 
@@ -341,7 +346,7 @@ void pCTraw::readOneEvent(bool debug) { // This is called once for each event
     int tkr_err;
     int hit_chips = read_FPGAsHeader(extracted_bits, FPGA_numb, tkr_tag, tkr_err);
     if (debug)
-      std::cout << "    FPGA " << FPGA_numb << " Number of chips hit=" << hit_chips << std::endl;
+      pCTrawLogFile << "    FPGA " << FPGA_numb << " Number of chips hit=" << hit_chips << std::endl;
     tkr_fpga[FPGA_numb].num_chips = hit_chips;
     tkr_fpga[FPGA_numb].error = (tkr_err != 0);
     tkr_fpga[FPGA_numb].tag = tkr_tag;
@@ -356,7 +361,7 @@ void pCTraw::readOneEvent(bool debug) { // This is called once for each event
         int ASIC_address;
         int clusters_num = read_ASICHeader(extracted_bits, ASIC_address, tkerr, tkperr, ovrflw);
         if (debug)
-          std::cout << "      ASIC address " << ASIC_address << "  Number of clusters= " << clusters_num << std::endl;
+          pCTrawLogFile << "      ASIC address " << ASIC_address << "  Number of clusters= " << clusters_num << std::endl;
         tkr_fpga[FPGA_numb].chip[i].address = ASIC_address;
         if (clusters_num <= max_clusts)
           tkr_fpga[FPGA_numb].chip[i].num_clusts = clusters_num;
@@ -374,8 +379,7 @@ void pCTraw::readOneEvent(bool debug) { // This is called once for each event
           int strip_num =
               read_stripHeader(extracted_bits, strip_address); // if strip number is 0 it means 1 strip is hit
           if (debug)
-            std::cout << "        Cluster: # strips= " << strip_num + 1 << " First strip= " << strip_address
-                      << std::endl;
+            pCTrawLogFile << " Cluster: # strips= " << strip_num + 1 << " First strip= " << strip_address << std::endl;
           if (icl < max_clusts) {
             bool good = (strip_num <= max_cluster_size);
             if (killTotal > 0 && good) {
@@ -417,7 +421,7 @@ void pCTraw::readOneEvent(bool debug) { // This is called once for each event
     int channels = read_EnFPGAs(extracted_bits, pedestal_flag, reduce_flag, n_samples, OTR, enrg_tag);
     if (reduceFlagCheck != -999) {
       if ((reduce_flag && reduceFlagCheck == 0) || (!reduce_flag && reduceFlagCheck == 1)) {
-        std::cout << "pCTraw: event found with an inconsistent flag setting "
+        pCTrawLogFile << "pCTraw: event found with an inconsistent flag setting "
                      "for data reduction in the FPGA." << std::endl;
         throw BadEvent("bad data reduction flag");
       }
@@ -427,7 +431,7 @@ void pCTraw::readOneEvent(bool debug) { // This is called once for each event
     enrg_fpga[i].peds_out = pedestal_flag;
     if (channels == 0) {
       if (nDaqErr < mxPrnt)
-        std::cout << "Input data error: Energy FPGA " << i << " number of channels = 0!!!"
+        pCTrawLogFile << "Input data error: Energy FPGA " << i << " number of channels = 0!!!"
                   << "\n";
       if (i == 0)
         channels = 3;
@@ -442,7 +446,7 @@ void pCTraw::readOneEvent(bool debug) { // This is called once for each event
     enrg_fpga[i].tag = enrg_tag;
     enrg_fpga[i].num_samples = n_samples;
     if (debug)
-      std::cout << "  Energy board " << i << "  Number of channels= " << channels << " Reduced=" << reduce_flag
+      pCTrawLogFile << "  Energy board " << i << "  Number of channels= " << channels << " Reduced=" << reduce_flag
                 << " Pedestals=" << pedestal_flag << " #samples=" << n_samples << std::endl;
     if (reduce_flag) {
       enrg_fpga[i].OTR[0] = (OTR & 1);
@@ -456,7 +460,7 @@ void pCTraw::readOneEvent(bool debug) { // This is called once for each event
           extracted_bits =
               just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
           int value = (int8_t)extracted_bits;
-          // std::cout << "    " << j << " pedestal= " <<
+          // pCTrawLogFile << "    " << j << " pedestal= " <<
           // (bitset<8>)extracted_bits << " v " << value;
           enrg_fpga[i].pedestal[j] = value;
         }
@@ -483,7 +487,7 @@ void pCTraw::readOneEvent(bool debug) { // This is called once for each event
         extracted_bits =
             just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
         if (debug)
-          std::cout << "         Sample: " << smp << " " << extracted_bits << " ";
+          pCTrawLogFile << "         Sample: " << smp << " " << extracted_bits << " ";
         required_bits = 15;
         for (int ch = 0; ch < channels; ch++) {
           extracted_bits =
@@ -501,7 +505,7 @@ void pCTraw::readOneEvent(bool debug) { // This is called once for each event
           }
           enrg_fpga[i].sample[ch][smp] = phsmp;
           if (debug)
-            std::cout << phsmp << "  ";
+            pCTrawLogFile << phsmp << "  ";
           if (smp == 0) {
             enrg_fpga[i].pedestal[ch] = phsmp;
             enrg_fpga[i].pulse_sum[ch] = phsmp;
@@ -514,7 +518,7 @@ void pCTraw::readOneEvent(bool debug) { // This is called once for each event
           }
         }
         if (debug)
-          std::cout << std::endl;
+          pCTrawLogFile << std::endl;
       }
       for (int ch = 0; ch < channels; ch++) { // 6-sample around-the-peak data reduction algorithm, as in
                                               // the event builder.
@@ -527,7 +531,7 @@ void pCTraw::readOneEvent(bool debug) { // This is called once for each event
           enrg_fpga[i].pulse_sum[ch] += enrg_fpga[i].sample[ch][smp];
         }
         if (debug)
-          std::cout << "    Channel " << ch << " sample sum=" << enrg_fpga[i].pulse_sum[ch] << std::endl;
+          pCTrawLogFile << "    Channel " << ch << " sample sum=" << enrg_fpga[i].pulse_sum[ch] << std::endl;
       }
     }
   }
@@ -541,19 +545,19 @@ void pCTraw::doWeStop(int max_events, int max_time) { // Check whether we are do
                                                       // read another event
   if (stream_position > file_size) {
     stop_reading = true;
-    std::cout << "pCTraw: stopping reading for thread " << threadNumber << " because at end of file\n";
+    pCTrawLogFile << "pCTraw: stopping reading for thread " << threadNumber << " because at end of file\n";
   }
   if (max_events > 0) {
     if (event_counter >= max_events) {
       stop_reading = true;
-      std::cout << "pCTraw: stopping reading for thread " << threadNumber
+      pCTrawLogFile << "pCTraw: stopping reading for thread " << threadNumber
                 << " because the maximum number of events was reached.\n";
     }
   }
   if (max_time > 0) {
     if (time_tag * 1.0E-8 >= max_time) {
       stop_reading = true;
-      std::cout << "pCTraw: stopping reading for thread " << threadNumber
+      pCTrawLogFile << "pCTraw: stopping reading for thread " << threadNumber
                 << " because the maximum time stamp was reached.\n";
     }
   }
@@ -589,7 +593,7 @@ void pCTraw::read_append_data(FILE *in_file, unsigned long long &bit_container, 
   bit_container <<= shift_by; // Shift current_bits over by 4-bytes so another
                               // 4-bytes can be appended to the end
 
-  fread(&buffer, sizeof(buffer), 1, in_file); // Read next 4-bytes from the current reading position inside the file
+  int ret = fread(&buffer, sizeof(buffer), 1, in_file); // Read next 4-bytes from the current reading position inside the file
   origin = origin + sizeof(buffer);
 
   auto temp = reverse_int_bytes(buffer); // Reverse the order of the bytes previously read into the buffer
@@ -599,7 +603,7 @@ void pCTraw::read_append_data(FILE *in_file, unsigned long long &bit_container, 
   // add 32 to the count of # bits represented by current_bits
   if (origin > file_size) {
     stop_reading = 1;
-    std::cout << "read_append_data:  stopping file reading because we've "
+    pCTrawLogFile << "read_append_data:  stopping file reading because we've "
                  "arrived at the end of the file.\n";
   }
 }
@@ -624,7 +628,7 @@ unsigned long long pCTraw::just_read(FILE *in_file, size_t file_size, bool &stop
                                      unsigned int bits_2_extract, long long &origin) {
   if (origin > file_size) {
     stop_reading = 1;
-    std::cout << "just_read thread " << threadNumber << ":  stopping reading because we're at the end of the input "
+    pCTrawLogFile << "just_read thread " << threadNumber << ":  stopping reading because we're at the end of the input "
                                                         "raw data file\n";
     return 0;
   } else if (num_bits < bits_2_extract)
@@ -640,9 +644,9 @@ int pCTraw::read_file_header(unsigned long long fileHeader_bits, const char *nam
   // way)
   unsigned long long mask = pow(2, 24) - 1;
   if ((fileHeader_bits & mask) == 13784398)
-    std::cout << "File run header found for the pCT raw data file: " << namefile << std::endl;
+    pCTrawLogFile << "File run header found for the pCT raw data file: " << namefile << std::endl;
   else {
-    std::cout << "No run header found for the pCT raw data file " << namefile << std::endl;
+    pCTrawLogFile << "No run header found for the pCT raw data file " << namefile << std::endl;
     perror("Did not find the expected header of a pCT file.\n");
     return -1;
   }
@@ -651,7 +655,7 @@ int pCTraw::read_file_header(unsigned long long fileHeader_bits, const char *nam
 
 // Run number function
 int pCTraw::read_run_number(unsigned long long runNumber_bits) {
-  std::cout << "Run Number: " << runNumber_bits << std::endl;
+  pCTrawLogFile << "Run Number: " << runNumber_bits << std::endl;
   return runNumber_bits;
 }
 
@@ -665,7 +669,7 @@ std::string pCTraw::read_run_startTime(unsigned long long startTime_bits) {
     Tout.erase(found + 1);
   else
     Tout.clear();
-  std::cout << "The run start time is " << Tout << "." << std::endl;
+  pCTrawLogFile << "The run start time is " << Tout << "." << std::endl;
   return Tout;
 }
 
@@ -685,7 +689,7 @@ bool pCTraw::read_BegOfEvent(unsigned long long BegOfEvent_bits, unsigned long l
                               // starts at the byte or half byte beginning
   }
   if (debug)
-    std::cout << std::hex << "   read_BegOfEvent: bits=" << (BegOfEvent_bits & mask)
+    pCTrawLogFile << std::hex << "   read_BegOfEvent: bits=" << (BegOfEvent_bits & mask)
               << " bit_container=" << bit_container << std::dec << " num_bits=" << num_bits << std::endl;
   return Found;
 }
@@ -723,11 +727,11 @@ int pCTraw::read_eventHeader(unsigned long long eventHeader_bits, int &TrgBits) 
     eventHeader_pz[l] = eventHeader_bits & eventHeader_mask[l];
 
   if ((eventHeader_pz[0] >>= 22) != 2)
-    std::cout << "*********** DAQ Error flag: Event header starting bits are "
+    pCTrawLogFile << "*********** DAQ Error flag: Event header starting bits are "
                  "not 10! ***" << std::endl;
   if ((eventHeader_pz[1] >>= 21) == 1) {
     if (nDaqErr < mxPrnt)
-      std::cout << "*********** DAQ Error flag: !Incorrect FPGA address received! ***" << std::endl;
+      pCTrawLogFile << "*********** DAQ Error flag: !Incorrect FPGA address received! ***" << std::endl;
     bad_fpga_address = true;
     nDaqErr++;
     DAQ_error = true;
@@ -736,7 +740,7 @@ int pCTraw::read_eventHeader(unsigned long long eventHeader_bits, int &TrgBits) 
     bad_fpga_address = false;
   if ((eventHeader_pz[2] >>= 20) == 1) {
     if (nDaqErr < mxPrnt)
-      std::cout << "*********** DAQ Error flag: !Tag mismatch error! ***" << std::endl;
+      pCTrawLogFile << "*********** DAQ Error flag: !Tag mismatch error! ***" << std::endl;
     tag_mismatch = true;
     nDaqErr++;
     DAQ_error = true;
@@ -745,7 +749,7 @@ int pCTraw::read_eventHeader(unsigned long long eventHeader_bits, int &TrgBits) 
     tag_mismatch = false;
   if ((eventHeader_pz[3] >>= 19) == 1) {
     if (nDaqErr < mxPrnt)
-      std::cout << "*********** DAQ Error flag: !CRC error! ***" << std::endl;
+      pCTrawLogFile << "*********** DAQ Error flag: !CRC error! ***" << std::endl;
     CRC_error = true;
     nDaqErr++;
     throw(BadEvent("CRC error"));
@@ -753,7 +757,7 @@ int pCTraw::read_eventHeader(unsigned long long eventHeader_bits, int &TrgBits) 
     CRC_error = false;
   if ((eventHeader_pz[4] >>= 18) == 1) {
     if (nDaqErr < mxPrnt)
-      std::cout << "*********** DAQ Error flag: !Chip error! ***" << std::endl;
+      pCTrawLogFile << "*********** DAQ Error flag: !Chip error! ***" << std::endl;
     chip_error = true;
     nDaqErr++;
     DAQ_error = true;
@@ -764,7 +768,7 @@ int pCTraw::read_eventHeader(unsigned long long eventHeader_bits, int &TrgBits) 
 
   TrgBits = (eventHeader_pz[5] >>= 12);
   // if ((eventHeader_pz[0] >>= 22 )==2 && (eventHeader_pz[5]%1000000)==0)
-  // std::cout << "Starting event n " << eventHeader_pz[5] << " " <<
+  // pCTrawLogFile << "Starting event n " << eventHeader_pz[5] << " " <<
   // event_counter << std::endl;
   return eventHeader_pz[6];
 }
@@ -787,17 +791,17 @@ int pCTraw::read_FPGAsHeader(unsigned long long FPGAsHeader_bits, int FPGA_num, 
   err = FPGAsHeader_pz[2] >>= 4;
   int numbChips = FPGAsHeader_pz[3];
   if (numbChips > max_chips) {
-    std::cout << "DAQ Error: number of chips " << numbChips << " exceeds the hardware limit " << max_chips << "\n";
+    pCTrawLogFile << "DAQ Error: number of chips " << numbChips << " exceeds the hardware limit " << max_chips << "\n";
     DAQ_error = true;
     numbChips = max_chips;
     throw(BadEvent("too many chips"));
   }
   if (FPGA_num == (FPGAsHeader_pz[0] >>= 8)) {
-    //        std::cout<<"reading FPGA "<<FPGAsHeader_pz[0]<<"..."<<std::endl;
+    //        pCTrawLogFile<<"reading FPGA "<<FPGAsHeader_pz[0]<<"..."<<std::endl;
     return numbChips;
   } else {
     if (nDaqErr < mxPrnt)
-      std::cout << "DAQ Error: FPGA Address mismatch: " << FPGA_num << " vs " << FPGAsHeader_pz[0] << "\n";
+      pCTrawLogFile << "DAQ Error: FPGA Address mismatch: " << FPGA_num << " vs " << FPGAsHeader_pz[0] << "\n";
     return numbChips;
     nDaqErr++;
     DAQ_error = true;
@@ -823,7 +827,7 @@ int pCTraw::read_ASICHeader(unsigned long long ASICHeader_bits, int &ASIC_add, i
   ASIC_add = ASICHeader_pz[4];
   if (ASIC_add < 0 || ASIC_add > 11) {
     if (nDaqErr < mxPrnt)
-      std::cout << "**** DAQ error, pCTraw::read_ASICHeader, ASIC address = " << ASIC_add << " is out of range."
+      pCTrawLogFile << "**** DAQ error, pCTraw::read_ASICHeader, ASIC address = " << ASIC_add << " is out of range."
                 << std::endl;
     nDaqErr++;
     DAQ_error = true;
@@ -834,7 +838,7 @@ int pCTraw::read_ASICHeader(unsigned long long ASICHeader_bits, int &ASIC_add, i
   int nClust = ASICHeader_pz[1] >>= 6;
   if (nClust > max_clusts) {
     if (nDaqErr < mxPrnt)
-      std::cout << "**** DAQ error, pCTraw::read_ASICHeader, number of clusters = " << nClust << " is greater than "
+      pCTrawLogFile << "**** DAQ error, pCTraw::read_ASICHeader, number of clusters = " << nClust << " is greater than "
                 << max_clusts << std::endl;
     nDaqErr++;
     DAQ_error = true;
@@ -858,12 +862,12 @@ int pCTraw::read_stripHeader(unsigned long long stripHeader_bits, int &strip_add
   int strip_num = (stripHeader_pz[0] >>= 6);
   if (strip_add + strip_num > 63) {
     if (nDaqErr < mxPrnt) {
-      std::cout << "**** DAQ Error in read_stripHeader****   First strip=" << strip_add
+      pCTrawLogFile << "**** DAQ Error in read_stripHeader****   First strip=" << strip_add
                 << "  Number of strips minus 1=" << strip_num << "\n";
     }
     strip_num = strip_num + 63 - (strip_add + strip_num);
     if (nDaqErr < mxPrnt) {
-      std::cout << "                                         Resetting the "
+      pCTrawLogFile << "                                         Resetting the "
                    "number of strips minus 1 to " << strip_num << "\n";
     }
     nDaqErr++;
@@ -887,7 +891,7 @@ int pCTraw::read_EnFPGAs(unsigned long long EnFPGAs_bits, bool &ped_flag, bool &
   unsigned long long EnFPGAs_mask[8] = { 0x800, 0x780, 0x40, 0x20, 0x18, 7, 0x1f, 0xf80 }; // representation HEX to do a
                                                                                            // mask
   unsigned long long EnFPGAs_pz[8] = {};
-  // if (EnFPGAs_bits == 1280) { std::cout << "***** pCTraw::read_EnFPGAs, Error flag encountered!\n";}
+  // if (EnFPGAs_bits == 1280) { pCTrawLogFile << "***** pCTraw::read_EnFPGAs, Error flag encountered!\n";}
   for (int l = 0; l < 7; l++)
     EnFPGAs_pz[l] = EnFPGAs_bits & EnFPGAs_mask[l];
 
@@ -908,10 +912,10 @@ int pCTraw::read_EnFPGAs(unsigned long long EnFPGAs_bits, bool &ped_flag, bool &
   OTR = EnFPGAs_pz[5];
   if (EnFPGAs_err == 1 || (channels_num != 2 && channels_num != 3) || nsamp > 16) {
     if (nDaqErr < mxPrnt) {
-      std::cout << "***** pCTraw::read_EnFPGAs, Error flag encountered!\n";
-      std::cout << "      channels_num=" << channels_num << "  OTR=" << OTR << "  nsamp=" << nsamp
+      pCTrawLogFile << "***** pCTraw::read_EnFPGAs, Error flag encountered!\n";
+      pCTrawLogFile << "      channels_num=" << channels_num << "  OTR=" << OTR << "  nsamp=" << nsamp
                 << "  frontend_tag=" << frontend_tag;
-      std::cout << "  Entype_flag=" << Entype_flag << "  ped_flag=" << ped_flag << std::endl;
+      pCTrawLogFile << "  Entype_flag=" << Entype_flag << "  ped_flag=" << ped_flag << std::endl;
     }
     nDaqErr++;
     DAQ_error = true;

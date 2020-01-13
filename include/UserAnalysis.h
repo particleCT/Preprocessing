@@ -3,10 +3,8 @@
 
 // The UserAnalysis class is defined to provide entry points for the user's
 // private analysis code
-
 // This code can slow down the processing significantly, so it is called only if
 // the -u option is given.
-
 // This is just an example user routine, which corresponds to the monitoring
 // code used to verify
 // the scanner operation during runs.  You may delete it all and/or replace with
@@ -16,7 +14,6 @@
 // Please put your private code for peaking at the data here, instead of
 // cluttering up the
 // public code needed by all to preprocess or calibrate data.
-
 // Note that the UserAnalysis entry points are called for each event by only the
 // mother thread, so if
 // you run your preprocessing job in multiple threads (-t option) only a
@@ -112,7 +109,6 @@ class UserAnalysis {
   pCTgeo *uGeometry;
   int numEvents;
   std::string fname;
-  std::string OsName;
 
   float timeFirst;
   double uBeamSpot, uPosE;
@@ -225,15 +221,14 @@ class UserAnalysis {
   string partType;
 
 public:
-  UserAnalysis(const char *fnameIn, pCTgeo &Geometry, string partType, int analysisLevel,
-               std::string OsName) { // User analysis constructor
+  UserAnalysis(const char *fnameIn, pCTgeo* Geometry, string partType, int analysisLevel) { // User analysis constructor
+               
     cout << "Now constructing the user analysis instance." << endl;
 
     // Initialize the member variables
 
     this->analysisLevel = analysisLevel;
     this->partType = partType;
-    this->OsName = OsName;
     fname = fnameIn;
     cout << "User analysis: name of the input data file: " << fnameIn << "\n";
 
@@ -267,7 +262,7 @@ public:
     nTgrLyr01 = 0;
     nTgrLyr02 = 0;
     nTgrLyr2 = 0;
-    uGeometry = &Geometry;
+    uGeometry = Geometry;
 
     nTkEvV = 0;
     nTkEvT = 0;
@@ -441,7 +436,7 @@ public:
       hRadioGraph2 = new ProfilePlot2D(440, -90., 0.5, 160, -40., 0.5, "Radiograph", "T (mm)", "V (mm)", "WEPL (mm)");
       if (partType == "H") {
         hEstop[0] =
-            new Histogram(400, 15., 0.35, "Stopping energy distribution for stage 0", "Energy (MeV)", "proton events");
+	  new Histogram(400, 15., 0.35, "Stopping energy distribution for stage 0", "Energy (MeV)", "proton events");
         hEstop[1] =
             new Histogram(400, 15., 0.35, "Stopping energy distribution for stage 1", "Energy (MeV)", "proton events");
         hEstop[2] =
@@ -670,7 +665,7 @@ public:
     }
   }
 
-  bool rawEvent(const pCTraw &pCTEvent, const TkrHits &pCThits, pCT_Tracking &pCTtracks, pCTgeo &geometry,
+  bool rawEvent(const pCTraw &pCTEvent, const TkrHits &pCThits, pCT_Tracking &pCTtracks, pCTgeo* geometry,
                 float theta) { // User event analysis called for each raw event
                                // read in
 
@@ -891,10 +886,10 @@ public:
 
       // Trigger efficiency analysis
       double vCal = -999.;
-      vCal = pCTtracks.backPredV(pCTtracks.itkV, geometry.energyDetectorU(0));
+      vCal = pCTtracks.backPredV(pCTtracks.itkV, geometry->energyDetectorU(0));
       hVcalInt->entry(vCal);
       double tCal = -999.;
-      tCal = pCTtracks.backPredT(pCTtracks.itkT, geometry.energyDetectorU(0));
+      tCal = pCTtracks.backPredT(pCTtracks.itkT, geometry->energyDetectorU(0));
       hTcalInt->entry(tCal);
       if (abs(vCal) < 35. && abs(tCal) < 125.) {
         for (int i = 0; i < 6; i++)
@@ -1035,7 +1030,7 @@ public:
             if (LineFitT.getChi2() < mxChi2) { // Good track in T that is within
                                                // bounds at the V layer of
                                                // interest
-              double Textrap = LineFitT.eval(geometry.uV(lyrA));
+              double Textrap = LineFitT.eval(geometry->uV(lyrA));
               if (Textrap > -155. && Textrap < 155.) {
                 for (int lyr = 0; lyr < 3; lyr++) {
                   xHit[lyr] = pCThits.Lyr[lyrFit[lyr]].U[0].at(0);
@@ -1043,7 +1038,7 @@ public:
                 }
                 LineFit LineFitV(3, xHit, yHit); // Fit a track in V to the 3
                                                  // layers not being studied
-                double vPos = LineFitV.eval(geometry.uV(lyrA));
+                double vPos = LineFitV.eval(geometry->uV(lyrA));
                 if (LineFitV.getChi2() < mxChi2 && vPos > -40. && vPos < 40.) { // Must be a good fit in V
                   if (Textrap > 0.)
                     nVtrialL[lyrA]++;
@@ -1089,14 +1084,14 @@ public:
             }
             LineFit LineFitV(4, xHit, yHit);
             if (LineFitV.getChi2() < mxChi2) {
-              double Vextrap = LineFitV.eval(geometry.uT(lyrA));
+              double Vextrap = LineFitV.eval(geometry->uT(lyrA));
               if (Vextrap > -40. && Vextrap < 40.) {
                 for (int lyr = 0; lyr < 3; lyr++) {
                   xHit[lyr] = pCThits.Lyr[lyrFit[lyr]].U[1].at(0);
                   yHit[lyr] = pCThits.Lyr[lyrFit[lyr]].Y[1].at(0);
                 }
                 LineFit LineFitT(3, xHit, yHit);
-                double tPos = LineFitT.eval(geometry.uT(lyrA));
+                double tPos = LineFitT.eval(geometry->uT(lyrA));
                 if (LineFitT.getChi2() < mxChi2 && tPos > -155. && tPos < 155.) {
                   nTtrial[lyrA]++;
                   bool success = false;
@@ -1259,20 +1254,14 @@ public:
     FILE *oFile;
     string fileName;
 
-    string setTerm;
-    if (OsName == "Windows")
-      setTerm = "set terminal wxt size 1300, 600\n";
-    else
-      setTerm = "set terminal x11 size 1300, 600\n";
 
     //  Plot time-stamp histogram
     fileName = outputDir + "/timeStamp.gp";
     oFile = fopen(fileName.c_str(), "w");
     if (oFile != NULL) {
-      fprintf(oFile, setTerm.c_str());
       fprintf(oFile, "set multiplot title 'Time stamps for file %s' layout 3,1 "
-                     "columnsfirst scale 1.0,1.0\n",
-              FNpD.c_str());
+	      "columnsfirst scale 1.0,1.0\n",
+	      FNpD.c_str());
       timeStamp->plot(oFile);
       hTdiff->plot(oFile);
       hErrInt->plot(oFile);
@@ -1301,9 +1290,8 @@ public:
     fileName = outputDir + "/TkrEpos.gp";
     oFile = fopen(fileName.c_str(), "w");
     if (oFile != NULL) {
-      fprintf(oFile, setTerm.c_str());
       fprintf(oFile, "set multiplot title 'Track at E-det %s' layout 3,1 "
-                     "columnsfirst scale 1.0,1.0\n",
+	      "columnsfirst scale 1.0,1.0\n",
               FNpD.c_str());
       hVcalInt->plot(oFile);
       hTcalInt->plot(oFile);
@@ -1323,7 +1311,6 @@ public:
     fileName = outputDir + "/deltaTstrip.gp";
     oFile = fopen(fileName.c_str(), "w");
     if (oFile != NULL) {
-      fprintf(oFile, setTerm.c_str());
       fprintf(oFile, "set multiplot title 'Event delta-t %s' layout 1,2 "
                      "columnsfirst scale 1.0,1.0\n",
               FNpD.c_str());
@@ -1336,7 +1323,6 @@ public:
     fileName = outputDir + "/deltaTmiss.gp";
     oFile = fopen(fileName.c_str(), "w");
     if (oFile != NULL) {
-      fprintf(oFile, setTerm.c_str());
       fprintf(oFile, "set multiplot title 'Missed hits %s' layout 1,2 "
                      "columnsfirst scale 1.0,1.0\n",
               FNpD.c_str());
@@ -1362,7 +1348,6 @@ public:
     fileName = outputDir + "/EnergyDetector.gp";
     oFile = fopen(fileName.c_str(), "w");
     if (oFile != NULL) {
-      fprintf(oFile, setTerm.c_str());
       fprintf(oFile, "set multiplot title 'Energy Detector %s' layout 3,2 "
                      "columnsfirst scale 1.0,1.0\n",
               fname.c_str());
@@ -1390,7 +1375,6 @@ public:
     fileName = outputDir + "/OTR.gp";
     oFile = fopen(fileName.c_str(), "w");
     if (oFile != NULL) {
-      fprintf(oFile, setTerm.c_str());
       fprintf(oFile, "set multiplot title 'Energy Detector ADC overflows for "
                      "file %s' layout 2,1 columnsfirst scale 1.0,1.0\n",
               FNpD.c_str());
@@ -1404,7 +1388,6 @@ public:
     fileName = outputDir + "/SampleMax.gp";
     oFile = fopen(fileName.c_str(), "w");
     if (oFile != NULL) {
-      fprintf(oFile, setTerm.c_str());
       fprintf(oFile, "set multiplot title 'Energy Detector Samples from %s' "
                      "layout 3,2 columnsfirst scale 1.0,1.0\n",
               FNpD.c_str());
@@ -1424,7 +1407,6 @@ public:
     fileName = outputDir + "/SamplePH.gp";
     oFile = fopen(fileName.c_str(), "w");
     if (oFile != NULL) {
-      fprintf(oFile, setTerm.c_str());
       fprintf(oFile, "set multiplot title 'Energy Detector Samples from %s' "
                      "layout 3,2 columnsfirst scale 1.0,1.0\n",
               FNpD.c_str());
@@ -1445,7 +1427,6 @@ public:
     fileName = outputDir + "/PH1Profile.gp";
     oFile = fopen(fileName.c_str(), "w");
     if (oFile != NULL) {
-      fprintf(oFile, setTerm.c_str());
       fprintf(oFile, "set multiplot title 'Stage 1 ADC Profiles %s' layout 2,1 "
                      "columnsfirst scale 1.0,1.0\n",
               FNpD.c_str());
@@ -1460,7 +1441,6 @@ public:
     fileName = outputDir + "/PH2Profile.gp";
     oFile = fopen(fileName.c_str(), "w");
     if (oFile != NULL) {
-      fprintf(oFile, setTerm.c_str());
       fprintf(oFile, "set multiplot title 'Stage 2 ADC Profiles %s' layout 2,1 "
                      "columnsfirst scale 1.0,1.0\n",
               FNpD.c_str());
@@ -1475,7 +1455,6 @@ public:
     fileName = outputDir + "/PH3Profile.gp";
     oFile = fopen(fileName.c_str(), "w");
     if (oFile != NULL) {
-      fprintf(oFile, setTerm.c_str());
       fprintf(oFile, "set multiplot title 'Stage 3 ADC Profiles %s' layout 2,1 "
                      "columnsfirst scale 1.0,1.0\n",
               FNpD.c_str());
@@ -1490,7 +1469,6 @@ public:
     fileName = outputDir + "/PH4Profile.gp";
     oFile = fopen(fileName.c_str(), "w");
     if (oFile != NULL) {
-      fprintf(oFile, setTerm.c_str());
       fprintf(oFile, "set multiplot title 'Stage 4 ADC Profiles %s' layout 2,1 "
                      "columnsfirst scale 1.0,1.0\n",
               FNpD.c_str());
@@ -1505,7 +1483,6 @@ public:
     fileName = outputDir + "/PH5Profile.gp";
     oFile = fopen(fileName.c_str(), "w");
     if (oFile != NULL) {
-      fprintf(oFile, setTerm.c_str());
       fprintf(oFile, "set multiplot title 'Stage 5 ADC Profiles %s' layout 2,1 "
                      "columnsfirst scale 1.0,1.0\n",
               FNpD.c_str());
@@ -1520,7 +1497,6 @@ public:
     fileName = outputDir + "/MxPh0.gp";
     oFile = fopen(fileName.c_str(), "w");
     if (oFile != NULL) {
-      fprintf(oFile, setTerm.c_str());
       fprintf(oFile, "set multiplot title 'Maximum Sample Pulse Height %s' "
                      "layout 3,1 columnsfirst scale 1.0,1.0\n",
               FNpD.c_str());
@@ -1535,7 +1511,6 @@ public:
     fileName = outputDir + "/MxPh1.gp";
     oFile = fopen(fileName.c_str(), "w");
     if (oFile != NULL) {
-      fprintf(oFile, setTerm.c_str());
       fprintf(oFile, "set multiplot title 'Maximum Sample Pulse Height %s' "
                      "layout 2,1 columnsfirst scale 1.0,1.0\n",
               FNpD.c_str());
@@ -1550,7 +1525,6 @@ public:
     fileName = outputDir + "/MxSample.gp";
     oFile = fopen(fileName.c_str(), "w");
     if (oFile != NULL) {
-      fprintf(oFile, setTerm.c_str());
       fprintf(oFile, "set multiplot title 'Maximum Sample Location %s' layout "
                      "2,1 columnsfirst scale 1.0,1.0\n",
               FNpD.c_str());
@@ -1566,7 +1540,6 @@ public:
     fileName = outputDir + "/FPGApedestals.gp";
     oFile = fopen(fileName.c_str(), "w");
     if (oFile != NULL) {
-      fprintf(oFile, setTerm.c_str());
       fprintf(oFile, "set multiplot title 'Energy pedestals %s' layout 3,2 "
                      "columnsfirst scale 1.0,1.0\n",
               FNpD.c_str());
@@ -1586,7 +1559,6 @@ public:
     fileName = outputDir + "/Vclusters.gp";
     oFile = fopen(fileName.c_str(), "w");
     if (oFile != NULL) {
-      fprintf(oFile, setTerm.c_str());
       fprintf(oFile, "set multiplot title 'Tracker V-Layer Cluster Frequency "
                      "%s' layout 2,2 columnsfirst scale 1.0,1.0\n",
               FNpD.c_str());
@@ -1603,7 +1575,6 @@ public:
     fileName = outputDir + "/Tclusters.gp";
     oFile = fopen(fileName.c_str(), "w");
     if (oFile != NULL) {
-      fprintf(oFile, setTerm.c_str());
       fprintf(oFile, "set multiplot title 'Tracker T-Layer Cluster Frequency "
                      "%s' layout 2,2 columnsfirst scale 1.0,1.0\n",
               FNpD.c_str());
@@ -1622,7 +1593,6 @@ public:
     fileName = outputDir + "/BeamSpot.gp";
     oFile = fopen(fileName.c_str(), "w");
     if (oFile != NULL) {
-      fprintf(oFile, setTerm.c_str());
       fprintf(oFile, "set multiplot title 'Front Vectors  %s' layout 2,1 "
                      "columnsfirst scale 1.0,1.0\n",
               FNpD.c_str());
@@ -1638,7 +1608,6 @@ public:
     fileName = outputDir + "/nTracks.gp";
     oFile = fopen(fileName.c_str(), "w");
     if (oFile != NULL) {
-      fprintf(oFile, setTerm.c_str());
       fprintf(oFile, "set multiplot title 'Number of Tracks Found %s' layout "
                      "2,1 columnsfirst scale 1.0,1.0\n",
               FNpD.c_str());
@@ -1652,7 +1621,6 @@ public:
     fileName = outputDir + "/tMiss.gp";
     oFile = fopen(fileName.c_str(), "w");
     if (oFile != NULL) {
-      fprintf(oFile, setTerm.c_str());
       fprintf(oFile, "set multiplot title 'Track miss distance at u=0 %s' "
                      "layout 2,1 columnsfirst scale 1.0,1.0\n",
               FNpD.c_str());
@@ -1666,7 +1634,6 @@ public:
     fileName = outputDir + "/tFrontSlope.gp";
     oFile = fopen(fileName.c_str(), "w");
     if (oFile != NULL) {
-      fprintf(oFile, setTerm.c_str());
       fprintf(oFile, "set multiplot title 'Front track vector slope %s' layout "
                      "2,1 columnsfirst scale 1.0,1.0\n",
               FNpD.c_str());
@@ -1680,7 +1647,6 @@ public:
     fileName = outputDir + "/tRearSlope.gp";
     oFile = fopen(fileName.c_str(), "w");
     if (oFile != NULL) {
-      fprintf(oFile, setTerm.c_str());
       fprintf(oFile, "set multiplot title 'Rear track vector slope %s' layout "
                      "2,1 columnsfirst scale 1.0,1.0\n",
               FNpD.c_str());
@@ -1697,7 +1663,6 @@ public:
     fileName = outputDir + "/Cassette1.gp";
     oFile = fopen(fileName.c_str(), "w");
     if (oFile != NULL) {
-      fprintf(oFile, setTerm.c_str());
       fprintf(oFile, "set multiplot title 'Tracking Detector First Cassette  "
                      "%s' layout 2,1 columnsfirst scale 1.0,1.0\n",
               FNpD.c_str());
@@ -1711,7 +1676,6 @@ public:
     fileName = outputDir + "/Cassette2.gp";
     oFile = fopen(fileName.c_str(), "w");
     if (oFile != NULL) {
-      fprintf(oFile, setTerm.c_str());
       fprintf(oFile, "set multiplot title 'Tracking Detector Second Cassette  "
                      "%s' layout 2,1 columnsfirst scale 1.0,1.0\n",
               FNpD.c_str());
@@ -1725,7 +1689,6 @@ public:
     fileName = outputDir + "/Cassette3.gp";
     oFile = fopen(fileName.c_str(), "w");
     if (oFile != NULL) {
-      fprintf(oFile, setTerm.c_str());
       fprintf(oFile, "set multiplot title 'Tracking Detector Third Cassette  "
                      "%s' layout 2,1 columnsfirst scale 1.0,1.0\n",
               FNpD.c_str());
@@ -1739,7 +1702,6 @@ public:
     fileName = outputDir + "/Cassette4.gp";
     oFile = fopen(fileName.c_str(), "w");
     if (oFile != NULL) {
-      fprintf(oFile, setTerm.c_str());
       fprintf(oFile, "set multiplot title 'Tracking Detector Fourth Cassette  "
                      "%s' layout 2,1 columnsfirst scale 1.0,1.0\n",
               FNpD.c_str());
@@ -1754,7 +1716,6 @@ public:
     fileName = outputDir + "/Vresiduals.gp";
     oFile = fopen(fileName.c_str(), "w");
     if (oFile != NULL) {
-      fprintf(oFile, setTerm.c_str());
       fprintf(oFile, "set multiplot title 'Tracker V Residuals from %s' layout "
                      "2,2 columnsfirst scale 1.0,1.0\n",
               FNpD.c_str());
@@ -1769,7 +1730,6 @@ public:
     fileName = outputDir + "/Tresiduals.gp";
     oFile = fopen(fileName.c_str(), "w");
     if (oFile != NULL) {
-      fprintf(oFile, setTerm.c_str());
       fprintf(oFile, "set multiplot title 'Tracker T Residuals from %s' layout "
                      "2,2 columnsfirst scale 1.0,1.0\n",
               FNpD.c_str());
@@ -1787,7 +1747,6 @@ public:
     fileName = outputDir + "/Vefficiency.gp";
     oFile = fopen(fileName.c_str(), "w");
     if (oFile != NULL) {
-      fprintf(oFile, setTerm.c_str());
       fprintf(oFile, "binwidth=0.1\n");
       fprintf(oFile, "set multiplot title 'Tracker V-Layer Residuals %s' "
                      "layout 2,2 columnsfirst scale 1.0,1.0\n",
@@ -1817,7 +1776,6 @@ public:
     fileName = outputDir + "/Tefficiency.gp";
     oFile = fopen(fileName.c_str(), "w");
     if (oFile != NULL) {
-      fprintf(oFile, setTerm.c_str());
       fprintf(oFile, "binwidth=0.1\n");
       fprintf(oFile, "set multiplot title 'Tracker T-Layer Residuals %s' "
                      "layout 2,2 columnsfirst scale 1.0,1.0\n",
@@ -1840,7 +1798,6 @@ public:
     fileName = outputDir + "/stageAngle.gp";
     oFile = fopen(fileName.c_str(), "w");
     if (oFile != NULL) {
-      fprintf(oFile, setTerm.c_str());
       fprintf(oFile, "set multiplot title 'Stage angle %s' layout 2,1 "
                      "columnsfirst scale 1.0,1.0\n",
               FNpD.c_str());
@@ -1888,7 +1845,6 @@ public:
       if (oFile != NULL) {
         time_t t = time(NULL);
         struct tm *now = localtime(&t);
-        fprintf(oFile, setTerm.c_str());
         fprintf(oFile, "set multiplot title 'Energy Detector Stage Stopping "
                        "Energies for file %s' layout 3,2 columnsfirst scale "
                        "1.0,1.0\n",
@@ -1926,7 +1882,6 @@ public:
       fileName = outputDir + "/WEPL.gp";
       oFile = fopen(fileName.c_str(), "w");
       if (oFile != NULL) {
-        fprintf(oFile, setTerm.c_str());
         fprintf(oFile, "set multiplot title 'Calibrated WEPL %s' layout 2,1 "
                        "columnsfirst scale 1.0,1.0\n",
                 FNpD.c_str());
@@ -1942,7 +1897,6 @@ public:
       fileName = outputDir + "/RadioGraph.txt";
       oFile = fopen(fileName.c_str(), "w");
       if (oFile != NULL) {
-        fprintf(oFile, setTerm.c_str());
         hRadioGraph->print(oFile);
         fclose(oFile);
       }
@@ -1950,7 +1904,6 @@ public:
       fileName = outputDir + "/RadioGraph2.txt";
       oFile = fopen(fileName.c_str(), "w");
       if (oFile != NULL) {
-        fprintf(oFile, setTerm.c_str());
         hRadioGraph2->print(oFile);
         fclose(oFile);
       }
@@ -1959,7 +1912,6 @@ public:
       fileName = outputDir + "/Energy1Profile.gp";
       oFile = fopen(fileName.c_str(), "w");
       if (oFile != NULL) {
-        fprintf(oFile, setTerm.c_str());
         fprintf(oFile, "set multiplot title 'Stage 1 Energy Profiles %s' "
                        "layout 2,1 columnsfirst scale 1.0,1.0\n",
                 FNpD.c_str());
@@ -1974,7 +1926,6 @@ public:
       fileName = outputDir + "/Energy2Profile.gp";
       oFile = fopen(fileName.c_str(), "w");
       if (oFile != NULL) {
-        fprintf(oFile, setTerm.c_str());
         fprintf(oFile, "set multiplot title 'Stage 2 Energy Profiles %s' "
                        "layout 2,1 columnsfirst scale 1.0,1.0\n",
                 FNpD.c_str());
@@ -1989,7 +1940,6 @@ public:
       fileName = outputDir + "/Energy3Profile.gp";
       oFile = fopen(fileName.c_str(), "w");
       if (oFile != NULL) {
-        fprintf(oFile, setTerm.c_str());
         fprintf(oFile, "set multiplot title 'Stage 3 Energy Profiles %s' "
                        "layout 2,1 columnsfirst scale 1.0,1.0\n",
                 FNpD.c_str());
@@ -2004,7 +1954,6 @@ public:
       fileName = outputDir + "/Energy4Profile.gp";
       oFile = fopen(fileName.c_str(), "w");
       if (oFile != NULL) {
-        fprintf(oFile, setTerm.c_str());
         fprintf(oFile, "set multiplot title 'Stage 4 Energy Profiles %s' "
                        "layout 2,1 columnsfirst scale 1.0,1.0\n",
                 FNpD.c_str());
@@ -2019,7 +1968,6 @@ public:
       fileName = outputDir + "/Energy5Profile.gp";
       oFile = fopen(fileName.c_str(), "w");
       if (oFile != NULL) {
-        fprintf(oFile, setTerm.c_str());
         fprintf(oFile, "set multiplot title 'Stage 5 Energy Profiles %s' "
                        "layout 2,1 columnsfirst scale 1.0,1.0\n",
                 FNpD.c_str());
@@ -2034,7 +1982,6 @@ public:
       fileName = outputDir + "/Stage4.gp";
       oFile = fopen(fileName.c_str(), "w");
       if (oFile != NULL) {
-        fprintf(oFile, setTerm.c_str());
         fprintf(oFile, "set multiplot title 'Energies for particles stopping "
                        "in stage 4 %s' layout 2,2 columnsfirst scale 1.0,1.0\n",
                 FNpD.c_str());
@@ -2048,7 +1995,6 @@ public:
       fileName = outputDir + "/Stage3.gp";
       oFile = fopen(fileName.c_str(), "w");
       if (oFile != NULL) {
-        fprintf(oFile, setTerm.c_str());
         fprintf(oFile, "set multiplot title 'Energies for particles stopping "
                        "in stage 3 %s' layout 3,1 columnsfirst scale 1.0,1.0\n",
                 FNpD.c_str());
@@ -2061,7 +2007,6 @@ public:
       fileName = outputDir + "/Stage2.gp";
       oFile = fopen(fileName.c_str(), "w");
       if (oFile != NULL) {
-        fprintf(oFile, setTerm.c_str());
         fprintf(oFile, "set multiplot title 'Energies for particles stopping "
                        "in stage 2 %s' layout 2,1 columnsfirst scale 1.0,1.0\n",
                 FNpD.c_str());

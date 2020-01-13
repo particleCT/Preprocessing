@@ -120,7 +120,7 @@ void Histogram::print(std::string fn) { // Print the histogram contents to an
       YY = counts[i];
       EEy = sqrt(counts[i]);
       if (BW > 0.1) {
-        fprintf(oFile, "  %d  %8.3f  %9.3+-%8.3f\n", i, XX, YY, EEy);
+        //fprintf(oFile, "  %d  %8.3f  %9.3 +0 %8.3f\n", i, XX, YY, EEy);
       } else {
         fprintf(oFile, "  %d  %e  %e\n", i, XX, YY);
       }
@@ -182,43 +182,38 @@ int Histogram::imode() { // Return the bin number for the mode of the distributi
 int Histogram::FWHMboundaries(float &xLow, float &xHigh) {
   float max = -1.0;
   int Imax = -1;
+  // Find the max bin and binId
   for (int i = 1; i < N - 1; ++i) {
-    if (counts[i] > max) { // Try to avoid spurious single-bin 'noise' peaks
-                           //			if (counts[i - 1] < 0.05*counts[i] && counts[i +
-      // 1] < 0.05*counts[i]) continue;
+    if (counts[i] > max) {
+      // Try to avoid spurious single-bin 'noise' peaks
+      //if (counts[i - 1] < 0.05*counts[i] && counts[i +  1] < 0.05*counts[i]) continue;
       max = counts[i];
       Imax = i;
     }
   }
-  /*	if (Imax < 0 || counts[Imax-1] > counts[Imax] || counts[Imax+1] >
-     counts[Imax]) {
-                  max = -1.0;
-                  Imax = -1;
-                  for (int i = 1; i < N - 1; ++i) {
-                          if (counts[i] > max) {
-                                  max = counts[i];
-                                  Imax = i;
-                          }
-                  }
-          }*/
-  if (Imax < 0)
-    return -1;
+
+  //binId < 0 
+  if (Imax < 0) return -1; // safety check
+
+  // higher bin Id
   int iUp = -1;
-  for (int i = Imax; i < N; ++i) {
-    if (counts[i] < max / 2.) {
-      iUp = i;
-      break;
-    }
-    if (i == N - 1 && Imax != N - 2) {
-      iUp = i;
-      break;
-    }
+  for (int i = Imax; i < N; ++i) { // higher bound
+    if (counts[i] < max / 2.)
+      {
+	iUp = i;
+	break;
+      }
+    if (i == N - 1 && Imax != N - 2)
+      {
+	iUp = i;
+	break;
+      }
   }
-  if (iUp < 0)
-    return -2;
+  if (iUp < 0) return -2; 
+    
 
   int iDn = -1;
-  for (int i = Imax; i >= 0; --i) {
+  for (int i = Imax; i >= 0; --i) { // lower bound
     if (counts[i] < max / 2.) {
       iDn = i;
       break;
@@ -228,8 +223,10 @@ int Histogram::FWHMboundaries(float &xLow, float &xHigh) {
       break;
     }
   }
-  if (iDn < 0)
-    return -3;
+
+  
+  if (iDn < 0) return -3;
+    
 
   xLow = B0 + (((double)iDn) + 0.5) * BW;
   xHigh = B0 + (((double)iUp) + 0.5) * BW;

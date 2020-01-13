@@ -47,8 +47,8 @@ class pCTgeo {
   double timeStampRes;  // Hardware time-stamp resolution in seconds
 
 public:
-  pCTgeo(double tWedgeOffset =
-             0.) { // Most of this stuff needs to be kept in a database and read from there in this constructor
+  pCTgeo(double tWedgeOffset = 0.) { // Most of this stuff needs to be kept in a database and read from there in this constructor
+    
     ofstream geoLogFile;
     geoLogFile.open("pCTGeometry.log");
     geoLogFile << "pCTgeo.h: loading geometry constants for the real Phase-II pCT Scanner." << endl;
@@ -194,9 +194,9 @@ public:
     }
     // Geometry for the wedge phantom, all in mm (INCLUDING 0.1MM SHIFT AND  0.1MM SLIT between wedges):
     TwedgeBreaks[0] = -104.50 + tWedgeOffset; // Start of the wedge slope
-    TwedgeBreaks[1] = -4.75 + tWedgeOffset;   // End of the slope, start of the flat
-    TwedgeBreaks[2] = 4.75 + tWedgeOffset;    // End of the slope, start of the opposite slope
-    TwedgeBreaks[3] = 104.50 + tWedgeOffset;  // End of the opposite slope.
+    TwedgeBreaks[1] = -4.75   + tWedgeOffset;   // End of the slope, start of the flat
+    TwedgeBreaks[2] =  4.75   + tWedgeOffset;    // End of the slope, start of the opposite slope
+    TwedgeBreaks[3] =  104.50 + tWedgeOffset;  // End of the opposite slope.
     // Should also be the end of the bricks, if positioned correctly
 
     BrickThickness = 50.8; // Brick thickness in U; also the wedge maximum thickness

@@ -52,7 +52,6 @@
 #include <thread>
 #include <cmath>
 #include <ctime>
-//#include <execinfo.h>  // For Linux only, if the error handler below is needed.
 #include <signal.h>
 #include "arg.h" // Command line options
 #include "Preprocessing.h"
@@ -62,22 +61,10 @@
 
 using namespace std;
 
-std::string getOsName() {
-#ifdef _WIN32
-  return "Windows";
-#elif _WIN64
-  return "Windows";
-#elif __linux__
-  return "Linux";
-#else
-  return "Other";
-#endif
-}
-
-// |\\  //|    //\    ||  |\\  || ****----
-// ||\\//||   // \\   ||  ||\\ || ****----
-// || \/ ||  //ZZZ\\  ||  || \\|| --------
-// ||    || //     \\ ||  ||  \\| ********
+// |\\  //|    //\    ||  |\\  || 
+// ||\\//||   // \\   ||  ||\\ || 
+// || \/ ||  //ZZZ\\  ||  || \\|| 
+// ||    || //     \\ ||  ||  \\| 
 
 int main(int argc, char *argv[]) {
 
@@ -182,7 +169,7 @@ int main(int argc, char *argv[]) {
       .stow(partType)
       .help("Particle type, hydrogen (H) or helium (He)", "STRING")
       .show_default();
-  cfg.addItem('S', "particle", partType);
+  cfg.addItem('S', "partType", partType);
 
   int fileBins = 1;
   parser.add_opt('b', "bins")
@@ -199,34 +186,33 @@ int main(int argc, char *argv[]) {
   cfg.addItem('c', "continuous", continuous_scan);
 
   string Outputdir = ".";
-  parser.add_opt('o', "outputDir").stow(Outputdir).help("set the output directory", "STRING").show_default();
+  parser.add_opt('o', "outputDir")
+    .stow(Outputdir)
+    .help("set the output directory", "STRING")
+    .show_default();
   cfg.addItem('o', "outputDir", Outputdir);
-
-  int n_threads = 1;
-  parser.add_opt('t', "threads").stow(n_threads).help("number of parallel threads to run", "INT").show_default();
-  cfg.addItem('t', "threads", n_threads);
-
+  
   int max_events = 0;
-  parser.add_opt('n', "number")
+  parser.add_opt('n', "max_events")
       .stow(max_events)
       .help("set maximum number of events to read and analyze", "INT")
       .show_default();
-  cfg.addItem('n', "number", max_events);
+  cfg.addItem('n', "max_events", max_events);
 
   int max_time = 0;
   parser.add_opt('M', "time")
       .stow(max_time)
       .help("set the maximum time stamp to read and analyze", "INT")
       .show_default();
-  cfg.addItem('M', "time", max_time);
+  cfg.addItem('M', "max_time", max_time);
 
   int n_debug = 1;
   parser.add_opt('d', "debug").stow(n_debug).help("set the number of events for debug printout", "INT").show_default();
-  cfg.addItem('d', "debug", n_debug);
+  cfg.addItem('d', "n_debug", n_debug);
 
   int n_plot = 0;
   parser.add_opt('j', "plot").stow(n_plot).help("set the number of tracker events to plot", "INT").show_default();
-  cfg.addItem('j', "plot", n_plot);
+  cfg.addItem('j', "n_plot", n_plot);
 
   string UserAna = "no";
   parser.add_opt('u', "user")
@@ -282,13 +268,6 @@ int main(int argc, char *argv[]) {
       .show_default();
   cfg.addItem('r', "recalibrate", reCalibrate);
 
-  string redoCalibAnalysis = "no";
-  parser.add_opt('R', "redo")
-      .stow(redoCalibAnalysis)
-      .help("Redo analysis of existing calibration histograms, yes or no", "STRING")
-      .show_default();
-  cfg.addItem('R', "redo", redoCalibAnalysis);
-
   float phantomSize = 110.;
   parser.add_opt('Z', "size")
       .stow(phantomSize)
@@ -313,7 +292,7 @@ int main(int argc, char *argv[]) {
       .help("Normalize the colums of the WET vs E plot all to be equal area? yes or no", "INT")
       .show_default();
   cfg.addItem('L', "normalize", Normalize);
-
+  
   float wedgeOff = 0.0;
   parser.add_opt('F', "offset")
       .stow(wedgeOff)
@@ -321,7 +300,7 @@ int main(int argc, char *argv[]) {
             "zero)",
             "FLOAT")
       .show_default();
-  cfg.addItem('F', "offset", wedgeOff);
+  cfg.addItem('F', "wedgeoffset", wedgeOff);
 
   string minDate = "2030/01/01";
   parser.add_opt('x', "mindate")
@@ -346,7 +325,7 @@ int main(int argc, char *argv[]) {
       .stow(minRun)
       .help("Minimum valid run number for the calibration, for calibration "
             "runs, to write in the output file",
-            "STRING")
+            "INT")
       .show_default();
   cfg.addItem('w', "minrun", minRun);
 
@@ -355,7 +334,7 @@ int main(int argc, char *argv[]) {
       .stow(maxRun)
       .help("Maximum valid run number for the calibration, for calibration "
             "runs, to write in the output file",
-            "STRING")
+            "INT")
       .show_default();
   cfg.addItem('z', "maxrun", maxRun);
 
@@ -402,11 +381,11 @@ int main(int argc, char *argv[]) {
   cfg.addItem('4', "thr4", thr[4]);
 
   int useTemp = 1;
-  parser.add_opt('E', "tempFile")
+  parser.add_opt('E', "useTemp")
       .stow(useTemp) // Add an option to the command line parser
       .help("Use a temporary file instead of local storage for the CALIBRATION process? yes or no", "INT")
       .show_default();
-  cfg.addItem('E', "tempFile", useTemp); // Also add the option to the list used for parsing the config file
+  cfg.addItem('E', "useTemp", useTemp); // Also add the option to the list used for parsing the config file
 
   int dodEEFilter = 1; // changed default to yes
   parser.add_opt('e', "dEEFilter")
@@ -417,13 +396,13 @@ int main(int argc, char *argv[]) {
 
   parser.add_opt_help();
   parser.add_opt_version(version);
-
+  
   // Read the default configuration from the config file
   if (cfg.Configure() != 0) {
     cout << "Was not able to read a default configuration from " << configFile << endl;
     cout << "The hardwired default configuration will be used." << endl;
   }
-
+  
   // Parse the command options
   try {
     parser.parse(argc, argv);
@@ -438,23 +417,18 @@ int main(int argc, char *argv[]) {
   if (numbEdetFPGA != 2)
     cout << "Non-standard number of energy detector FPGAs in the readout = " << numbEdetFPGA << endl;
 
-  bool redoCal = (redoCalibAnalysis == "yes" || redoCalibAnalysis == "y" || redoCalibAnalysis == "Y" ||
-                  redoCalibAnalysis == "Yes");
-  if (partType == "p" || partType == "proton" || partType == "hydrogen" || partType == "Hydrogen")
-    partType = "H";
-  if (partType == "helium" || partType == "alpha" || partType == "Helium")
-    partType = "He";
+  // Weird validation
+  if (partType == "p" || partType == "proton" || partType == "hydrogen" || partType == "Hydrogen") partType = "H";
+  if (partType == "helium" || partType == "alpha" || partType == "Helium") partType = "He";    
   if (partType == "H" || partType == "He") {
-    cout << "The beam particle type assumed for analysis and calibration is " << partType << endl;
+    cout << "The beam particle type assumed for analysis and calibration is " << cfg.item_str["partType"] << endl;
   } else {
     cout << "Unrecognized particle type '" << partType << "'" << endl;
     exit(2);
   }
 
-  if (reCalibrate)
-    cout << "Energy detector stage gains will be recalibrated on the fly during processing." << endl;
-  else
-    cout << "Energy detector stage gains will NOT be recalibrated on the fly during processing." << endl;
+  if (reCalibrate) cout << "Energy detector stage gains will be recalibrated on the fly during processing." << endl;
+  else cout << "Energy detector stage gains will NOT be recalibrated on the fly during processing." << endl;
 
   // Get the list of required, position-sensitive arguments, in this case just the input filename
   vector<string> requiredArgs = parser.args();
@@ -473,8 +447,7 @@ int main(int argc, char *argv[]) {
 
   // Unlike in the original program, the user has to enter the full filename,
   // including path
-  string CalFile = "CalFileList.txt"; // For calibration runs the input
-                                      // filenames are taken from here
+  string CalFile = "CalFileList.txt"; // For calibration runs the input filenames are taken from here
   string inputFileName;
   if (requiredArgs.size() == 0) {
     if (!Calibrate) {
@@ -485,31 +458,11 @@ int main(int argc, char *argv[]) {
     inputFileName = requiredArgs[0];
     CalFile = requiredArgs[0];
   }
-  if (Calibrate) {
-    cout << "Calibration run.  The list of input files is from " << CalFile << endl;
-    if (redoCal)  cout << "The analysis of existing calibration histograms will be redone" << endl;
-  } 
+  if (Calibrate) cout << "Calibration run.  The list of input files is from " << CalFile << endl;
+
   else cout << "Preprocessing run, the input file name is " << inputFileName << endl;
   cout << "The TV calibration file is " << TVcorrFile << endl;
   cout << "The WEPL calibration file is " << WcalibFile << endl;
-
-  // Try to extract the study name from the input filename.
-  if (study_name == "") { // Do this only if the user did not explicitly enter a study name.
-    size_t foundSlash = inputFileName.find_last_of("/");
-    int c1 = 0;
-    if (foundSlash != string::npos) {
-      c1 = foundSlash + 1;
-    }
-    size_t found = inputFileName.find_first_of("_");
-    if (found != string::npos) {
-      study_name = inputFileName.substr(c1, found - c1);
-      cout << "Setting the study_name to " << study_name << " from the input file name." << endl;
-    } else {
-      cout << "Unable to extract the study_name from the input file name.\n";
-      study_name = "Test";
-    }
-  }
-  cout << "The study_name is " << study_name << endl;
 
   bool callUser = (UserAna == "yes" || UserAna == "Yes" || UserAna == "y" || UserAna == "Y" || UserAna == "YES");
 
@@ -518,28 +471,14 @@ int main(int argc, char *argv[]) {
             "negative.  Resetting to equal 1 bin. **********" << endl;
     fileBins = 1; // Protects from crashing due to bad input
   }
-
   if (max_events > 0) {
     cout << "The maximum number of events to analyze is set to " << max_events << endl;
-  } else {
-    cout << "No restriction is set on the maximum number of events to analyze." << endl;
-  }
-  if (n_threads > 1) {
-    cout << "The preprocessing is set to run in " << n_threads << " threads." << endl;
-    cout << "The data file will be equally divided into " << n_threads << " sections, one for each thread." << endl;
-    if (max_events > 1) {
-      max_events = max_events / float(n_threads);
-      cout << "Each thread will analyze " << max_events << " events";
-    }
-  }
+  } else cout << "No restriction is set on the maximum number of events to analyze." << endl;
+
   if (max_time > 0) {
     cout << "The maximum time stamp to analyze is set to " << max_time << " seconds." << endl;
-    if (n_threads > 1)
-      cout << "    With multiple threads be sure this is what you want, as "
-              "some threads may have no data to analyze!" << endl;
-  } else {
-    cout << "No restriction is set on the maximum time stamp to analyze." << endl;
-  }
+  } else cout << "No restriction is set on the maximum time stamp to analyze." << endl;
+
 
   if (continuous_scan) {
     cout << "The data are assumed to be from a continuous scan." << endl;
@@ -569,19 +508,12 @@ int main(int argc, char *argv[]) {
 
   cout << "The number of events for debug printing is " << n_debug << endl;
   cout << "The number of events for which to plot the tracker hits and tracks is " << n_plot << endl;
-  if (Calibrate) {
-    cout << "Set the number of events to plot > 0 to get loads of debug "
-            "histograms in calibration runs." << endl;
-    if (n_threads > 1)
-      cout << "The WEPL calibration will be submitted in 5 parallel threads, "
-              "since > 1 thread is specified." << endl;
-  } else if (callUser)
-    cout << "The user routine will be called for each raw event." << endl;
+
+  if (Calibrate) cout << "Set the number of events to plot > 0 to get loads of debug histograms in calibration runs." << endl;
+  else if (callUser) cout << "The user routine will be called for each raw event." << endl;
 
   cout << "Fraction of the input file to be analyzed is " << fileFraction << endl;
 
-  std::string OsName = getOsName();
-  cout << "The operating system is identified to be " << OsName << endl;
   cout << "The phantom size for preprocessing is assumed to be " << phantomSize << " mm in radius." << endl;
 
   if (KillCh != "null")
@@ -594,32 +526,42 @@ int main(int argc, char *argv[]) {
   } else
     cout << "No dE-E filtering of nuclear interactions will be used" << endl;
 
+  ////  ////  ////  ////  ////  ////  ////  ////  ////  ////  ////  ////  ////
+  // Calibration run
+  ////  ////  ////  ////  ////  ////  ////  ////  ////  ////  ////  ////  ////
   if (Calibrate) { // Calibration Run
     cout << "Running the pCT TV and WEPL calibration sequence" << endl;
-    if (Normalize)
-      cout << "Will normalize columns in the WET vs E plot to have equal area." << endl;
+    if (Normalize) cout << "Will normalize columns in the WET vs E plot to have equal area." << endl;
 
-    double tWedgeOffset = wedgeOff;
-    pCTcalib calibProcessor(CalFile, Outputdir, max_events, max_time, n_debug, n_plot, useTemp, version, WcalibFile,
-                            TVcorrFile, minDate, maxDate, minRun, maxRun, tWedgeOffset, partType, pdstlr, reCalibrate,
-                            OsName, redoCal, Normalize);
-    if (calibProcessor.TVmapper() == 0) {
+    // Few more options to be used later in the calibration
+    int Nbricks = 1; 
+    cfg.addItem('b', "NBricks", Nbricks); 
+    int doGains = 1; 
+    cfg.addItem('g', "doGains", doGains);
+    string inputFileName; 
+    cfg.addItem('g', "inputFileName", inputFileName);
+    
+    pCTcalib calibProcessor(cfg, CalFile);
+    if (calibProcessor.TVmapper() == 0) { // First the TVmapper
       calibProcessor.enrgDep();
       calibProcessor.writeTVfile();
-      calibProcessor.Wcalib(thr, pdstlr, n_threads);
-    } else {
+      calibProcessor.Wcalib();
+    }
+    else {
       cout << "The calibration run failed in calibProcessor.TVmapper; WEPL calibration will not be run." << endl;
     }
-  } else { // Real run
+  }
+  ////  ////  ////  ////  ////  ////  ////  ////  ////  ////  ////  ////  ////
+  // Real run
+  ////  ////  ////  ////  ////  ////  ////  ////  ////  ////  ////  ////  ////
+  else { 
     cout << "Executing a pCT data pre-processing run" << endl;
     // Here we call the complete preprocessing program
-    Preprocessing pCTpreprocessor(inputFileName, study_name, Outputdir, WcalibFile, TVcorrFile, n_threads, thr,
+    Preprocessing pCTpreprocessor(inputFileName, study_name, Outputdir, WcalibFile, TVcorrFile, thr,
                                   fileBins, analysisLevel, callUser, continuous_scan, initialAngle, reCalibrate,
-                                  max_events, max_time, n_debug, n_plot, proj_angle, dodEEFilter, pdstlr, OsName,
+                                  max_events, max_time, n_debug, n_plot, proj_angle, dodEEFilter, pdstlr,
                                   beamEnergy, Version);
-    int errorCode =
-        pCTpreprocessor.ProcessFile(phantomSize, partType, wedgeOff, fileFraction, numbTkrFPGA, numbEdetFPGA, KillCh);
-
+    int errorCode = pCTpreprocessor.ProcessFile(phantomSize, partType, wedgeOff, fileFraction, numbTkrFPGA, numbEdetFPGA, KillCh);
     return errorCode;
   }
 

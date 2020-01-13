@@ -17,17 +17,23 @@
 #include <vector>
 #include <cmath>
 
-class pCTraw {
+#define num_tkr_fpga 12
+#define num_enrg_fpga 2
+#define max_chips 12
+#define max_clusts 10
+#define mxPrnt 10000
+#define max_cluster_size 9
 
+class pCTraw {
+ public:
+  ~pCTraw();
+  pCTraw(FILE *in_file, size_t file_size, int thread, int numbTkrFPGA, int numbEdetFPGA);
   typedef unsigned char byte;
   std::size_t BITS_PER_BYTE;
-
   long long stream_position;
-  unsigned long long current_bits; // holds the ULL representation of all the
-                                   // bits read into memory
+  unsigned long long current_bits; // holds the ULL representation of all the  bits read into memory
                                    // and placed in the correct order
-  unsigned int queued_bits;        // # of bits currently represented by the ULL
-                                   // variable "current_bits"
+  unsigned int queued_bits;        // # of bits currently represented by the ULL variable "current_bits"
   // (i.e. # bits in queue waiting to be processed)
   unsigned long long extracted_bits; // bit containing information needed
   int required_bits;
@@ -38,7 +44,6 @@ class pCTraw {
   long long evtStart;
   int threadNumber;
   int nDaqErr;
-
   // This union is used to reverse byte order
   union int_reversal {
     unsigned int int_val;
@@ -48,15 +53,7 @@ class pCTraw {
     };
     char each_byte[4]; // unused
   };
-
-public:
-#define num_tkr_fpga 12
-#define num_enrg_fpga 2
-#define max_chips 12
-#define max_clusts 10
-#define mxPrnt 10000
-#define max_cluster_size 9
-
+  
   // Lists of tracker channels to suppress
   int killTotal;
   std::vector<int> killCh[num_tkr_fpga][max_chips];
@@ -69,8 +66,7 @@ public:
   float stage_angle;      // Filled only if run header found
   int program_version;    // Filled only if run header found
   bool TimeTags;          // Assumed true if no run header is found
-  // Information from a single event.  This is just the raw data organized for
-  // convenient access
+  // Information from a single event.  This is just the raw data organized for convenient access
   bool DAQ_error;
   int event_number;            // Warning, this can repeat in a long run
   bool trigger_bits[6];        // Energy detector trigger bits (all 0 for
@@ -83,21 +79,20 @@ public:
   bool CRC_error;
   bool chip_error;
   bool bad_strip_address;
+
   struct EnergyFPGA {
     bool peds_out; // 0=no pedestals written out, 1=pedestals written
-    // Only relevant for reduced data
-    bool error;
-    bool OTR[3]; // out-of-range indicators per channel; calculate for
-                 // non-reduced data
+    bool error;     // Only relevant for reduced data
+    bool OTR[3]; // out-of-range indicators per channel; calculate for non-reduced data
     int tag;
     bool type;         // 0=samples written out, 1=reduced in FPGA
     int num_samples;   // 0 if samples are not written out
     int num_channels;  // 2 or 3 for reduced data, always 3 for samples
-    int sample[3][16]; // up to 16 samples for each channel; none for reduced
-                       // data
+    int sample[3][16]; // up to 16 samples for each channel; none for reduced data
     int pedestal[3];   // equals the first sample
     int pulse_sum[3];  // calculate from the samples for non-reduced data
   } enrg_fpga[num_enrg_fpga];
+
   struct TrackerFPGA {
     bool error;
     int tag;
@@ -119,7 +114,6 @@ public:
   bool stop_reading;
   std::string Months[12];
 
-  pCTraw(FILE *in_file, size_t file_size, int thread, int numbTkrFPGA, int numbEdetFPGA);
   void pCTkillStrip(int FPGA, int chip, int channel);
   void dumpEvt();
   void readRunHeader(const char *inFileName);
@@ -128,13 +122,11 @@ public:
   void doWeStop(int max_events, int max_time);
   bool parseDate(int &year, int &month, int &day);
 
-private: // Blakes's and Piersimoni's bit parsing methods, plus more, are all
-         // hidden here:
+ private: // Blakes's and Piersimoni's bit parsing methods, plus more, are all hidden here:
+         
   int numbTkrFPGA;
   int numbEdetFPGA;
-
   bool findRunHdr();
-
   void read_append_data(FILE *in_file, unsigned long long &bit_container, unsigned int &num_bits, long long &origin,
                         size_t file_size, bool &stop_reading);
 
@@ -152,8 +144,7 @@ private: // Blakes's and Piersimoni's bit parsing methods, plus more, are all
   std::string read_run_startTime(unsigned long long startTime_bits);
 
   inline bool read_statusBits(unsigned long long status_bits) {
-    // if (status_bits==1) cout << "Time tags are included in the data stream."
-    // << endl;
+    // if (status_bits==1) cout << "Time tags are included in the data stream." << endl;
     // else cout << "Time tags are NOT included in the data stream." << endl;
     return status_bits;
   }

@@ -9,7 +9,10 @@
 #include "pCTgeo.h"
 
 class TkrHits {
-public:
+ public:
+  TkrHits(pCTraw &pCTEvent, const pCTgeo* Geometry, bool print);
+  ~TkrHits();
+  ofstream TkrLogFile;
   struct LyrHits {
     int N[2];                       // Number of hits in each of the V and T views for a given layer
     std::vector<double> Y[2], U[2]; // 0=V and 1=T
@@ -18,10 +21,8 @@ public:
 
   LyrHits Lyr[4]; // Hit list for each layer.  0,1= front tracker    2,3= back
                   // tracker
-
   //  Convert the raw tracker strip information into coordinates
-  TkrHits(pCTraw &pCTEvent, const pCTgeo &Geometry, bool print);
-
+  
   // Method to print the list of hits
   void dumpHits(int eventNumber);
 
