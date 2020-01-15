@@ -51,6 +51,12 @@ class pCTcalib {
   bool getLineIntersection(double, double, double, double, double, double, double, double, double &, double &);
   bool EnrgCut(float [5], float, float, float, float);
 
+  // Other classes
+  EvtRecon *theEvtRecon;
+  pCTgeo *Geometry;
+  TVcorrection *TVcal;
+  pCTcut *cuts;
+ 
   // Variables
   vector<string> calFileNames;
   string CalFile;
@@ -59,13 +65,6 @@ class pCTcalib {
   double brickW;  // half width of range in t for brick-only protons
   double emptyW;  // half width of range in t for selecting empty events
 
-  // Other classes
-  EvtRecon *procEvt;
-  pCTgeo *Geometry;
-  TVcorrection *TVcal;
-  pCTcut *cuts;
-  
-  //Variables
   float Est[nStage] = {0}; // energy in each stage
   float EnS; // energy sum in all stage
 
@@ -94,6 +93,7 @@ class pCTcalib {
   double V[2], T[2], Ut[2], Uv[2];
   // Here are a bunch of parameters used to extract the calibration
   float EG4stage[nStage]; // MC derived stage energies, used to calibrate to MeV (CDH setup)
+  float Teststage[nStage];
   int k1[nStage];         // Lots of interpolation parameters for cleaning up calibration curves
   int j1[nStage], j2[nStage], j3[nStage], j4[nStage];
   int i1[nStage], i2[nStage], i3;

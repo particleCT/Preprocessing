@@ -13,18 +13,12 @@
 #include <ctime>
 #include <string>
 #include "arg.h" // Command line options
-#include "pCTgeo.h"
-#include "TkrHits.h"
-#include "pCT_Tracking.h"
-#include "pCTraw.h"
 
 #include "TTree.h"
 #include "TFile.h"
 // Effective Aug 2016: Use new WEPL calibration
 #include "Wepl.h"
 #include "pCTcut.h"
-#include "TVcorrection.h"
-#include "pedGainCalib.h"
 #include "Preprocessing.h"
 #include "BadEvent.h"
 
@@ -64,6 +58,8 @@ Preprocessing::Preprocessing(pCTconfig cfg): config(cfg){
   file_size = ftell(in_file);
   rewind(in_file);
   cout << "Input raw data file size=" << file_size << endl;
+
+
 };
 
 // ******************************* ******************************* *******************************
@@ -178,11 +174,13 @@ void Preprocessing::WriteRootFile(bool timeStampOutput, bool energyOutput, bool 
 				  float E1[], float E2[], float E3[], float E4[], float E5[],
 				  float WetBinary[], float ProjAngle[], unsigned int TimeStamp[], unsigned int EventIDs[]) 
 {
+
   TString filename = Form("%s/%s_%d.root",
 			  config.item_str["outputDir"].c_str(),
 			  config.item_str["inputFileName"].substr(7, config.item_str["inputFileName"].size()-4).c_str(),
 			  fileNb);
   TFile* projectionROOT = new TFile( filename,"update");
+
   TTree* header;
   TTree* phase;
 
@@ -326,7 +324,7 @@ void Preprocessing::WriteRootFile(bool timeStampOutput, bool energyOutput, bool 
 // Routine called to read the raw data, analyze it, write results to a temporary
 // file, and analyze the WEPL calibration pedestals and gains.  Ideally this would be a private member
 // of the Preprocessing class, but then the compiler doesn't allow it to be passed to multiple threads.
-void pCTevents(pCTconfig config, pCTgeo* Geometry, pCTraw rawEvt, pedGainCalib *Calibrate,
+void Preprocessing::pCTevents(pCTconfig config, pCTgeo* Geometry, pCTraw rawEvt, pedGainCalib *Calibrate,
                TVcorrection *const TVcorr, int &nKeep, double Uhit[]) {
 
   // Multiple instances of this program can execute in parallel threads.
@@ -462,8 +460,8 @@ void pCTevents(pCTconfig config, pCTgeo* Geometry, pCTraw rawEvt, pedGainCalib *
                                                                            // layers
             else
               Thit[lyr] = pCTtracks.backPredT(pCTtracks.itkT, Uhit[lyr]);
-            if (debug)
-              cout << "Layer " << lyr << " T,U,V= " << Thit[lyr] << " " << Uhit[lyr] << " " << Vhit[lyr] << endl;
+            if (debug) cout << "Layer " << lyr << " T,U,V= " << Thit[lyr] << " " << Uhit[lyr] << " " << Vhit[lyr] << endl;
+              
           }
         } else { // Use just the first hit in each layer if there is no track
           double UhitT[4], ThitD[4];
@@ -566,7 +564,7 @@ void pCTevents(pCTconfig config, pCTgeo* Geometry, pCTraw rawEvt, pedGainCalib *
   /////////////////////////////////////////////////////////
 
   if (rawEvt.event_counter > 90000) {
-    Calibrate->getPeds(config.item_str["inputFileName"].c_str(), rawEvt.run_number, rawEvt.program_version, config.item_float["projection"],
+    Calibrate->getPeds(pedCalibrateROOTFile,config.item_str["inputFileName"].c_str(), rawEvt.run_number, rawEvt.program_version, config.item_float["projection"],
                        cuts.nKeep, rawEvt.start_time);
     cout <<"We are updating the energy detector pedestal settings to the "
       "on-the-fly measurement values.\n";
@@ -651,7 +649,7 @@ void pCTevents(pCTconfig config, pCTgeo* Geometry, pCTraw rawEvt, pedGainCalib *
 
       Calibrate->weplEvt(Vedet[0], Tphantom, Ene); // Accumulate histograms for gain recalibration
     }
-    Calibrate->getGains(TVcorr, config.item_str["inputFileName"].c_str(), rawEvt.run_number, rawEvt.program_version, config.item_float["projection"],
+    Calibrate->getGains(TVcorr, pedCalibrateROOTFile, config.item_str["inputFileName"].c_str(), rawEvt.run_number, rawEvt.program_version, config.item_float["projection"],
                         cuts.nKeep, rawEvt.start_time);
 
     fclose(fptmp);

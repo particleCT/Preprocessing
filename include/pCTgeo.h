@@ -64,8 +64,7 @@ public:
     fpgaLyr[9] = 2;
     fpgaLyr[10] = 3;
     fpgaLyr[11] = 3;
-    for (int i = 0; i < 12; i++)
-      geoLogFile << "pCTgeo.h: FPGA number " << i << " is located in layer " << fpgaLyr[i] << endl;
+    for (int i = 0; i < 12; i++) geoLogFile << "pCTgeo.h: FPGA number " << i << " is located in layer " << fpgaLyr[i] << endl;
 
     rotationSpeed = 6.0; // The stage velocity is 1 rpm or 6 deg/s
     timeStampRes = 1.0e-8;
@@ -73,7 +72,7 @@ public:
     geoLogFile << "pCTgeo.h: time-stamp resolution is assumed to equal " << timeStampRes << " seconds" << endl;
 
     double beamZV = -3000; //-1850.;   // Average value for CPC, from Mark Pankuch, Sept 2018
-    double beamZT = -3000; //-1850.; // NEW MEASURED DISTANCE GIVES WORSE RESULTS FOR WHATEVER REASON
+    double beamZT = -3000; //-1850.;   // NEW MEASURED DISTANCE GIVES WORSE RESULTS FOR WHATEVER REASON
 
     double beamX = 0.;
     double beamY = 0.;
@@ -120,9 +119,7 @@ public:
     Vpin[2] = 0.063;
     Vpin[3] = 0.040;
 
-    for (int i = 0; i < 4; i++)
-      geoLogFile << "pCTgeo.h: V layer " << i << " is board " << VBoard[i] << " with alignment pin at v=" << Vpin[i]
-                 << " mm\n";
+    for (int i = 0; i < 4; i++) geoLogFile << "pCTgeo.h: V layer " << i << " is board " << VBoard[i] << " with alignment pin at v=" << Vpin[i] << " mm\n";
 
     double fSV[7][2] = // V board internal alignment from optical surveys of
                        // physics boards
@@ -192,6 +189,7 @@ public:
       }
       geoLogFile << std::endl;
     }
+    
     // Geometry for the wedge phantom, all in mm (INCLUDING 0.1MM SHIFT AND  0.1MM SLIT between wedges):
     TwedgeBreaks[0] = -104.50 + tWedgeOffset; // Start of the wedge slope
     TwedgeBreaks[1] = -4.75   + tWedgeOffset;   // End of the slope, start of the flat

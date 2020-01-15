@@ -379,13 +379,6 @@ int main(int argc, char *argv[]) {
   parser.add_opt('4', "thr4").stow(thr[4]).help("stage 4 threshold (MeV)", "FLOAT").show_default();
   cfg.addItem('4', "thr4", thr[4]);
 
-  int useTemp = 1;
-  parser.add_opt('E', "useTemp")
-    .stow(useTemp) // Add an option to the command line parser
-    .help("Use a temporary file instead of local storage for the CALIBRATION process? yes or no", "INT")
-    .show_default();
-  cfg.addItem('E', "useTemp", useTemp); // Also add the option to the list used for parsing the config file
-
   int dodEEFilter = 1; // changed default to yes
   parser.add_opt('e', "dEEFilter")
       .stow(dodEEFilter) // Add an option to the command line parser

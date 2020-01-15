@@ -28,7 +28,14 @@
 //
 
 #include "pCTconfig.h"
+#include "TVcorrection.h"
+#include "pedGainCalib.h"
+#include "pCTgeo.h"
+#include "TkrHits.h"
+#include "pCT_Tracking.h"
+#include "pCTraw.h"
 
+#include "TFile.h"
 class Preprocessing { // Top level program from the pCT preprocessing task.
  public:
   /*Preprocessing(std::string, std::string, std::string, std::string, std::string,
@@ -40,7 +47,7 @@ class Preprocessing { // Top level program from the pCT preprocessing task.
   pCTconfig config;
   int ProcessFile(float, std::string, float, float, int, int, std::string);
   int ret;
-  //generalparam config;
+  TFile* pedCalibrateROOTFile = new TFile("pedGainCalib.root","update");
   size_t file_size;
   float Version, beamEnergy, StgThr[5], initialAngle, proj_angle;
   int fileBins, analysisLevel, max_events, max_time, n_debug, n_plot;
@@ -55,6 +62,8 @@ class Preprocessing { // Top level program from the pCT preprocessing task.
   time_t start_time;
   struct tm *now;
   static int findEvt(FILE *fp);
+  void pCTevents(pCTconfig config, pCTgeo* Geometry, pCTraw rawEvt, pedGainCalib *Calibrate,
+		 TVcorrection *const TVcorr, int &nKeep, double Uhit[]);
   void WriteBinaryFile(bool timeStampOutput, bool energyOutput, bool eventIDOutput, float AngleNb,
                         const char OutputFilename[], const char DATA_SOURCE[], const char PHANTOM_NAME[],
                         int study_date, int event_counter, double u[], float V0[], float V1[], float V2[], float V3[],

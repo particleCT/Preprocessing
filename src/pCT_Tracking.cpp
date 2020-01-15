@@ -64,9 +64,9 @@ std::vector<Tkr2D> pCT_Tracking::Tracking2D(int Idx, TkrHits &pCThits, pCTgeo *G
       }
     }
   }
-  if (front.size() == 0 && back.size() == 0)
-    return tmp; // Hopeless case; no recovery, so give up.
 
+  if (front.size() == 0 && back.size() == 0) return tmp; // Hopeless case; no recovery, so give up.
+    
   // Look at all combinations of front and rear vectors for tracks that match in the center
   for (int i = 0; i < front.size(); i++) {
     for (int j = 0; j < back.size(); j++) {

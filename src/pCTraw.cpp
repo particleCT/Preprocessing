@@ -196,9 +196,8 @@ void pCTraw::readRunHeader(const char *inFileName) { // This is called once afte
                                         // output file
 
     // reading status bits:8 bits
-    required_bits = 8;
-    extracted_bits =
-        just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
+    required_bits  = 8;
+    extracted_bits = just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
 
     int flgMsk[2] = { 0x01, 0x02 };
     TimeTags = extracted_bits & flgMsk[0];
@@ -212,16 +211,16 @@ void pCTraw::readRunHeader(const char *inFileName) { // This is called once afte
                    "data stream!\n";
 
     // reading program version number:8 bits
-    required_bits = 8;
-    extracted_bits =
-        just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
+    required_bits  = 8;
+    extracted_bits = just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
+        
     program_version = read_programVersion(extracted_bits);
     pCTrawLogFile << "Event builder FPGA firmware version number = " << program_version << std::endl;
 
     // reading projection_angle:12 bits
-    required_bits = 12;
-    extracted_bits =
-        just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
+    required_bits  = 12;
+    extracted_bits = just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
+      
     stage_angle = read_projection_angle(extracted_bits) / 10.;
     pCTrawLogFile << "Projection angle from the run header = " << stage_angle << " degrees.\n";
   } else {
@@ -259,30 +258,25 @@ bool pCTraw::findRunHdr() {
 // ******************************* ******************************* *******************************
 // end of the pCTraw findRunHeader
 // ******************************* ******************************* *******************************
-
 // Method to search for the beginning of an event
 bool pCTraw::findEvtHdr(bool debug) {
-  // reading Beginning-of-Event identifier: 24 bits. the string is: 1111 0000
-  // 0100 0011 0101 0100= "1pCT" in ASCII std= 15745876(int dec)
+  // reading Beginning-of-Event identifier: 24 bits. the string is: 1111 0000 0100 0011 0101 0100 = "1pCT" in ASCII std= 15745876(int dec)
   bool Eureka = false;
   required_bits = 24;
   while (!Eureka) {
-    if (stream_position >= file_size)
-      return Eureka;
-    if (queued_bits < required_bits)
-      read_append_data(in_file, current_bits, queued_bits, stream_position, file_size, stop_reading);
-
+    if (stream_position >= file_size) return Eureka; // EOF
+    if (queued_bits < required_bits) read_append_data(in_file, current_bits, queued_bits, stream_position, file_size, stop_reading);
+      
     unsigned long long temp_container = current_bits;
     unsigned int temp_queued = queued_bits;
-    extracted_bits =
-        extract_N_bits(in_file, stream_position, current_bits, queued_bits, required_bits, file_size, stop_reading);
-    if (debug)
-      pCTrawLogFile << std::hex << "   extracted_bits=" << extracted_bits << " current_bits=" << current_bits
-                << " queued_bits=" << queued_bits << std::dec << std::endl;
-    Eureka =
-        read_BegOfEvent(extracted_bits, current_bits, temp_container, queued_bits, temp_queued, event_counter, debug);
-    if (debug)
-      pCTrawLogFile << "   stream_position=" << stream_position << " file_size=" << file_size << std::endl;
+    extracted_bits = extract_N_bits(in_file, stream_position, current_bits, queued_bits, required_bits, file_size, stop_reading);
+      
+    //if (debug) pCTrawLogFile << std::hex << "   extracted_bits=" << extracted_bits << " current_bits=" << current_bits
+    //<< " queued_bits=" << queued_bits << std::dec << std::endl;
+    Eureka = read_BegOfEvent(extracted_bits, current_bits, temp_container, queued_bits, temp_queued, event_counter, debug);
+
+    //if (debug) pCTrawLogFile << "   stream_position=" << stream_position << " file_size=" << file_size << std::endl;
+      
   }
   evtStart = stream_position;
   DAQ_error = false;
@@ -298,88 +292,79 @@ void pCTraw::readOneEvent(bool debug) { // This is called once for each event
   // reading the  event time tag: 36 bits
 
   if (TimeTags) {
-    required_bits = 36;
-    extracted_bits =
-        just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
-    time_tag = read_timeTag(extracted_bits);
-    if (debug)
-      pCTrawLogFile << "   Time tag = " << time_tag << std::endl;
-  } else {
-    time_tag = 0;
-  }
-
+    required_bits  = 36;
+    extracted_bits = just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
+    time_tag       = read_timeTag(extracted_bits);
+    //if (debug) pCTrawLogFile << "   Time tag = " << time_tag << std::endl;
+  }else time_tag   = 0;
+    
   // reading the time since previous trigger: 12 bits
-  required_bits = 12;
-  extracted_bits =
-      just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
-  delta_t = read_timeDelta(extracted_bits);
-  if (debug)
-    pCTrawLogFile << "   Time since last trigger = " << delta_t << std::endl;
+  required_bits    = 12;
+  extracted_bits   = just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
+  delta_t          = read_timeDelta(extracted_bits);
+  //if (debug) pCTrawLogFile << "   Time since last trigger = " << delta_t << std::endl;
 
   // reading Event header: 24 bits
-  required_bits = 24;
-  extracted_bits =
-      just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
+  required_bits    = 24;
+  extracted_bits   = just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
+    
   int TrgBits;
-  if (debug)
-    pCTrawLogFile << std::hex << "   Event header bits = " << extracted_bits << std::dec << std::endl;
+  //if (debug) pCTrawLogFile << std::hex << "   Event header bits = " << extracted_bits << std::dec << std::endl;
   event_number = read_eventHeader(extracted_bits, TrgBits);
-  if (debug)
-    pCTrawLogFile << "Event number: " << event_number << std::endl;
+  //if (debug) pCTrawLogFile << "Event number: " << event_number << std::endl;
+    
   int trgMsk[6] = { 0x01, 0x02, 0x04, 0x08, 0x10, 0x20 };
   for (int i = 0; i < 6; i++)
     trigger_bits[i] = (trgMsk[i] & TrgBits) != 0; // Will be all zero for program_version<64
-  if (debug) {
+
+  /*if (debug) {
     pCTrawLogFile << "Entering pCTraw::readOneEvent, TimeTags=" << TimeTags << " Run Number=" << run_number
               << " Event number=" << event_number;
     pCTrawLogFile << " Program version=" << program_version << " Stage angle=" << stage_angle;
     pCTrawLogFile << " Start time=" << start_time << " Event count=" << event_counter << std::endl;
-  }
-  // reading 12 tracker FPGA headers: 12 bits
+    }*/
 
+
+  
+  // reading 12 tracker FPGA headers with 12 bits each
   required_bits = 12;
   for (int FPGA_numb = 0; FPGA_numb < num_tkr_fpga; FPGA_numb++) { // All 12 headers will always be there
-    size_t strip_counter = 0;
-    extracted_bits =
-        just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
+    size_t strip_counter = 0;      
     int tkr_tag;
     int tkr_err;
-    int hit_chips = read_FPGAsHeader(extracted_bits, FPGA_numb, tkr_tag, tkr_err);
-    if (debug)
-      pCTrawLogFile << "    FPGA " << FPGA_numb << " Number of chips hit=" << hit_chips << std::endl;
+    extracted_bits = just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
+    int hit_chips  = read_FPGAsHeader(extracted_bits, FPGA_numb, tkr_tag, tkr_err);
+    //if (debug) pCTrawLogFile << "    FPGA " << FPGA_numb << " Number of chips hit=" << hit_chips << std::endl;
+      
     tkr_fpga[FPGA_numb].num_chips = hit_chips;
-    tkr_fpga[FPGA_numb].error = (tkr_err != 0);
-    tkr_fpga[FPGA_numb].tag = tkr_tag;
+    tkr_fpga[FPGA_numb].error     = (tkr_err != 0);
+    tkr_fpga[FPGA_numb].tag       = tkr_tag;
     if (hit_chips > 0) {
       required_bits = 12;
       for (int i = 0; i < hit_chips; i++) {
-        extracted_bits =
-            just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
+        extracted_bits = just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
         int tkerr;
         int tkperr;
         int ovrflw;
         int ASIC_address;
         int clusters_num = read_ASICHeader(extracted_bits, ASIC_address, tkerr, tkperr, ovrflw);
-        if (debug)
-          pCTrawLogFile << "      ASIC address " << ASIC_address << "  Number of clusters= " << clusters_num << std::endl;
+        //if (debug) pCTrawLogFile << "      ASIC address " << ASIC_address << "  Number of clusters= " << clusters_num << std::endl;
+          
         tkr_fpga[FPGA_numb].chip[i].address = ASIC_address;
-        if (clusters_num <= max_clusts)
-          tkr_fpga[FPGA_numb].chip[i].num_clusts = clusters_num;
-        else
-          tkr_fpga[FPGA_numb].chip[i].num_clusts = max_clusts;
+        if (clusters_num <= max_clusts) tkr_fpga[FPGA_numb].chip[i].num_clusts = clusters_num;
+        else tkr_fpga[FPGA_numb].chip[i].num_clusts = max_clusts;
+          
         tkr_fpga[FPGA_numb].chip[i].error = (tkerr != 0);
         tkr_fpga[FPGA_numb].chip[i].parity_error = (tkperr != 0);
         tkr_fpga[FPGA_numb].chip[i].cluster_overflow = ovrflw;
         required_bits = 12;
         int jcl = 0;
         for (int icl = 0; icl < clusters_num; icl++) {
-          extracted_bits =
-              just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
+          extracted_bits = just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
           int strip_address;
-          int strip_num =
-              read_stripHeader(extracted_bits, strip_address); // if strip number is 0 it means 1 strip is hit
-          if (debug)
-            pCTrawLogFile << " Cluster: # strips= " << strip_num + 1 << " First strip= " << strip_address << std::endl;
+          int strip_num = read_stripHeader(extracted_bits, strip_address); // if strip number is 0 it means 1 strip is hit
+	    
+          //if (debug) pCTrawLogFile << " Cluster: # strips= " << strip_num + 1 << " First strip= " << strip_address << std::endl;
           if (icl < max_clusts) {
             bool good = (strip_num <= max_cluster_size);
             if (killTotal > 0 && good) {
@@ -396,7 +381,7 @@ void pCTraw::readOneEvent(bool debug) { // This is called once for each event
             }
             if (good) {
               tkr_fpga[FPGA_numb].chip[i].cluster[jcl].length = strip_num;
-              tkr_fpga[FPGA_numb].chip[i].cluster[jcl].first = strip_address;
+              tkr_fpga[FPGA_numb].chip[i].cluster[jcl].first  = strip_address;
               jcl++;
             } else {
               tkr_fpga[FPGA_numb].chip[i].num_clusts--;
@@ -413,9 +398,9 @@ void pCTraw::readOneEvent(bool debug) { // This is called once for each event
     bool pedestal_flag;
     bool reduce_flag;
     unsigned int n_samples;
-    required_bits = 12;
-    extracted_bits =
-        just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
+    required_bits  = 12;
+    extracted_bits = just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
+      
     unsigned int OTR;
     int enrg_tag;
     int channels = read_EnFPGAs(extracted_bits, pedestal_flag, reduce_flag, n_samples, OTR, enrg_tag);
@@ -433,10 +418,8 @@ void pCTraw::readOneEvent(bool debug) { // This is called once for each event
       if (nDaqErr < mxPrnt)
         pCTrawLogFile << "Input data error: Energy FPGA " << i << " number of channels = 0!!!"
                   << "\n";
-      if (i == 0)
-        channels = 3;
-      else
-        channels = 2;
+      if (i == 0) channels = 3;
+      else channels = 2;
       nDaqErr++;
       DAQ_error = true;
       throw BadEvent("Zero channels in FPGA");
@@ -445,9 +428,9 @@ void pCTraw::readOneEvent(bool debug) { // This is called once for each event
     enrg_fpga[i].type = reduce_flag;
     enrg_fpga[i].tag = enrg_tag;
     enrg_fpga[i].num_samples = n_samples;
-    if (debug)
-      pCTrawLogFile << "  Energy board " << i << "  Number of channels= " << channels << " Reduced=" << reduce_flag
-                << " Pedestals=" << pedestal_flag << " #samples=" << n_samples << std::endl;
+    //if (debug)
+    // pCTrawLogFile << "  Energy board " << i << "  Number of channels= " << channels << " Reduced=" << reduce_flag
+    //            << " Pedestals=" << pedestal_flag << " #samples=" << n_samples << std::endl;
     if (reduce_flag) {
       enrg_fpga[i].OTR[0] = (OTR & 1);
       int OTR1 = ((OTR & 2) >> 1);
@@ -456,24 +439,22 @@ void pCTraw::readOneEvent(bool debug) { // This is called once for each event
       enrg_fpga[i].OTR[2] = (OTR2 != 0);
       for (int j = 0; j < channels; j++) {
         if (pedestal_flag) {
-          required_bits = 8;
-          extracted_bits =
-              just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
+          required_bits  = 8;
+          extracted_bits = just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
+	    
           int value = (int8_t)extracted_bits;
           // pCTrawLogFile << "    " << j << " pedestal= " <<
           // (bitset<8>)extracted_bits << " v " << value;
           enrg_fpga[i].pedestal[j] = value;
         }
-        required_bits = 16;
-        extracted_bits =
-            just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
+        required_bits  = 16;
+        extracted_bits = just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
         int value1 = (int16_t)extracted_bits;
         enrg_fpga[i].pulse_sum[j] = value1;
         count_channel++;
         if (pedestal_flag == 0 && i == 1) {
-          required_bits = 4;
-          extracted_bits =
-              just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
+          required_bits  = 4;
+          extracted_bits = just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
         }
       }
     } else { // Data with samples written out
@@ -483,15 +464,15 @@ void pCTraw::readOneEvent(bool debug) { // This is called once for each event
         imax[k] = 0;
       }
       for (int smp = 0; smp < n_samples; smp++) {
-        required_bits = 3;
-        extracted_bits =
-            just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
-        if (debug)
-          pCTrawLogFile << "         Sample: " << smp << " " << extracted_bits << " ";
+        required_bits  = 3;
+        extracted_bits = just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
+	  
+        //if (debug) pCTrawLogFile << "         Sample: " << smp << " " << extracted_bits << " ";
+          
         required_bits = 15;
         for (int ch = 0; ch < channels; ch++) {
-          extracted_bits =
-              just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
+          extracted_bits = just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
+	    
           unsigned int raw_phsmp = extracted_bits & 0x3fff;
           int otr = (extracted_bits & 0x4000) >> 14;
           int sign = (extracted_bits & 0x2000) >> 13;
@@ -504,8 +485,8 @@ void pCTraw::readOneEvent(bool debug) { // This is called once for each event
             phsmp = raw_phsmp;
           }
           enrg_fpga[i].sample[ch][smp] = phsmp;
-          if (debug)
-            pCTrawLogFile << phsmp << "  ";
+          //if (debug) pCTrawLogFile << phsmp << "  ";
+            
           if (smp == 0) {
             enrg_fpga[i].pedestal[ch] = phsmp;
             enrg_fpga[i].pulse_sum[ch] = phsmp;
@@ -517,8 +498,8 @@ void pCTraw::readOneEvent(bool debug) { // This is called once for each event
             }
           }
         }
-        if (debug)
-          pCTrawLogFile << std::endl;
+        //if (debug) pCTrawLogFile << std::endl;
+          
       }
       for (int ch = 0; ch < channels; ch++) { // 6-sample around-the-peak data reduction algorithm, as in
                                               // the event builder.
@@ -530,13 +511,13 @@ void pCTraw::readOneEvent(bool debug) { // This is called once for each event
         for (int smp = imax[ch] + 1; smp < endsmp; smp++) {
           enrg_fpga[i].pulse_sum[ch] += enrg_fpga[i].sample[ch][smp];
         }
-        if (debug)
-          pCTrawLogFile << "    Channel " << ch << " sample sum=" << enrg_fpga[i].pulse_sum[ch] << std::endl;
+        //if (debug) pCTrawLogFile << "    Channel " << ch << " sample sum=" << enrg_fpga[i].pulse_sum[ch] << std::endl;
+          
       }
     }
   }
   raw_length = stream_position - evtStart;
-};
+  };
 // ******************************* ******************************* *******************************
 // end of the pCTraw readOneEvent
 // ******************************* ******************************* *******************************
@@ -608,6 +589,9 @@ void pCTraw::read_append_data(FILE *in_file, unsigned long long &bit_container, 
   }
 }
 
+// ******************************* ******************************* *******************************
+// end of the pCTraw read_append_data
+// ******************************* ******************************* *******************************
 unsigned long long pCTraw::extract_N_bits(FILE *in_file, long long stream_position, unsigned long long &bit_container,
                                           unsigned int &num_bits, unsigned int bits_2_extract, size_t file_size,
                                           bool &stop_reading) {
@@ -620,9 +604,10 @@ unsigned long long pCTraw::extract_N_bits(FILE *in_file, long long stream_positi
   num_bits -= bits_2_extract;
   return extracted_bits;
 }
-
+// ******************************* ******************************* *******************************
+// ******************************* ******************************* *******************************
 // This function groups together the read and extract functions, and makes the
-// check on the queud bits
+// check on the queued bits
 unsigned long long pCTraw::just_read(FILE *in_file, size_t file_size, bool &stop_reading,
                                      unsigned long long &bit_container, unsigned int &num_bits,
                                      unsigned int bits_2_extract, long long &origin) {
@@ -631,13 +616,15 @@ unsigned long long pCTraw::just_read(FILE *in_file, size_t file_size, bool &stop
     pCTrawLogFile << "just_read thread " << threadNumber << ":  stopping reading because we're at the end of the input "
                                                         "raw data file\n";
     return 0;
-  } else if (num_bits < bits_2_extract)
-    read_append_data(in_file, bit_container, num_bits, origin, file_size, stop_reading);
-  unsigned long long required_bts =
-      extract_N_bits(in_file, origin, bit_container, num_bits, bits_2_extract, file_size, stop_reading);
+  }
+  else if (num_bits < bits_2_extract) read_append_data(in_file, bit_container, num_bits, origin, file_size, stop_reading);    
+  unsigned long long required_bts = extract_N_bits(in_file, origin, bit_container, num_bits, bits_2_extract, file_size, stop_reading);
   return required_bts;
 }
 
+
+// ******************************* ******************************* *******************************
+// ******************************* ******************************* *******************************
 // File header function
 int pCTraw::read_file_header(unsigned long long fileHeader_bits, const char *namefile) {
   // the number 13784398 corresponds to the bit string: 1101 0010 0101 0101 0100 1110 = "1RUN" in std ASCII (in a fancy
@@ -652,13 +639,15 @@ int pCTraw::read_file_header(unsigned long long fileHeader_bits, const char *nam
   }
   return 0;
 }
-
+// ******************************* ******************************* *******************************
+// ******************************* ******************************* *******************************
 // Run number function
 int pCTraw::read_run_number(unsigned long long runNumber_bits) {
   pCTrawLogFile << "Run Number: " << runNumber_bits << std::endl;
   return runNumber_bits;
 }
-
+// ******************************* ******************************* *******************************
+// ******************************* ******************************* *******************************
 // Start time function
 std::string pCTraw::read_run_startTime(unsigned long long startTime_bits) {
   time_t RealTime = startTime_bits;
@@ -672,7 +661,8 @@ std::string pCTraw::read_run_startTime(unsigned long long startTime_bits) {
   pCTrawLogFile << "The run start time is " << Tout << "." << std::endl;
   return Tout;
 }
-
+// ******************************* ******************************* *******************************
+// ******************************* ******************************* *******************************
 // File header function
 bool pCTraw::read_BegOfEvent(unsigned long long BegOfEvent_bits, unsigned long long &bit_container,
                              unsigned long long temp_cont, unsigned int &num_bits, unsigned int temp_queu,
@@ -688,12 +678,13 @@ bool pCTraw::read_BegOfEvent(unsigned long long BegOfEvent_bits, unsigned long l
     num_bits = temp_queu - 4; // I can do 4-bit steps, because the BoE usually
                               // starts at the byte or half byte beginning
   }
-  if (debug)
-    pCTrawLogFile << std::hex << "   read_BegOfEvent: bits=" << (BegOfEvent_bits & mask)
-              << " bit_container=" << bit_container << std::dec << " num_bits=" << num_bits << std::endl;
+  //if (debug)
+  // pCTrawLogFile << std::hex << "   read_BegOfEvent: bits=" << (BegOfEvent_bits & mask)
+  //           << " bit_container=" << bit_container << std::dec << " num_bits=" << num_bits << std::endl;
   return Found;
 }
-
+// ******************************* ******************************* *******************************
+// ******************************* ******************************* *******************************
 bool pCTraw::read_BegOfRun(unsigned long long BegOfRun_bits, unsigned long long &bit_container,
                            unsigned long long temp_cont, unsigned int &num_bits, unsigned int temp_queu) {
   // the string is: 1101 0010 0101 0101 0100 1110 = d2554e

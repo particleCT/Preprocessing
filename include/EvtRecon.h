@@ -13,7 +13,7 @@
 #include "pedGainCalib.h"
 #include "pCTcalib.h"
 #include "pCTconfig.h"
-
+#include "TFile.h"
 using namespace std;
 struct Event{
   float Thit[4];
@@ -24,21 +24,17 @@ struct Event{
 class pCTcalib;
 class EvtRecon {
  public:
-  EvtRecon(pCTconfig conf);
+  EvtRecon(pCTconfig conf, TFile*);
   ~EvtRecon();
-
+  TFile* rootfile;
   pCTconfig config;  
-  //Functions   
+  //Functions
+  void dumpEvt(Event);
   void ReadInputFile(pCTgeo* Geometry, TVcorrection *const TVcorr, string);
-  void readTmp(Event &evt);
-  void dumpTmp(Event evt);
-  void reopenTmpFile();
-  void rewindTmpFile();
   string to_str(int i) { // To fix some stupid compiler problem on my linux box
     long long int j = i;
     return to_string(j);
-  }
-  
+  }  
   // Variable
   time_t start_time;
   struct tm *now;
@@ -49,7 +45,6 @@ class EvtRecon {
   string evtFileName; // Temporary file for large runs
   FILE *evtFile;
   void writeTmp(Event &evt);
-  void delTmpFile();
   bool gainAnalysis;
   int Nblk, n_debug, max_time; 
   bool useTmpFile;       

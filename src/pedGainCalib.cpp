@@ -6,7 +6,6 @@
 #include "TFile.h"
 pedGainCalib::~pedGainCalib()
 {
-  pedGainCalibRootFile->Close();
 }
 pedGainCalib::pedGainCalib(string Outputdir, int pdstlr[5], float oldPed[5], int thread, float t1, float t2, float t3,
                            float t4, string partType) {
@@ -51,14 +50,14 @@ void pedGainCalib::rawPh(pCTraw &rawEvt) { // Called for each raw event read in 
   hPed[4]->Fill(rawEvt.enrg_fpga[1].pulse_sum[1]);
 }
 
-void pedGainCalib::getPeds(const char *inFileName, int run_number, int program_version, float proj_angle, int nKeep,
+void pedGainCalib::getPeds(TFile* RootFile,const char *inFileName, int run_number, int program_version, float proj_angle, int nKeep,
                            string start_time) {
   // Called after completion of  the loop over all input raw data
   // Save plots of the histograms so that the pedestal region can be visualized  
-    std::string inFileName_s = inFileName;
+  std::string inFileName_s = inFileName;
   inFileName_s = inFileName_s.substr(inFileName_s.find_last_of("\\/") +1,  inFileName_s.size());
-  pedGainCalibRootFile->mkdir(inFileName_s.c_str());
-  pedGainCalibRootFile->cd(inFileName_s.c_str());  
+  RootFile->mkdir(inFileName_s.c_str());
+  RootFile->cd(inFileName_s.c_str());  
 
   // Calculate the pedestal
   for(int i =0; i<5; i++) hPed[i]->Write("", TObject::kOverwrite);
@@ -95,7 +94,7 @@ void pedGainCalib::weplEvt(float Vedet, float Tedet, float Ene[5]) { // Called f
   }
   if (Ene[0] > 10.) hProfT->Fill(Tedet, Ene[0]);
 }
-void pedGainCalib::getGains(TVcorrection *TVcorr, const char *inFileName, int run_number, int program_version,
+void pedGainCalib::getGains(TVcorrection *TVcorr, TFile* RootFile, const char *inFileName, int run_number, int program_version,
                             int proj_angle, int nKeep, string start_time) {
   // Called prior to the final loop over protons histories to calculate WEPL
   // Save plots of the histograms so that the gains can be visualized
@@ -104,8 +103,8 @@ void pedGainCalib::getGains(TVcorrection *TVcorr, const char *inFileName, int ru
   // Write the files
   std::string inFileName_s = inFileName;
   inFileName_s = inFileName_s.substr(inFileName_s.find_last_of("\\/") +1,  inFileName_s.size());
-  pedGainCalibRootFile->mkdir(inFileName_s.c_str());
-  pedGainCalibRootFile->cd(inFileName_s.c_str());
+  RootFile->mkdir(inFileName_s.c_str());
+  RootFile->cd(inFileName_s.c_str());
   for(int i =0; i<5; i++) hEnrg[i]->Write("", TObject::kOverwrite);
   hEnrgTot->Write("",TObject::kOverwrite);
   hTedet->Write("", TObject::kOverwrite);
