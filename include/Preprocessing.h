@@ -45,7 +45,7 @@ class Preprocessing { // Top level program from the pCT preprocessing task.
   Preprocessing(pCTconfig cfg);
 
   pCTconfig config;
-  int ProcessFile(float, std::string, float, float, int, int, std::string);
+  int ProcessFile(float, std::string, float, float, int, int);
   int ret;
   TFile* pedCalibrateROOTFile = new TFile("pedGainCalib.root","update");
   size_t file_size;

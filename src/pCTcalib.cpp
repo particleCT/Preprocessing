@@ -64,6 +64,7 @@ pCTcalib::pCTcalib(pCTconfig cfg, string inputFileName): config(cfg)
   }
   cout << "pCTcalib: reading the list of raw data file names from " << CalFile << endl;
   cout << "pCTcalib: the list of raw data file names for calibration is as follows:" << endl;
+
   // Read the CalFile to find the calibration files
   int linecount = 0;
   string line;
@@ -108,7 +109,7 @@ pCTcalib::pCTcalib(pCTconfig cfg, string inputFileName): config(cfg)
   now = localtime(&currentTime);
 
   // Initialize class
-  Geometry = new pCTgeo(config.item_float["wedgeoffset"]);                 // Create a class instance with all of the geometry information
+  Geometry = new pCTgeo(config.item_float["wedgeoffset"]);                 
   cuts     = new pCTcut(config);
   TVcal    = new TVcorrection(config.item_str["TVcorr"].c_str(), 0, 0, 0, 0);
   theEvtRecon  = new EvtRecon(config, pCTcalibRootFile);
@@ -125,8 +126,11 @@ int pCTcalib::TVmapper() {
   config.item_int["Nbricks"] = 0; // This is for the empty one
   config.item_int["doGains"] = false;
   theEvtRecon->ReadInputFile(Geometry, TVcal, calFileNames[0]); // Pedestal are determined here
+
+  // Position of the trackers
   Ut[0] = theEvtRecon->uhitT[2]; Ut[1] = theEvtRecon->uhitT[3];
   Uv[0] = theEvtRecon->uhitV[2]; Uv[1] = theEvtRecon->uhitV[3];
+
   cout << "pCTcalib: U values for T coordinates = " << Ut[0] << " and " << Ut[1] << endl;
   cout << "pCTcalib: U values for V coordinates = " << Uv[0] << " and " << Uv[1] << endl;  
   for (int stage = 0; stage < nStage; ++stage) cout << "Pedestal measured for stage " << stage << " is " << theEvtRecon->Peds[stage] << " ADC counts " << endl;
@@ -298,7 +302,7 @@ void pCTcalib::enrgDep() { // Calculate energy depositions in each stage and the
       float Tcorr = Geometry->extrap2D(Ut, T, Geometry->energyDetectorU(stage));
       float Vcorr = Geometry->extrap2D(Uv, V, Geometry->energyDetectorU(stage));
       if (fabs(Tcorr) > 150.0) continue;
-      if (fabs(Vcorr) > 45.0)  continue;
+      if (fabs(Vcorr) > 45.0)  continue; 
 
       bool inBounds;
       float Ecorr = ((float)thisEvent.ADC[stage] - theEvtRecon->Peds[stage]) * TVcal->corrFactor(stage, Tcorr, Vcorr, inBounds);
@@ -380,7 +384,6 @@ void pCTcalib::enrgDep() { // Calculate energy depositions in each stage and the
   for (int stage = 0; stage < nStage; ++stage) {
     float xLow, xHigh, Sadc;
     if(stgHistE_root[stage]->GetEntries()>500){
-    
       Sadc = stgHistE_root[stage]->GetBinCenter(stgHistE_root[stage]->GetMaximumBin());
       }
     /*int ret = stgHistE[stage]->FWHMboundaries(xLow, xHigh);
@@ -390,8 +393,8 @@ void pCTcalib::enrgDep() { // Calculate energy depositions in each stage and the
       cout << "pCTcalib::enrgDep, no data for stage " << stage << endl;
     }
     Est[stage] = Sadc;
-    //TVcal->ped[stage]   = theEvtRecon->Peds[stage];
-    //TVcal->Eempt[stage] = Est[stage];
+    TVcal->ped[stage]   = theEvtRecon->Peds[stage];
+    TVcal->Eempt[stage] = Est[stage];
     cout << "pCTcalib::enrgDep, Energy in stage " << stage << " = " << Est[stage]
          << "; dE=" << Est[stage] - EG4stage[stage] << " MeV" << endl;
 
@@ -597,7 +600,6 @@ int pCTcalib::Wcalib(){
     rngEnrg_unCorr[stage]->Write("", TObject::kOverwrite);
   }
 
-
   // Correction of the range-energy curve starts here
   cout << "Wcalib: interpolation parameters:" << endl;
   cout << "        k1 is for extrapolating below the threshold" << endl;
@@ -676,8 +678,7 @@ int pCTcalib::Wcalib(){
   }
 
   cout << "Corrected stage 4 air W=0. E, dE: " << 0.25 * x0 << "  " << Est[4] - x0 / 4 << endl;
-
-
+  
   //////////////////////////////////
   // Correction for the beginning
   //////////////////////////////////

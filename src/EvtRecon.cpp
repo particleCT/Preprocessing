@@ -151,7 +151,6 @@ void EvtRecon::ReadInputFile(pCTgeo* Geometry, TVcorrection *const TVcorr , stri
       if (nGood == 5) Calibrate.weplEvt(vPh, tPh, Ene);
     } // end of the event loop
 
-
     if (config.item_int["recalibrate"]) {
       Calibrate.getGains(TVcorr, rootfile, inputFileName.c_str(), rawEvt.run_number, rawEvt.program_version, 0., cuts.nKeep, rawEvt.start_time);
 

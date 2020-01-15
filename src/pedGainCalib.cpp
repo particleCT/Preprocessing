@@ -7,8 +7,7 @@
 pedGainCalib::~pedGainCalib()
 {
 }
-pedGainCalib::pedGainCalib(string Outputdir, int pdstlr[5], float oldPed[5], int thread, float t1, float t2, float t3,
-                           float t4, string partType) {
+pedGainCalib::pedGainCalib(string Outputdir, int pdstlr[5], float oldPed[5], int thread, float t1, float t2, float t3, float t4, string partType) {
 
   // Two ranges in t occupied by unobstructed (empty) protons
   emtrng1 = t1; // negative t side
@@ -77,9 +76,9 @@ void pedGainCalib::getPeds(TFile* RootFile,const char *inFileName, int run_numbe
   }
 }
 
-void pedGainCalib::weplEvt(float Vedet, float Tedet, float Ene[5]) { // Called for each event in the
-                                                                     // temporary file of proton histories
+void pedGainCalib::weplEvt(float Vedet, float Tedet, float Ene[5]) { // Called for each event in the temporary file of proton histories -- gain recalibration
   float Esum = 0.;
+  //between t1 and t2 or between t3 and t4
   if ((Tedet > emtrng1 && Tedet < emtrng2) || (Tedet > emtrng3 && Tedet < emtrng4)) { // Analyze full-energy protons
                                                                                       // outside of the phantom region
     if (fabs(Vedet) < 40.) {

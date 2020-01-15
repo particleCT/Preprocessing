@@ -60,11 +60,13 @@ public:
 
   //////////////////////////////////////////////////////
   //////////////////////////////////////////////////////
-  float corrFactor(int stage, float T, float V,bool &inBounds) {
+  float corrFactor(int stage, float T, float V, bool &inBounds) {
     // Can be called with an external TVmap
     // No class members or variables are referenced by this function
     inBounds = true;                    
     int tPix = floor(0.1 * (T + 190.));
+    int vPix = floor(0.1 * (V + 50.));
+
     if (tPix < 0) {
       tPix = 0;
       inBounds = false;
@@ -73,7 +75,7 @@ public:
       tPix = 37;
       inBounds = false;
     }
-    int vPix = floor(0.1 * (V + 50.));
+
     if (vPix < 0) {
       vPix = 0;
       inBounds = false;

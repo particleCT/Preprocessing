@@ -106,13 +106,6 @@ int main(int argc, char *argv[]) {
   parser.add_help(" Available options are:");
 
   // Define all of the command line options
-  string KillCh = "null";
-  parser.add_opt('k', "kill")
-      .stow(KillCh)
-      .help("Filename for the list of tracker channels to kill", "STRING")
-      .show_default();
-  cfg.addItem('k', "kill", KillCh);
-
   int numbTkrFPGA = 12;
   parser.add_opt('q', "nTracker")
       .stow(numbTkrFPGA)
@@ -493,11 +486,8 @@ int main(int argc, char *argv[]) {
 
   if (Calibrate) cout << "Set the number of events to plot > 0 to get loads of debug histograms in calibration runs." << endl;
   cout << "Fraction of the input file to be analyzed is " << fileFraction << endl;
-
   cout << "The phantom size for preprocessing is assumed to be " << phantomSize << " mm in radius." << endl;
-
-  if (KillCh != "null")
-    cout << "The list of tracker channels to kill will be taken from file " << KillCh << endl;
+    
   if (dodEEFilter) {
     if (!Calibrate)
       cout << "The dE-E filtering of nuclear interactions will be used before WEPL reconstruction" << endl;
@@ -539,7 +529,7 @@ int main(int argc, char *argv[]) {
     cout << "Executing a pCT data pre-processing run" << endl;
     // Here we call the complete preprocessing program
     Preprocessing pCTpreprocessor(cfg);
-    int errorCode = pCTpreprocessor.ProcessFile(phantomSize, partType, wedgeOff, fileFraction, numbTkrFPGA, numbEdetFPGA, KillCh);
+    int errorCode = pCTpreprocessor.ProcessFile(phantomSize, partType, wedgeOff, fileFraction, numbTkrFPGA, numbEdetFPGA);
     return errorCode;
   }
 
