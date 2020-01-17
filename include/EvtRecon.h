@@ -58,7 +58,7 @@ class EvtRecon {
   float stage_angle;
   int program_version;
   float Peds[5];    // Energy detector pedestals measured from the processed data set
-  float CorFacs[5]; // Gain correction factors
+  float GainFac[5]; // Gain correction factors
 };
 
 #endif

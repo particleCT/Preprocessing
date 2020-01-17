@@ -363,7 +363,7 @@ void Preprocessing::pCTevents(pCTconfig config, pCTgeo* Geometry, pCTraw rawEvt,
       /////////////////////////////////////////////////
 
       rawEvt.readOneEvent(debug);
-      Calibrate->rawPh(rawEvt); // Accumulating histograms for pedestal analysis
+      Calibrate->FillPeds(rawEvt); // Accumulating histograms for pedestal analysis
 
       bool daqErr = rawEvt.bad_fpga_address || rawEvt.tag_mismatch || rawEvt.CRC_error || rawEvt.chip_error || rawEvt.bad_strip_address;
       if (daqErr) nErrDmp++; 
@@ -518,7 +518,7 @@ void Preprocessing::pCTevents(pCTconfig config, pCTgeo* Geometry, pCTraw rawEvt,
   /////////////////////////////////////////////////////////
 
   if (rawEvt.event_counter > 90000) {
-    Calibrate->getPeds(pedCalibrateROOTFile,config.item_str["inputFileName"].c_str(), rawEvt.run_number, rawEvt.program_version, config.item_float["projection"],
+    Calibrate->GetPeds(config.item_str["inputFileName"].c_str(), rawEvt.run_number, rawEvt.program_version, config.item_float["projection"],
                        cuts.nKeep, rawEvt.start_time);
     cout <<"We are updating the energy detector pedestal settings to the on-the-fly measurement values.\n";
     for (int stage = 0; stage < 5; stage++) {
@@ -590,16 +590,16 @@ void Preprocessing::pCTevents(pCTconfig config, pCTgeo* Geometry, pCTraw rawEvt,
 	if (inBounds) nGood++;
       }
 
-      if(nGood==5) Calibrate->weplEvt(Vedet[0], Tphantom, Ene); // Accumulate histograms for gain recalibration // why at Tphantom??
+      if(nGood==5) Calibrate->FillGains(Vedet[0], Tphantom, Ene); // Accumulate histograms for gain recalibration // why at Tphantom??
     }
-    Calibrate->getGains(TVcorr, pedCalibrateROOTFile, config.item_str["inputFileName"].c_str(), rawEvt.run_number, rawEvt.program_version, config.item_float["projection"],
+    Calibrate->GetGains(TVcorr, config.item_str["inputFileName"].c_str(), rawEvt.run_number, rawEvt.program_version, config.item_float["projection"],
                         cuts.nKeep, rawEvt.start_time);
 
     fclose(fptmp);
     cout << "closed the temporary file " << tempfile << endl;
   }
   cout <<"Gain correction factors: ";
-  for (int stage = 0; stage < 5; stage++) cout << Calibrate->corrFac[stage] << "  ";
+  for (int stage = 0; stage < 5; stage++) cout << Calibrate->GainFac[stage] << "  ";
   cout << endl;
 
   nKeep = cuts.nKeep;
@@ -705,7 +705,7 @@ int Preprocessing::ProcessFile(float phantomSize, string partType, float wedgeOf
   for (int stage = 0; stage < 5; stage++) pedestals[stage] = TVcorr->ped[stage];
   int pdstlr[5];
   for (int stage = 0; stage < nStage; stage++) pdstlr[stage] = config.item_int[Form("pedrng%d",stage)];
-  pedGainCalib* Calibrate = new pedGainCalib(config.item_str["outputDir"], pdstlr, pedestals, 0, t1, t2, t3, t4, partType); 
+  pedGainCalib* Calibrate = new pedGainCalib(pedCalibrateROOTFile, pdstlr, pedestals, t1, t2, t3, t4, partType); 
 
   /////////////////////////////////////////////////////////////////
   // Call the routine that reads the data and does the analysis.
@@ -877,7 +877,7 @@ int Preprocessing::ProcessFile(float phantomSize, string partType, float wedgeOf
       float Vedet = Geometry->extrap2D(&Uhit[2], Vback, Geometry->energyDetectorU(stage));
       float Tedet = Geometry->extrap2D(&Uhit[2], Tback, Geometry->energyDetectorU(stage));
       float TVCorrFactor = TVcorr->corrFactor(stage, Tedet, Vedet, inBounds);
-      Ene[stage] = Calibrate->corrFac[stage] * ((float)phSum[stage] - Calibrate->Ped[stage]) * TVCorrFactor;
+      Ene[stage] = Calibrate->GainFac[stage] * ((float)phSum[stage] - Calibrate->Ped[stage]) * TVCorrFactor;
       if(inBounds) nGood++;
     }
 

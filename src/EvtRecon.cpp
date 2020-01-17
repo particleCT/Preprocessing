@@ -3,19 +3,20 @@
 #include "BadEvent.h"
 
 // Constructors/Destructor
-EvtRecon::EvtRecon(pCTconfig conf, TFile* root): config(conf), rootfile(root)
-{}
+EvtRecon::EvtRecon(pCTconfig conf, TFile* root): config(conf), rootfile(root){}
 EvtRecon::~EvtRecon() {}
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Read a file and fill the different temporary files needed
 ////////////////////////////////////////////////////////////////////////////////////
 void EvtRecon::ReadInputFile(pCTgeo* Geometry, TVcorrection *const TVcorr , string inputFileName){
-  
+  // Restart anew
+  evtList.clear();
+
   cout << "*********** Entering EvtRecon " << config.item_int["Nbricks"] << " for processing raw calibration data **************" << endl;
   if (config.item_int["max_events"] > 0) cout << "The preprocessing will halt after processing " << config.item_int["max_events"] << " events\n";
 
-  // Create the Temporary files.
+  // Read the input file
   nEvents = 0;  
   cout << "EvtRecon_" << config.item_int["Nbricks"] << ": Reading the input raw data file " << inputFileName << endl;
   in_file = fopen(inputFileName.c_str(), "rb");
@@ -52,14 +53,13 @@ void EvtRecon::ReadInputFile(pCTgeo* Geometry, TVcorrection *const TVcorr , stri
   float openRange = 20.0;
   cout << "EvtRecon_ " << config.item_int["Nbricks"] << ": range in T used for recalibration is " << wedgeLimit << " to " << wedgeLimit + openRange << " mm\n";
   float pedestals[nStage];
-  int pdstlr[5];
+  int pedMin[5];
 
   for (int stage = 0; stage < nStage; stage++) pedestals[stage] = 0.;
-  for (int stage = 0; stage < nStage; stage++) pdstlr[stage] = config.item_int[Form("pedrng%d",stage)];
+  for (int stage = 0; stage < nStage; stage++) pedMin[stage] = config.item_int[Form("pedrng%d",stage)];
 
-  pedGainCalib Calibrate(config.item_str["outputDir"], pdstlr, pedestals, config.item_int["Nbricks"], -150., -151., wedgeLimit, wedgeLimit + openRange,
-                         config.item_str["partType"]); // Specifies range in t where particles miss the wedge phantom
-
+  // Specifies range in t where particles miss the wedge phantom
+  pedGainCalib Calibrate(rootfile, pedMin, pedestals,-150., -151., wedgeLimit, wedgeLimit + openRange, config.item_str["partType"]);
 
   // Here is the start of the event loop
   while (!rawEvt.stop_reading) {
@@ -69,24 +69,15 @@ void EvtRecon::ReadInputFile(pCTgeo* Geometry, TVcorrection *const TVcorr , stri
         cout << "EvtRecon_" << config.item_int["Nbricks"] << ": event header not found after " << rawEvt.event_counter << " events.\n";
         break;
       }
-
       if (rawEvt.event_counter % 1000000 == 0) cout << "EvtRecon_" << config.item_int["Nbricks"] << ": Processing raw event " << rawEvt.event_counter << endl;
         
-      bool debug = false;//rawEvt.event_counter < config.item_int["n_debug"];
-      //if (debug) cout << "EvtRecon_" << config.item_int["Nbricks"] << ": Event beginning found for event count " << rawEvt.event_counter << endl;
-        
-      rawEvt.readOneEvent(debug);
+      rawEvt.readOneEvent(false);
       
-      //if (debug) rawEvt.dumpEvt(); // Detailed print-out of the raw data
+      Calibrate.FillPeds(rawEvt); // Accumulate pedestal histograms
 
-      Calibrate.rawPh(rawEvt); // Accumulate pedestal histograms
-
-      TkrHits pCThits(rawEvt, Geometry, debug); // Reconstruct the tracker hits from the raw strip data
-      //if (debug) pCThits.dumpHits(rawEvt.event_number);
+      TkrHits pCThits(rawEvt, Geometry, false); // Reconstruct the tracker hits from the raw strip data
 
       pCT_Tracking pCTtracks(pCThits, Geometry); // Track pattern recognition
-      //if (debug) pCTtracks.dumpTracks(rawEvt.event_number);
-      //if (rawEvt.event_counter < config.item_int["n_plot"]) pCTtracks.displayEvent(rawEvt.event_number, pCThits, config.item_str["outputDir"]);
       //Store the reconstructed track and raw energy information into the output list
       if (cuts.cutEvt(pCTtracks, pCThits)) {
         for (int lyr = 0; lyr < 4; lyr++) {
@@ -110,13 +101,12 @@ void EvtRecon::ReadInputFile(pCTgeo* Geometry, TVcorrection *const TVcorr , stri
     catch (const BadEvent &badEvent) {
       // do nothing - go back and find next event header
       cout << badEvent.what() << endl;
-      cout << "EvtRecon " << config.item_int["Nbricks"] << ": bad event data input caught at event number " << rawEvt.event_counter
-           << endl;
+      cout << "EvtRecon " << config.item_int["Nbricks"] << ": bad event data input caught at event number " << rawEvt.event_counter << endl;
     }
   } // End of the loop over events
 
   cuts.summary(); // Summarize the event counts
-  Calibrate.getPeds(rootfile, inputFileName.c_str(), runNumber, program_version, stage_angle, nEvents, runStartTime);
+  Calibrate.GetPeds(inputFileName.c_str(), runNumber, program_version, stage_angle, nEvents, runStartTime);
   
   for (int stage = 0; stage < 5; stage++) Peds[stage] = Calibrate.Ped[stage];  
   if (config.item_int["doGains"]) {
@@ -142,22 +132,22 @@ void EvtRecon::ReadInputFile(pCTgeo* Geometry, TVcorrection *const TVcorr , stri
         Tedet[stage] = Geometry->extrap2D(&UT[2], &T[2], Geometry->energyDetectorU(stage));
 
         bool inBounds;
-        Ene[stage] = ((float)thisEvent.ADC[stage] - Peds[stage]) * TVcorr->corrFactor(stage, Tedet[stage], Vedet[stage], inBounds);
+        Ene[stage] = ((float)thisEvent.ADC[stage] - Calibrate.Ped[stage]) * TVcorr->corrFactor(stage, Tedet[stage], Vedet[stage], inBounds);
         if (inBounds) nGood++;
 
       }
       float vPh = Geometry->extrap2D(UV, V, -76.2);
       float tPh = Geometry->extrap2D(UT, T, -76.2);
-      if (nGood == 5) Calibrate.weplEvt(vPh, tPh, Ene);
+      if (nGood == 5) Calibrate.FillGains(vPh, tPh, Ene);
     } // end of the event loop
 
     if (config.item_int["recalibrate"]) {
-      Calibrate.getGains(TVcorr, rootfile, inputFileName.c_str(), rawEvt.run_number, rawEvt.program_version, 0., cuts.nKeep, rawEvt.start_time);
+      Calibrate.GetGains(TVcorr, inputFileName.c_str(), rawEvt.run_number, rawEvt.program_version, 0., cuts.nKeep, rawEvt.start_time);
 
       cout << "EvtRecon nBricks=" << config.item_int["Nbricks"] << ": Gain correction factors: ";
       for (int stage = 0; stage < 5; stage++) {
-        cout << Calibrate.corrFac[stage] << "  ";
-        CorFacs[stage] = Calibrate.corrFac[stage];
+        cout << Calibrate.GainFac[stage] << "  ";
+        GainFac[stage] = Calibrate.GainFac[stage];
       }
       cout << endl;
     }
@@ -165,14 +155,14 @@ void EvtRecon::ReadInputFile(pCTgeo* Geometry, TVcorrection *const TVcorr , stri
     else {
       cout << "EvtRecon nBricks=" << config.item_int["Nbricks"] << ": Recalibration turned off, Gain correction factors are ";
       for (int stage = 0; stage < 5; stage++) {
-        CorFacs[stage] = 1.0;
-        cout << CorFacs[stage] << "  ";
+        GainFac[stage] = 1.0;
+        cout << GainFac[stage] << "  ";
       }
       cout << endl;
     }
   }
   cout << "EvtRecon_" << config.item_int["Nbricks"] << " is complete.  " << nEvents << " events were stored in the event list " << endl;
-  evtList.clear();
+
 } 
 ////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////             

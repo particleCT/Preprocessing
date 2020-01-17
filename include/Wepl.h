@@ -158,8 +158,7 @@ inline Wepl::Wepl(const char *WCalibFile, int year, int month, int day, int run,
       cout << endl << "Echoing comment lines from the WEPL calibration file " << WCalibFile << ": " << endl;
       while (getline(infile, line)) {
         size_t found = line.find_first_not_of(" ");
-        if (found == line.npos)
-          continue;
+        if (found == line.npos) continue;
         if (line[found] == '#') {
           cout << line << endl;
           string key, value;

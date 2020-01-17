@@ -7,8 +7,10 @@
 pedGainCalib::~pedGainCalib()
 {
 }
-pedGainCalib::pedGainCalib(string Outputdir, int pdstlr[5], float oldPed[5], int thread, float t1, float t2, float t3, float t4, string partType) {
+pedGainCalib::pedGainCalib(TFile* root, int pedMin[5], float oldPed[5], float t1, float t2, float t3, float t4, string partType):RootFile(root)
+{
 
+  
   // Two ranges in t occupied by unobstructed (empty) protons
   emtrng1 = t1; // negative t side
   emtrng2 = t2;
@@ -17,12 +19,12 @@ pedGainCalib::pedGainCalib(string Outputdir, int pdstlr[5], float oldPed[5], int
   this->partType = partType;
   for (int stage = 0; stage < 5; stage++) {
     Ped[stage] = oldPed[stage];
-    corrFac[stage] = 1.0;
-    cout << "pedGainCalib " << thread << ": setting the default pedestal for stage " << stage << " to " << Ped[stage] << endl;
+    GainFac[stage] = 1.0;
+    cout << "pedGainCalib setting the default pedestal for stage " << stage << " to " << Ped[stage] << endl;
   }
 
   // Define histograms for pedestal calculation
-  for (int i =0; i<5; i++) hPed[i] = new TH1D(Form("PedestalStage_%i",i), Form("Pedestal region for stage %i",i), 400, pdstlr[0], pdstlr[0] +400*5); 
+  for (int i =0; i<5; i++) hPed[i] = new TH1D(Form("PedestalStage_%i",i), Form("Pedestal region for stage %i",i), 400, pedMin[0], pedMin[0] +400*5); 
   // Define histograms for gain calibration
   if (partType == "H") {
     for (int i =0; i<5; i++) hEnrg[i] = new TH1D(Form("EnergyDistribution_%i",i), Form("Energy Distribution for stage %i",i), 400, 15, 15 + 400*0.175);
@@ -35,12 +37,13 @@ pedGainCalib::pedGainCalib(string Outputdir, int pdstlr[5], float oldPed[5], int
   }
 
   // Profile plot to make sure that the phantom does not extend into the regions used for gain calibration
-  hProfT = new TProfile("Stage0EnergyProfileInT", "Stage 0 energy profile in T", 100, -150, -150 + 100*3.0);
+  hProfT = new TProfile2D("Stage0EnergyProfile", "Stage 0 energy profile", 100, -150, -150 + 100*3.0, 100, -50., -50 + 1.0*100);
   hTedet = new TH1D("T_Ions_GainRecalib", "T of ions used for gain recalibration", 100, -150, -150 + 100*3.0);
-  threadNumber = thread;
+  RootFile->mkdir("Pedestals");
+
 }
 
-void pedGainCalib::rawPh(pCTraw &rawEvt) { // Called for each raw event read in from the input data file
+void pedGainCalib::FillPeds(pCTraw &rawEvt) { // Called for each raw event read in from the input data file
   // Accumulate histograms for pedestal analysis 
   hPed[0]->Fill(rawEvt.enrg_fpga[0].pulse_sum[0]);
   hPed[1]->Fill(rawEvt.enrg_fpga[0].pulse_sum[1]);
@@ -49,15 +52,13 @@ void pedGainCalib::rawPh(pCTraw &rawEvt) { // Called for each raw event read in 
   hPed[4]->Fill(rawEvt.enrg_fpga[1].pulse_sum[1]);
 }
 
-void pedGainCalib::getPeds(TFile* RootFile,const char *inFileName, int run_number, int program_version, float proj_angle, int nKeep,
-                           string start_time) {
+void pedGainCalib::GetPeds(const char *inFileName, int run_number, int program_version, float proj_angle, int nKeep, string start_time) {
   // Called after completion of  the loop over all input raw data
   // Save plots of the histograms so that the pedestal region can be visualized  
   std::string inFileName_s = inFileName;
-  inFileName_s = inFileName_s.substr(inFileName_s.find_last_of("\\/") +1,  inFileName_s.size());
-  RootFile->mkdir(inFileName_s.c_str());
-  RootFile->cd(inFileName_s.c_str());  
-
+  inFileName_s = inFileName_s.substr(inFileName_s.find_last_of("\\/") +1,  inFileName_s.size());  
+  RootFile->mkdir(Form("Pedestals/%s",inFileName_s.c_str()));
+  RootFile->cd(Form("Pedestals/%s",inFileName_s.c_str()));
   // Calculate the pedestal
   for(int i =0; i<5; i++) hPed[i]->Write("", TObject::kOverwrite);
   for (int stage = 0; stage < 5; stage++) {
@@ -68,15 +69,15 @@ void pedGainCalib::getPeds(TFile* RootFile,const char *inFileName, int run_numbe
     if ( hPed[stage]->GetEntries()>100 ) Ped[stage] = hPed[stage]->GetBinCenter(hPed[stage]->GetMaximumBin());
     else if(xLow > xHigh || xLow < 0 || xHigh < 0){  // sanity
       Ped[stage] = 0.;
-      cout << "pedGainCalib::getPeds thread " << threadNumber << ": ERROR: could not find the peak of the pedestal distribution for stage ************" << stage << endl;
+      cout << "pedGainCalib::getPeds ERROR: could not find the peak of the pedestal distribution for stage ************" << stage << endl;
     }
     
     //hPed[stage]->GetXaxis()->SetRange();
-    cout << inFileName_s <<" "<<hPed[stage]->Integral()<< " getPeds thread " << threadNumber << ": measured pedestal for stage " << stage << " is " << Ped[stage] << endl;
+    cout << inFileName_s <<" "<<hPed[stage]->Integral()<< " getPeds: measured pedestal for stage " << stage << " is " << Ped[stage] << endl;
   }
 }
 
-void pedGainCalib::weplEvt(float Vedet, float Tedet, float Ene[5]) { // Called for each event in the temporary file of proton histories -- gain recalibration
+void pedGainCalib::FillGains(float Vedet, float Tedet, float Ene[5]) { // Called for each event in the temporary file of proton histories -- gain recalibration
   float Esum = 0.;
   //between t1 and t2 or between t3 and t4
   if ((Tedet > emtrng1 && Tedet < emtrng2) || (Tedet > emtrng3 && Tedet < emtrng4)) { // Analyze full-energy protons
@@ -91,28 +92,25 @@ void pedGainCalib::weplEvt(float Vedet, float Tedet, float Ene[5]) { // Called f
       hTedet->Fill(Tedet);
     }
   }
-  if (Ene[0] > 10.) hProfT->Fill(Tedet, Ene[0]);
+  if (Ene[0] > 10.) hProfT->Fill(Tedet, Vedet, Ene[0]);
 }
-void pedGainCalib::getGains(TVcorrection *TVcorr, TFile* RootFile, const char *inFileName, int run_number, int program_version,
-                            int proj_angle, int nKeep, string start_time) {
+void pedGainCalib::GetGains(TVcorrection *TVcorr, const char *inFileName, int run_number, int program_version, int proj_angle, int nKeep, string start_time) {
+                            
   // Called prior to the final loop over protons histories to calculate WEPL
   // Save plots of the histograms so that the gains can be visualized
   // Create a folder with the filename
-
   // Write the files
   std::string inFileName_s = inFileName;
-  inFileName_s = inFileName_s.substr(inFileName_s.find_last_of("\\/") +1,  inFileName_s.size());
-  RootFile->mkdir(inFileName_s.c_str());
-  RootFile->cd(inFileName_s.c_str());
+  inFileName_s = inFileName_s.substr(inFileName_s.find_last_of("\\/") +1,  inFileName_s.size());  
+  RootFile->mkdir(Form("Pedestals/%s",inFileName_s.c_str()));
+  RootFile->cd(Form("Pedestals/%s",inFileName_s.c_str()));
   for(int i =0; i<5; i++) hEnrg[i]->Write("", TObject::kOverwrite);
   hEnrgTot->Write("",TObject::kOverwrite);
   hTedet->Write("", TObject::kOverwrite);
   hProfT->Write("", TObject::kOverwrite);  
 
   // Calculate the gain
-  double EBragg = 6.0;
   double Peak[5];
-  double rng[5] = { 0.5, 0.5, 0.5, 0.5, 1.0 };
   for (int stage = 0; stage < 5; stage++) {
     float xLow, xHigh;
     //xLow       =  hEnrg[stage]->GetBinCenter(hEnrg[stage]->FindFirstBinAbove( hEnrg[stage]->GetMaximum()/2));
@@ -121,11 +119,12 @@ void pedGainCalib::getGains(TVcorrection *TVcorr, TFile* RootFile, const char *i
     if ( hEnrg[stage]->GetEntries()>100 )  Peak[stage] = hEnrg[stage]->GetBinCenter(hEnrg[stage]->GetMaximumBin());
     else if(xLow > xHigh || xLow < 0 || xHigh < 0) Peak[stage] = 0.0;
     //hEnrg[stage]->GetXaxis()->SetRange();
-    cout << "getGains thread " << threadNumber << ": measured peak location for stage " << stage << " is " << Peak[stage] << endl;
-    if (Peak[stage] > 0.01) corrFac[stage] = TVcorr->Eempt[stage] / Peak[stage];
+    cout << "getGains: measured peak location for stage " << stage << " is " << Peak[stage] << endl;
+    if (Peak[stage] > 0.01) GainFac[stage] = TVcorr->Eempt[stage] / Peak[stage];
     else {
-      cout << "getGains thread " << threadNumber << ", ERROR: unable to find a peak position; leaving the gains unchanged. **********" << endl;
-      corrFac[stage] = 1.0;
+      cout << "getGains ERROR: unable to find a peak position; leaving the gains unchanged. **********" << endl;
+      GainFac[stage] = 1.0;
     }
   }
+
 }

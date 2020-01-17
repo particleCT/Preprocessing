@@ -15,6 +15,7 @@
 #include "TFile.h"
 #include "TF1.h"
 #include "TProfile.h"
+#include "TProfile2D.h"
 #include "TSpectrum.h"
 #include "Histogram.h"
 #include "pCTgeo.h"
@@ -53,9 +54,9 @@ class pCTcalib {
 
   // Other classes
   EvtRecon *theEvtRecon;
-  pCTgeo *Geometry;
-  TVcorrection *TVcal;
-  pCTcut *cuts;
+  pCTgeo *theGeometry;
+  TVcorrection *theTVcorr;
+  pCTcut *theCuts;
  
   // Variables
   vector<string> calFileNames;
@@ -80,9 +81,10 @@ class pCTcalib {
   TH1D *pxHistADC_root[nStage][nPix];
   TH1D *stgHistE_root[nStage];
   TH1D *EsumH;
-  TProfile *stgEvsT[nStage];
-  TProfile *stgEvsV[nStage];
+  //TProfile *stgEvsT[nStage];
+  //TProfile *stgEvsV[nStage];
 
+  TProfile2D *stgE[nStage];
   Histogram *pxHistADC[nStage][nPix];
   Histogram *stgHistE[nStage];
   Histogram *pxHistE[nStage][nPix];
