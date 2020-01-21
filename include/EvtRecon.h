@@ -24,13 +24,12 @@ struct Event{
 class pCTcalib;
 class EvtRecon {
  public:
-  EvtRecon(pCTconfig conf, TFile*);
+  EvtRecon(pCTconfig conf);
   ~EvtRecon();
-  TFile* rootfile;
   pCTconfig config;  
   //Functions
   void dumpEvt(Event);
-  void ReadInputFile(pCTgeo* Geometry, TVcorrection *const TVcorr, string);
+  void ReadInputFile(pCTgeo* Geometry, TVcorrection *const TVcorr, string, pedGainCalib* Calibrate);
   string to_str(int i) { // To fix some stupid compiler problem on my linux box
     long long int j = i;
     return to_string(j);

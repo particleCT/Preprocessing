@@ -34,6 +34,7 @@ class pedGainCalib {
   float GainFac[5]; // Gain correction factor derived here for each stage
   
   // functions
+  void ClearHist();
   void FillPeds(pCTraw &rawEvt);
   void GetPeds(const char *inFileName,int run_number, int program_version, float proj_angle, int nKeep, string start_time);
   void FillGains(float Vedet, float Tedet, float Ene[5]);

@@ -56,14 +56,14 @@ class Preprocessing { // Top level program from the pCT preprocessing task.
   std::string study_name, Outputdir;
   std::string WcalibFile;
   std::string TVcorrFile;
-
+  TVcorrection* theTVcorr;
   FILE *in_file;
   char inFileName[256];
   time_t start_time;
   struct tm *now;
   static int findEvt(FILE *fp);
   void pCTevents(pCTconfig config, pCTgeo* Geometry, pCTraw rawEvt, pedGainCalib *Calibrate,
-		 TVcorrection *const TVcorr, int &nKeep, double Uhit[]);
+		 int &nKeep, double Uhit[]);
   void WriteBinaryFile(bool timeStampOutput, bool energyOutput, bool eventIDOutput, float AngleNb,
                         const char OutputFilename[], const char DATA_SOURCE[], const char PHANTOM_NAME[],
                         int study_date, int event_counter, double u[], float V0[], float V1[], float V2[], float V3[],

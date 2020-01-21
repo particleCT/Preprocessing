@@ -9,23 +9,30 @@
 #include <fstream>
 #include <cstdio>
 #include <cmath>
-
+#include "TH2D.h"
 #include "Util.h"
-
+#include "TFile.h"
 using namespace std;
 #define nStage 5
 #define nPix 380
+#define nPixRoot (100 + 2)*(10 + 2) // under and overflow
 
 class TVcorrection {
 public:
   float tPlaneShifts[4][4]  = {{0}}; // planes sensors array for sensors shifts (stored in TVcorr.txt but no longer used)
-  float TVmap[nStage][nPix] = {{0}}; // 5 TV maps with 1cm pixels, 10x38 cm2 area, total 10x38=380 pixels
+  float TVmap[nStage][nPixRoot] = {{0}}; // 5 TV maps with 1cm pixels, 10x38 cm2 area, total 10x38=380 pixels
   float ped[5];   // Calibrated pedestals (the program will generally use values  generated on the fly, however)
   float Eempt[6]; // ADC pedestals and energy depositions from Empty run
+
+  TH2D* TVcorrHist[5]; // TVcorr histogram for each stage 
 
   // Constructor -- read from the TV calibration file
   TVcorrection(const char *TVfile, int year, int month, int day, int run) { // pass 0 for all of year, month, day, run to avoid checks on those values
     cout << "TVcorrection: opening TV correction file " << TVfile << endl;
+
+    // Initialize the histograms
+    for(int stage =0; stage<nStage; stage++) TVcorrHist[stage] = new TH2D(Form("TVcorrMap_%d", stage), "", 100, -190, 190, 10, -50, 50);
+    
     fstream TVcalfile(TVfile, ios_base::in); // Open text file with TV-corr etc. data
     if (!TVcalfile.is_open()) {
       perror("Error opening TV correction file");
@@ -55,14 +62,18 @@ public:
       exit(1);
     }
     cout << "TVcorrection: completed initialization of the TV corrections.\n";
-    cout << "   Pedestals = " << ped[0] << " " << ped[1] << " " << ped[2] << " " << ped[3] << " " << ped[4] << endl;
+    cout << "   Pedestals = " << ped[0] << " " << ped[1] << " " << ped[2] << " " << ped[3] << " " << ped[4] << endl;  
   }
 
   //////////////////////////////////////////////////////
   //////////////////////////////////////////////////////
+  void LoadTVCorrHist(TFile* f) {
+    for(int stage =0; stage<nStage; stage++) TVcorrHist[stage] = (TH2D*)f->Get(Form("TVcorrProfile/TVcorrMap_%d",stage));
+
+  }
+  //////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////
   float corrFactor(int stage, float T, float V, bool &inBounds) {
-    // Can be called with an external TVmap
-    // No class members or variables are referenced by this function
     inBounds = true;                    
     int tPix = floor(0.1 * (T + 190.));
     int vPix = floor(0.1 * (V + 50.));
@@ -85,7 +96,8 @@ public:
       inBounds = false;
     }
     if (inBounds) {
-      int tLow = floor(0.1 * (T + 185.));
+      //return TVcorrHist[stage]->Interpolate(T,V); // when we set root only
+      int tLow = floor(0.1 * (T + 185.)); //+ half a pixel
       int tHigh = tLow + 1;
       int vLow = floor(0.1 * (V + 45.));
       int vHigh = vLow + 1;
@@ -103,10 +115,10 @@ public:
           float TS = (T - T0) / 10.;
           float result = f00 + (f10 - f00) * TS + (f01 - f00) * VS + (f11 + f00 - f10 - f01) * TS * VS;
           return result;
-        }
+	  }
       } else {
         return TVmap[stage][vPix + 10 * tPix];
-      }
+	}
     } else {
       return TVmap[stage][vPix + 10 * tPix];
     }

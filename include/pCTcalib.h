@@ -57,7 +57,7 @@ class pCTcalib {
   pCTgeo *theGeometry;
   TVcorrection *theTVcorr;
   pCTcut *theCuts;
- 
+  pedGainCalib *theCalibration;
   // Variables
   vector<string> calFileNames;
   string CalFile;
@@ -77,13 +77,11 @@ class pCTcalib {
   float dEEhigh[5][3];
     
   TFile* pCTcalibRootFile = new TFile("pCTcalib.root", "recreate"); // General File for Recalibration
-  TH1D *pxHistE_root[nStage][nPix];
-  TH1D *pxHistADC_root[nStage][nPix];
+  TH1D *pxHistE_root[nStage][nPixRoot];
+  TH1D *pxHistADC_root[nStage][nPixRoot];
   TH1D *stgHistE_root[nStage];
   TH1D *EsumH;
-  //TProfile *stgEvsT[nStage];
-  //TProfile *stgEvsV[nStage];
-
+  TH2D* TVcorrHist[5]; // TVcorr histogram for each stage
   TProfile2D *stgE[nStage];
   Histogram *pxHistADC[nStage][nPix];
   Histogram *stgHistE[nStage];

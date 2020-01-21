@@ -8,9 +8,7 @@ pedGainCalib::~pedGainCalib()
 {
 }
 pedGainCalib::pedGainCalib(TFile* root, int pedMin[5], float oldPed[5], float t1, float t2, float t3, float t4, string partType):RootFile(root)
-{
-
-  
+{  
   // Two ranges in t occupied by unobstructed (empty) protons
   emtrng1 = t1; // negative t side
   emtrng2 = t2;
@@ -29,18 +27,27 @@ pedGainCalib::pedGainCalib(TFile* root, int pedMin[5], float oldPed[5], float t1
   if (partType == "H") {
     for (int i =0; i<5; i++) hEnrg[i] = new TH1D(Form("EnergyDistribution_%i",i), Form("Energy Distribution for stage %i",i), 400, 15, 15 + 400*0.175);
     hEnrgTot = new TH1D("SumStageEnergies", "Sum of stage energies", 800, 0, 0 + 0.3*800);
-    
   }
   else {
     for (int i =0; i<5; i++) hEnrg[i] = new TH1D(Form("EnergyDistribution_%i",i), Form("Energy Distribution for stage %i",i), 400, 60, 60 + 400*0.7);
     hEnrgTot = new TH1D("SumStageEnergies", "Sum of stage energies", 800, 0, 0 + 1.2*800);
   }
-
   // Profile plot to make sure that the phantom does not extend into the regions used for gain calibration
   hProfT = new TProfile2D("Stage0EnergyProfile", "Stage 0 energy profile", 100, -150, -150 + 100*3.0, 100, -50., -50 + 1.0*100);
   hTedet = new TH1D("T_Ions_GainRecalib", "T of ions used for gain recalibration", 100, -150, -150 + 100*3.0);
   RootFile->mkdir("Pedestals");
+  
+  
+}
 
+void pedGainCalib::ClearHist(){
+  hProfT->Reset();
+  hTedet->Reset();
+  hEnrgTot->Reset();
+  for (int i =0; i<5; i++){
+    hEnrg[i]->Reset();
+    hPed[i]->Reset();
+  }
 }
 
 void pedGainCalib::FillPeds(pCTraw &rawEvt) { // Called for each raw event read in from the input data file
