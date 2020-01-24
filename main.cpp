@@ -295,22 +295,22 @@ int main(int argc, char *argv[]) {
   cfg.addItem('F', "wedgeoffset", wedgeOff);
 
   string minDate = "2030/01/01";
-  parser.add_opt('x', "mindate")
+  parser.add_opt('x', "minDate")
       .stow(minDate)
       .help("Minimum valid date for the calibration, for calibration runs, to "
             "write in the output file",
             "STRING")
       .show_default();
-  cfg.addItem('x', "mindate", minDate);
+  cfg.addItem('x', "minDate", minDate);
 
   string maxDate = "2000/01/01";
-  parser.add_opt('y', "maxdate")
+  parser.add_opt('y', "maxDate")
       .stow(maxDate)
       .help("Maximum valid date for the calibration, for calibration runs, to "
             "write in the output file",
             "STRING")
       .show_default();
-  cfg.addItem('y', "maxdate", maxDate);
+  cfg.addItem('y', "maxDate", maxDate);
 
   int minRun = 999;
   parser.add_opt('w', "minrun")
@@ -350,26 +350,42 @@ int main(int argc, char *argv[]) {
       .help("path and name of TV gain-correction calibration file", "STRING")
       .show_default();
   cfg.addItem('T', "TVcorr", TVcorrFile);
-
+  string rootCalibFile = "pCTcalib.root";
+  parser.add_opt('R', "calib")
+      .stow(rootCalibFile)
+      .help("path and name of root calibration file", "STRING")
+      .show_default();
+  cfg.addItem('R', "calib", rootCalibFile);
+  
   float thr[5]; // Array of stage thresholds for WEPL analysis
   thr[0] = 1.0;
-  parser.add_opt('0', "thr0").stow(thr[0]).help("stage 0 threshold (MeV)", "FLOAT").show_default();
+  parser.add_opt('0', "thr0")
+    .stow(thr[0]).help("stage 0 threshold (MeV)", "FLOAT")
+    .show_default();
   cfg.addItem('0', "thr0", thr[0]);
 
   thr[1] = 1.0;
-  parser.add_opt('1', "thr1").stow(thr[1]).help("stage 1 threshold (MeV)", "FLOAT").show_default();
+  parser.add_opt('1', "thr1")
+    .stow(thr[1]).help("stage 1 threshold (MeV)", "FLOAT")
+    .show_default();
   cfg.addItem('1', "thr1", thr[1]);
 
   thr[2] = 1.0;
-  parser.add_opt('2', "thr2").stow(thr[2]).help("stage 2 threshold (MeV)", "FLOAT").show_default();
+  parser.add_opt('2', "thr2")
+    .stow(thr[2]).help("stage 2 threshold (MeV)", "FLOAT")
+    .show_default();
   cfg.addItem('2', "thr2", thr[2]);
 
   thr[3] = 1.0;
-  parser.add_opt('3', "thr3").stow(thr[3]).help("stage 3 threshold (MeV)", "FLOAT").show_default();
+  parser.add_opt('3', "thr3")
+    .stow(thr[3]).help("stage 3 threshold (MeV)", "FLOAT")
+    .show_default();
   cfg.addItem('3', "thr3", thr[3]);
 
   thr[4] = 1.0;
-  parser.add_opt('4', "thr4").stow(thr[4]).help("stage 4 threshold (MeV)", "FLOAT").show_default();
+  parser.add_opt('4', "thr4")
+    .stow(thr[4]).help("stage 4 threshold (MeV)", "FLOAT")
+    .show_default();
   cfg.addItem('4', "thr4", thr[4]);
 
   int dodEEFilter = 1; // changed default to yes
@@ -387,9 +403,8 @@ int main(int argc, char *argv[]) {
     cout << "Was not able to read a default configuration from " << configFile << endl;
     cout << "The hardwired default configuration will be used." << endl;
   }
-
   // Parse the command options
-  try { parser.parse(argc, argv); }
+  try {parser.parse(argc, argv);}
   catch (arg::Error e) {
     cout << " Error parsing command line: " << e.get_msg() << '\n';
     return 1;
@@ -401,7 +416,7 @@ int main(int argc, char *argv[]) {
   if (numbEdetFPGA != 2)  cout << "Non-standard number of energy detector FPGAs in the readout = " << numbEdetFPGA << endl;
     
   // Weird validation
-  if (reCalibrate) cout << "Energy detector stage gains will be recalibrated on the fly during processing." << endl;
+  if (cfg.item_int["recalibrate"]) cout << "Energy detector stage gains will be recalibrated on the fly during processing." << endl;
   else cout << "Energy detector stage gains will NOT be recalibrated on the fly during processing." << endl;
   if (fileBins <= 0) {
     cout << "************ The number of files was specified to be 0 or negative. Resetting to equal 1 bin. **********" << endl;
@@ -426,16 +441,6 @@ int main(int argc, char *argv[]) {
   cout << "  long long is " << sizeof(long long) << " bytes\n";
   cout << "  long is " << sizeof(long) << " bytes\n";
 
-
-  if (partType == "p" || partType == "proton" || partType == "hydrogen" || partType == "Hydrogen") partType = "H";
-  if (partType == "helium" || partType == "alpha" || partType == "Helium") partType = "He";    
-  if (partType == "H" || partType == "He") {
-    cout << "The beam particle type assumed for analysis and calibration is " << cfg.item_str["partType"] << endl;
-  } else {
-    cout << "Unrecognized particle type '" << partType << "'" << endl;
-    exit(2);
-  }
-
   // The user has to enter the full filename including path
   string CalFile = "CalFileList.txt"; // For calibration runs the input filenames are taken from here
   string inputFileName;
@@ -443,7 +448,7 @@ int main(int argc, char *argv[]) {
   // Get the list of required, position-sensitive arguments, in this case just the input filename
   vector<string> requiredArgs = parser.args();
   if (requiredArgs.size() == 0) {
-    if (!Calibrate) {
+    if (!cfg.item_int["calibrate"]) {
       cout << "pCT_Preprocessing: no input raw data file was specified!\n";
       exit(1);
     }
@@ -451,10 +456,10 @@ int main(int argc, char *argv[]) {
     inputFileName = requiredArgs[0];
     CalFile = requiredArgs[0];
   }
-  if (Calibrate) cout << "Calibration run.  The list of input files is from " << CalFile << endl;
+  if (cfg.item_int["calibrate"]) cout << "Calibration run.  The list of input files is from " << CalFile << endl;
   else cout << "Preprocessing run, the input file name is " << inputFileName << endl;
-  cout << "The TV calibration file is " << TVcorrFile << endl;
-  cout << "The WEPL calibration file is " << WcalibFile << endl;
+  cout << "The TV calibration file is " << cfg.item_str["TVcorr"] << endl;
+  cout << "The WEPL calibration file is " << cfg.item_str["Wcalib"] << endl;
 
   if (continuous_scan) {
     cout << "The data are assumed to be from a continuous scan." << endl;
@@ -484,31 +489,27 @@ int main(int argc, char *argv[]) {
   cout << "The number of events for debug printing is " << n_debug << endl;
   cout << "The number of events for which to plot the tracker hits and tracks is " << n_plot << endl;
 
-  if (Calibrate) cout << "Set the number of events to plot > 0 to get loads of debug histograms in calibration runs." << endl;
+  if (cfg.item_int["calibrate"]) cout << "Set the number of events to plot > 0 to get loads of debug histograms in calibration runs." << endl;
   cout << "Fraction of the input file to be analyzed is " << fileFraction << endl;
   cout << "The phantom size for preprocessing is assumed to be " << phantomSize << " mm in radius." << endl;
     
   if (dodEEFilter) {
-    if (!Calibrate)
+    if (!cfg.item_int["calibrate"])
       cout << "The dE-E filtering of nuclear interactions will be used before WEPL reconstruction" << endl;
-    else if (!Calibrate && partType == "He")
+    else if (!cfg.item_int["calibrate"] && cfg.item_str["partType"] == "He")
       cout << "WARNING: helium fragments will be included in the analysis!" << endl;
   } else
     cout << "No dE-E filtering of nuclear interactions will be used" << endl;
-
-    cfg.addItem('g', "inputFileName", inputFileName);
-
-  
   ////////////////////////////////////////////////////
   // Calibration run
   ////////////////////////////////////////////////////
-  if (Calibrate) { // Calibration Run
+  if (cfg.item_int["calibrate"]) { // Calibration Run
     cout << "Running the pCT TV and WEPL calibration sequence" << endl;
     if (Normalize) cout << "Will normalize columns in the WET vs E plot to have equal area." << endl;
 
     // Few more options to be used later in the calibration
     int Nbricks = 1; 
-    cfg.addItem('b', "NBricks", Nbricks); 
+    cfg.addItem('b', "Nbricks", Nbricks);
     int doGains = 1; 
     cfg.addItem('g', "doGains", doGains);
     
@@ -522,15 +523,16 @@ int main(int argc, char *argv[]) {
       cout << "The calibration run failed in calibProcessor.TVmapper; WEPL calibration will not be run." << endl;
     }
   }
+
   ////////////////////////////////////////////////////
   // Real run
   ////////////////////////////////////////////////////
-  else { 
+  else {
+    cfg.addItem('i', "inputFileName", inputFileName);
     cout << "Executing a pCT data pre-processing run" << endl;
     // Here we call the complete preprocessing program
     Preprocessing pCTpreprocessor(cfg);
-    int errorCode = pCTpreprocessor.ProcessFile(phantomSize, partType, wedgeOff, fileFraction, numbTkrFPGA, numbEdetFPGA);
+    int errorCode = pCTpreprocessor.ProcessFile(fileFraction, numbTkrFPGA, numbEdetFPGA);
     return errorCode;
   }
-
 } // end of the main program

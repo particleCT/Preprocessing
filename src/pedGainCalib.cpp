@@ -22,7 +22,7 @@ pedGainCalib::pedGainCalib(TFile* root, int pedMin[5], float oldPed[5], float t1
   }
 
   // Define histograms for pedestal calculation
-  for (int i =0; i<5; i++) hPed[i] = new TH1D(Form("PedestalStage_%i",i), Form("Pedestal region for stage %i",i), 400, pedMin[0], pedMin[0] +400*5); 
+  for (int i =0; i<5; i++) hPed[i] = new TH1D(Form("PedestalStage_%i",i), Form("Pedestal region for stage %i",i), 400, pedMin[i], pedMin[i] +400*5); 
   // Define histograms for gain calibration
   if (partType == "H") {
     for (int i =0; i<5; i++) hEnrg[i] = new TH1D(Form("EnergyDistribution_%i",i), Form("Energy Distribution for stage %i",i), 400, 15, 15 + 400*0.175);
@@ -35,9 +35,7 @@ pedGainCalib::pedGainCalib(TFile* root, int pedMin[5], float oldPed[5], float t1
   // Profile plot to make sure that the phantom does not extend into the regions used for gain calibration
   hProfT = new TProfile2D("Stage0EnergyProfile", "Stage 0 energy profile", 100, -150, -150 + 100*3.0, 100, -50., -50 + 1.0*100);
   hTedet = new TH1D("T_Ions_GainRecalib", "T of ions used for gain recalibration", 100, -150, -150 + 100*3.0);
-  RootFile->mkdir("Pedestals");
-  
-  
+  RootFile->mkdir("Pedestals");   
 }
 
 void pedGainCalib::ClearHist(){
@@ -59,7 +57,7 @@ void pedGainCalib::FillPeds(pCTraw &rawEvt) { // Called for each raw event read 
   hPed[4]->Fill(rawEvt.enrg_fpga[1].pulse_sum[1]);
 }
 
-void pedGainCalib::GetPeds(const char *inFileName, int run_number, int program_version, float proj_angle, int nKeep, string start_time) {
+void pedGainCalib::GetPeds(const char *inFileName) {
   // Called after completion of  the loop over all input raw data
   // Save plots of the histograms so that the pedestal region can be visualized  
   std::string inFileName_s = inFileName;
@@ -89,7 +87,7 @@ void pedGainCalib::FillGains(float Vedet, float Tedet, float Ene[5]) { // Called
   //between t1 and t2 or between t3 and t4
   if ((Tedet > emtrng1 && Tedet < emtrng2) || (Tedet > emtrng3 && Tedet < emtrng4)) { // Analyze full-energy protons
                                                                                       // outside of the phantom region
-    if (fabs(Vedet) < 40.) {
+    if (fabs(Vedet) < 40.) { // not outside the detector
       for (int stage = 0; stage < 5; stage++) {
         float stgEne = Ene[stage];
         hEnrg[stage]->Fill(stgEne);
@@ -101,7 +99,7 @@ void pedGainCalib::FillGains(float Vedet, float Tedet, float Ene[5]) { // Called
   }
   if (Ene[0] > 10.) hProfT->Fill(Tedet, Vedet, Ene[0]);
 }
-void pedGainCalib::GetGains(TVcorrection *TVcorr, const char *inFileName, int run_number, int program_version, int proj_angle, int nKeep, string start_time) {
+void pedGainCalib::GetGains(TVcorrection *TVcorr, const char *inFileName) {
                             
   // Called prior to the final loop over protons histories to calculate WEPL
   // Save plots of the histograms so that the gains can be visualized

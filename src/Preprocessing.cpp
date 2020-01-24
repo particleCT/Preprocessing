@@ -1,6 +1,5 @@
 // Top-level driving routines for the pCT preprocessing task
 // R.P. Johnson   September 15, 2016
-
 #include <iostream>
 #include <cstdlib>
 #include <cstdio>
@@ -16,14 +15,12 @@
 
 #include "TTree.h"
 #include "TFile.h"
-// Effective Aug 2016: Use new WEPL calibration
 #include "Wepl.h"
 #include "pCTcut.h"
 #include "Preprocessing.h"
 #include "BadEvent.h"
 
 using namespace std;
-
 Preprocessing::Preprocessing(pCTconfig cfg): config(cfg){
   
   cout << "*********** Entering the driver program for pCT preprocessing **************" << endl;
@@ -36,19 +33,19 @@ Preprocessing::Preprocessing(pCTconfig cfg): config(cfg){
 
   if (config.item_int["continuous"]) {
     cout << "A continuous scan will be analyzed\n";
-     cout << "The initial stage angle, at time 0, is " << initialAngle << " degrees." << endl;
+    cout << "The initial stage angle, at time 0, is " << initialAngle << " degrees." << endl;
   } else {
     cout << "A fixed angle scan will be analyzed\n";
     if (config.item_float["projection"] > -360.0)
       cout << "The assumed projection angle of " << config.item_float["projection"] << " will override what comes from the data file " << endl;
   }
-  cout << "The file will be split into  " << fileBins << " sub-files " << endl;
+  cout << "The file will be split into  " << config.item_int["bins"] << " sub-files " << endl;
 
-  if (config.item_int["max_events"] > 0)
-    cout << "The preprocessing will halt after processing " << config.item_int["max_events"] << " events\n";
+  if (config.item_int["max_events"] > 0) cout << "The preprocessing will halt after processing " << config.item_int["max_events"] << " events\n";
 
   cout << "Reading the input raw data file " << config.item_str["inputFileName"] << endl;
   in_file = fopen(config.item_str["inputFileName"].c_str(), "rb");
+
   if (in_file == NULL) {
     perror("Error opening the input raw data file.");
     exit(1);
@@ -58,6 +55,14 @@ Preprocessing::Preprocessing(pCTconfig cfg): config(cfg){
   file_size = ftell(in_file);
   rewind(in_file);
   cout << "Input raw data file size=" << file_size << endl;
+
+  pCTcalibRootFile = new TFile(config.item_str["calib"].c_str());
+  TString filename = Form("%s/%s.root",
+			  config.item_str["outputDir"].c_str(),
+			  config.item_str["inputFileName"].substr(7, config.item_str["inputFileName"].size()-4).c_str());
+			  
+  projectionROOT = new TFile(filename,"update");
+  
 };
 
 // ******************************* ******************************* *******************************
@@ -170,12 +175,12 @@ void Preprocessing::WriteRootFile(bool timeStampOutput, bool energyOutput, bool 
 				  float E1[], float E2[], float E3[], float E4[], float E5[],
 				  float WetBinary[], float ProjAngle[], unsigned int TimeStamp[], unsigned int EventIDs[]) 
 {
-  TString filename = Form("%s/%s_%d.root",
+  /*TString filename = Form("%s/%s_%d.root",
 			  config.item_str["outputDir"].c_str(),
 			  config.item_str["inputFileName"].substr(7, config.item_str["inputFileName"].size()-4).c_str(),
 			  fileNb);
-  TFile* projectionROOT = new TFile( filename,"update");
-
+			  TFile* projectionROOT = new TFile( filename,"update");*/
+  projectionROOT->cd();
   TTree* header;
   TTree* phase;
 
@@ -185,8 +190,7 @@ void Preprocessing::WriteRootFile(bool timeStampOutput, bool energyOutput, bool 
   float px0,py0,pz0;
   float px1,py1,pz1;
   Int_t MaxEnergyTransFilter, ThresholdFilter, dEEFilter;
-  
-  
+
   char magic_number[] = "PCTD";
   const char *PREPARED_BY = getenv("USER");
   if (PREPARED_BY == NULL) { // The getenv fails in Windows
@@ -223,7 +227,6 @@ void Preprocessing::WriteRootFile(bool timeStampOutput, bool energyOutput, bool 
   header->Branch("prepared_by",&prepared_by_string);
   header->Fill();
   
-
   phase = new TTree("phase", "bin tree");
   phase->Branch("t", &t, "t[4]/F");  // duplicate information -- uncomment for DROPTVS
   phase->Branch("v", &v, "v[4]/F");
@@ -243,8 +246,8 @@ void Preprocessing::WriteRootFile(bool timeStampOutput, bool energyOutput, bool 
   phase->Branch("px0",&px0,"px0/F");
   phase->Branch("py0",&py0,"py0/F");
   phase->Branch("pz0",&pz0,"pz0/F");
-
   phase->Branch("px1",&px1,"px1/F");
+  
   phase->Branch("py1",&py1,"py1/F");
   phase->Branch("pz1",&pz1,"pz1/F");
   phase->Branch("MaxEnergyTransFilter",&MaxEnergyTransFilter,"MaxEnergyTransFilter/I");
@@ -256,8 +259,6 @@ void Preprocessing::WriteRootFile(bool timeStampOutput, bool energyOutput, bool 
     dEEFilter = 1;
     MaxEnergyTransFilter = 1;
     ThresholdFilter = 1;
-
-    
     t[0] = T0[i]  ; t[1] = T1[i]; t[2] = T2[i]; t[3] = T3[i];
     v[0] = V0[i]  ; v[1] = V1[i]; v[2] = V2[i]; v[3] = V3[i];
     //u should be already done
@@ -273,8 +274,6 @@ void Preprocessing::WriteRootFile(bool timeStampOutput, bool energyOutput, bool 
 
     px0 /=  Length_0; py0 /= Length_0; pz0 /= Length_0;
     px1 /=  Length_1; py1 /= Length_1; pz1 /= Length_1;
-    
-    
     
     if (energyOutput) {
       cout << "WriteRootFile: writing out the stage energy arrays" << endl;
@@ -310,7 +309,6 @@ void Preprocessing::WriteRootFile(bool timeStampOutput, bool energyOutput, bool 
   phase->Write("",TObject::kOverwrite);
   projectionROOT->Close();
 };
-
 // ******************************* ******************************* *******************************
 // end of the Preprocessing : WriteRootFile
 // ******************************* ******************************* *******************************
@@ -407,8 +405,6 @@ void Preprocessing::pCTevents(pCTconfig config, pCTgeo* Geometry, pCTraw rawEvt,
       pCT_Tracking pCTtracks(pCThits, Geometry);
       //if (debug) pCTtracks.dumpTracks(rawEvt.event_number);
       //if (rawEvt.event_counter < config.item_int["n_plot"]) pCTtracks.displayEvent(rawEvt.event_number, pCThits, config.item_str["outputDir"]);
-        
-
       ////////////////////////////////////////////////////////////////////
       // WRITE OUT ONLY EVENTS THAT ARE SUITABLE FOR IMAGE RECONSTRUCTION
       ////////////////////////////////////////////////////////////////////
@@ -517,8 +513,7 @@ void Preprocessing::pCTevents(pCTconfig config, pCTgeo* Geometry, pCTraw rawEvt,
   /////////////////////////////////////////////////////////
 
   if (rawEvt.event_counter > 90000) {
-    Calibrate->GetPeds(config.item_str["inputFileName"].c_str(), rawEvt.run_number, rawEvt.program_version, config.item_float["projection"],
-                       cuts.nKeep, rawEvt.start_time);
+    Calibrate->GetPeds(config.item_str["inputFileName"].c_str());
     cout <<"We are updating the energy detector pedestal settings to the on-the-fly measurement values.\n";
     for (int stage = 0; stage < 5; stage++) {
       if (Calibrate->Ped[stage] == 0.) cout <<"Keeping the theTVcorr pedestal value " << theTVcorr->ped[stage] << " for stage " << stage << endl;
@@ -532,7 +527,6 @@ void Preprocessing::pCTevents(pCTconfig config, pCTgeo* Geometry, pCTraw rawEvt,
   /////////////////////////////////////////////////////////
   // Read PROCESSED DATA BACK FROM THE TEMPORARY FILE TO CALCULATE GAIN CORRECTION FACTORS
   /////////////////////////////////////////////////////////
-
   if (config.item_int["recalibrate"]) {
     fptmp = fopen(tempfile.c_str(), "rb");
     if (fptmp == NULL) {
@@ -588,12 +582,9 @@ void Preprocessing::pCTevents(pCTconfig config, pCTgeo* Geometry, pCTraw rawEvt,
         Ene[stage] = ((float)phSum[stage] - Calibrate->Ped[stage]) * theTVcorr->corrFactor(stage, Tedet[stage], Vedet[stage], inBounds);
 	if (inBounds) nGood++;
       }
-
       if(nGood==5) Calibrate->FillGains(Vedet[0], Tphantom, Ene); // Accumulate histograms for gain recalibration // why at Tphantom??
     }
-    Calibrate->GetGains(theTVcorr, config.item_str["inputFileName"].c_str(), rawEvt.run_number, rawEvt.program_version, config.item_float["projection"],
-                        cuts.nKeep, rawEvt.start_time);
-
+    Calibrate->GetGains(theTVcorr, config.item_str["inputFileName"].c_str());
     fclose(fptmp);
     cout << "closed the temporary file " << tempfile << endl;
   }
@@ -607,16 +598,15 @@ void Preprocessing::pCTevents(pCTconfig config, pCTgeo* Geometry, pCTraw rawEvt,
   return;
 }
 
-
 //*********** Driving program for pCT preprocessing **************
-int Preprocessing::ProcessFile(float phantomSize, string partType, float wedgeOffset, float fileFraction,
-                               int numbTkrFPGA, int numbEdetFPGA) {
-
+int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdetFPGA) {
   cout << "Preprocessing.cpp: Entering the driver routine for pCT preprocessing. . ." << endl;
-  cout << "The phantom is assumed to be less than " << phantomSize << " in radius, for recalibration of gains." << endl;
-  cout << "The wedge phantom offset is assumed to be " << wedgeOffset << endl;
+  cout << "The phantom is assumed to be less than " << config.item_float["size"] << " in radius, for recalibration of gains." << endl;
+  cout << "The wedge phantom offset is assumed to be " << config.item_float["wedgeoffset"] << endl;
   cout << "There are " << numbTkrFPGA << " tracker FPGAs and " << numbEdetFPGA << " energy detector FPGAs" << endl;
   cout << "The file fraction to use is " << fileFraction << endl;
+
+
   if (fileFraction > 1.0)     fileFraction = 1.0;
   // Divide the file into pieces, one for each file
   float fractSize = fileFraction * static_cast<float>(file_size);
@@ -627,8 +617,8 @@ int Preprocessing::ProcessFile(float phantomSize, string partType, float wedgeOf
 
   // Create an instance of the class for parsing and storing the raw data from
   // the input file
-  pCTraw rawEvt(in_file, fileSize, 0, numbTkrFPGA, numbEdetFPGA); // For the mother thread only
-  rawEvt.readRunHeader(config.item_str["inputFileName"].c_str());    // Look for the run header bits and parse them
+  pCTraw rawEvt(in_file, fileSize, 0, numbTkrFPGA, numbEdetFPGA); 
+  rawEvt.readRunHeader(config.item_str["inputFileName"].c_str()); // Look for the run header bits and parse them
   pCTgeo* Geometry = new pCTgeo(0.);   // Create a class instance with all of the geometry information
 
   if (config.item_int["level"] < 0 || config.item_int["level"] > 2)
@@ -680,32 +670,26 @@ int Preprocessing::ProcessFile(float phantomSize, string partType, float wedgeOf
   // GET EXISTING WEPL CALIBRATION CONSTANTS  [CEO Aug 2016]
   /////////////////////////////////////////////////////////
 
-  if (WcalibFile.size() == 0) {
+  /*if (WcalibFile.size() == 0) {
     WcalibFile = config.item_str["outputDir"] + "/WcalibW.txt";
     cout << "Preprocessing.cpp: Since no WEPL calibration filename and path "
             "was specified, we will look for it in " << WcalibFile << endl;
-  }
-  Wepl *WEPL = new Wepl(WcalibFile.c_str(), year, month, day, rawEvt.run_number, partType, dodEEFilter, config.item_str["outputDir"]);
-  WEPL->SetEthresholds1(StgThr[0], StgThr[1], StgThr[2], StgThr[3], StgThr[4]);
-  
-  if (TVcorrFile.size() == 0) {
-    TVcorrFile = config.item_str["outputDir"] + "/TVcorr.txt"; // Default TVcorr calibration file location.
-    cout << "Preprocessing.cpp: Since no TV calibration filename and path was "
-            "specified, we will look for it in " << TVcorrFile << endl;
-  }
-
-  theTVcorr = new TVcorrection(TVcorrFile.c_str(), year, month, day, rawEvt.run_number);
-  //theTVcorr->LoadTVcorrHist(rootCalibFile);
+	    }*/
+  for(int i =0; i<5; i++) StgThr[i] = config.item_float[Form("thr%d",i)];
+  Wepl *WEPL = new Wepl(config.item_str["Wcalib"].c_str(), year, month, day, rawEvt.run_number,
+			config.item_str["partType"], config.item_int["dEEFilter"], config.item_str["outputDir"]);
+  WEPL->SetEthresholds1(StgThr[0], StgThr[1], StgThr[2], StgThr[3], StgThr[4]);  
+  theTVcorr = new TVcorrection(pCTcalibRootFile, 0);
   // Create a vector of pointers to instances of the pedestal and gain calibration class
-  float t1 = -150.; // These define two ranges for finding protons passing through zero phantom material, for gain calibration
-  float t2 = -150.; // ****** Let's keep this to one side only, for now, to accommodate the wedge calibration runs with bricks
-  float t3 = phantomSize + wedgeOffset;
-  float t4 = 150.;
+  float t1 = -90.; // These define two ranges for finding protons passing through zero phantom material, for gain calibration
+  float t2 = -1*config.item_float["size"];//-150/; // ****** Let's keep this to one side only, for now, to accommodate the wedge calibration runs with bricks
+  float t3 = config.item_float["size"];// + config.item_float["wedgeoffset"];
+  float t4 = 90.;
   float pedestals[5];
   for (int stage = 0; stage < 5; stage++) pedestals[stage] = theTVcorr->ped[stage];
   int pdstlr[5];
   for (int stage = 0; stage < nStage; stage++) pdstlr[stage] = config.item_int[Form("pedrng%d",stage)];
-  pedGainCalib* Calibrate = new pedGainCalib(pedCalibrateROOTFile, pdstlr, pedestals, t1, t2, t3, t4, partType); 
+  pedGainCalib* Calibrate = new pedGainCalib(projectionROOT, pdstlr, pedestals, t1, t2, t3, t4, config.item_str["partType"]); 
 
   /////////////////////////////////////////////////////////////////
   // Call the routine that reads the data and does the analysis.
@@ -737,37 +721,36 @@ int Preprocessing::ProcessFile(float phantomSize, string partType, float wedgeOf
 
   // Vectors of vectors to hold the proton histories pending writing out the
   // projection files
-  vector<vector<float> > V0(fileBins);
-  vector<vector<float> > V1(fileBins);
-  vector<vector<float> > V2(fileBins);
-  vector<vector<float> > V3(fileBins);
-  vector<vector<float> > T0(fileBins);
-  vector<vector<float> > T1(fileBins);
-  vector<vector<float> > T2(fileBins);
-  vector<vector<float> > T3(fileBins);
+  vector<vector<float> > V0(config.item_int["bins"]);
+  vector<vector<float> > V1(config.item_int["bins"]);
+  vector<vector<float> > V2(config.item_int["bins"]);
+  vector<vector<float> > V3(config.item_int["bins"]);
+  vector<vector<float> > T0(config.item_int["bins"]);
+  vector<vector<float> > T1(config.item_int["bins"]);
+  vector<vector<float> > T2(config.item_int["bins"]);
+  vector<vector<float> > T3(config.item_int["bins"]);
   int sizeE = 1;
-  if (energyOutput) sizeE = fileBins;
+  if (energyOutput) sizeE = config.item_int["bins"];
   vector<vector<float> > E1(sizeE);
   vector<vector<float> > E2(sizeE);
   vector<vector<float> > E3(sizeE);
   vector<vector<float> > E4(sizeE);
   vector<vector<float> > E5(sizeE);
   int sizeT = 1;
-  if (timeStampOutput) sizeT = fileBins;
+  if (timeStampOutput) sizeT = config.item_int["bins"];
   vector<vector<unsigned int> > TS(sizeT);
   int sizeI = 1;
-  if (eventIDOutput) sizeI = fileBins;
+  if (eventIDOutput) sizeI = config.item_int["bins"];
   vector<vector<unsigned int> > EventIDs(sizeI);
-  vector<vector<float> > WetBinary(fileBins);
-  vector<vector<float> > ProjAngle(fileBins);
+  vector<vector<float> > WetBinary(config.item_int["bins"]);
+  vector<vector<float> > ProjAngle(config.item_int["bins"]);
   int totEvt = 0;
-  cout << "Preprocessing.cpp: the total number of events in the temporary "
-          "files is " << totEvt << endl;
+  cout << "Preprocessing.cpp: the total number of events in the temporary files is " << totEvt << endl;
   totEvt = nKeep;
-  int alloc = totEvt / fileBins;
-  if (alloc > 10) { // Reserve memory space for the vectors -- this is bonkers, there is no guarantee that fileBins is
-                    // the same as angle
-    for (int bin = 0; bin < fileBins; ++bin) {
+  int alloc = totEvt / config.item_int["bins"];
+  if (alloc > 10) {
+
+    for (int bin = 0; bin < config.item_int["bins"]; ++bin) {
       V0[bin].reserve(alloc);
       V1[bin].reserve(alloc);
       V2[bin].reserve(alloc);
@@ -879,13 +862,18 @@ int Preprocessing::ProcessFile(float phantomSize, string partType, float wedgeOf
       float TVCorrFactor = theTVcorr->corrFactor(stage, Tedet, Vedet, inBounds);
       Ene[stage] = Calibrate->GainFac[stage] * ((float)phSum[stage] - Calibrate->Ped[stage]) * TVCorrFactor;
       if(inBounds) nGood++;
+
     }
 
-    if(nGood!=5) continue; // new fix to remove events out of range
+
     float Wet;
     Wet = WEPL->EtoWEPL(Ene); // Energy to WEPL conversion
-    if (Wet < -999. || Wet > 999.)
-      ++nBadWEPL;
+    if(nGood!=5) ++nBadWEPL; // new fix to remove events out of range
+    if (Wet < -999. || Wet > 999.) ++nBadWEPL;
+    /*if(Tback[1]>-70 && Tback[1]<-40){
+      cout<<inBounds<<" Wet:"<<Wet<<" T:"<<Tback[1]<<" V:"<<Vback[1]<<endl;
+      cout<<Ene[0]<<" "<<Ene[1]<<" "<<Ene[2]<<" "<<Ene[3]<<" "<<Ene[4]<<"\n"<<endl;
+      }*/
     /*if (debug) {
       cout << "  WEPL = " << Wet << endl;
       cout << "  Corrected stage energies= ";
@@ -902,7 +890,7 @@ int Preprocessing::ProcessFile(float phantomSize, string partType, float wedgeOf
     if (config.item_int["level"] == 2) {
       ++nEvtot;
       int k = (EvtNum - EvtNum % alloc) / alloc; // Split the event per files
-      if (k == fileBins) k--; // Sanity check
+      if (k == config.item_int["bins"]) k--; // Sanity check
       
       V0[k].push_back(Vhit[0]);
       V1[k].push_back(Vhit[1]);
@@ -947,12 +935,12 @@ int Preprocessing::ProcessFile(float phantomSize, string partType, float wedgeOf
   }
 
   // [CEO Jan 2016] Save the projection data for each angle bin (single bin in the case it is not a continuous scan)
-  for (int k = 0; k < fileBins; k++) {
+  for (int k = 0; k < config.item_int["bins"]; k++) {
     float AngleNb;
     int Event_Counter = V0[k].size();
     //sprintf(OutputFilename, "%s/projection_%1d.bin", config.item_str["outputDir"].c_str(), k); // float
     char OutputFilename[512];
-    //sprintf(OutputFilename, "%s/%s.root", config.item_str["outputDir"], config.item_str["inputFileName"].substr(7, config.item_str["inputFileName"].size()).c_str() );
+    sprintf(OutputFilename, "%s/%s.root", config.item_str["outputDir"].c_str(), config.item_str["inputFileName"].substr(7, config.item_str["inputFileName"].size()).c_str() );
     cout << "Preprocessing.cpp: Write binary file for file number " << k <<" with "<< Event_Counter << " histories."
          << " Output Filename : " << OutputFilename << endl;
 

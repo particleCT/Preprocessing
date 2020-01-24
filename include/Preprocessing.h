@@ -43,11 +43,11 @@ class Preprocessing { // Top level program from the pCT preprocessing task.
 		int, int, float, bool, int*, float, float);*/
 
   Preprocessing(pCTconfig cfg);
-
+  TFile* projectionROOT;
   pCTconfig config;
-  int ProcessFile(float, std::string, float, float, int, int);
+  TFile* pCTcalibRootFile;
+  int ProcessFile(float, int, int);
   int ret;
-  TFile* pedCalibrateROOTFile = new TFile("pedGainCalib.root","update");
   size_t file_size;
   float Version, beamEnergy, StgThr[5], initialAngle, proj_angle;
   int fileBins, analysisLevel, max_events, max_time, n_debug, n_plot;
@@ -62,21 +62,18 @@ class Preprocessing { // Top level program from the pCT preprocessing task.
   time_t start_time;
   struct tm *now;
   static int findEvt(FILE *fp);
-  void pCTevents(pCTconfig config, pCTgeo* Geometry, pCTraw rawEvt, pedGainCalib *Calibrate,
-		 int &nKeep, double Uhit[]);
+  void pCTevents(pCTconfig config, pCTgeo* Geometry, pCTraw rawEvt, pedGainCalib *Calibrate, int &nKeep, double Uhit[]);
   void WriteBinaryFile(bool timeStampOutput, bool energyOutput, bool eventIDOutput, float AngleNb,
                         const char OutputFilename[], const char DATA_SOURCE[], const char PHANTOM_NAME[],
                         int study_date, int event_counter, double u[], float V0[], float V1[], float V2[], float V3[],
                         float T0[], float T1[], float T2[], float T3[], float E1[], float E2[], float E3[], float E4[],
                         float E5[], float WetBinary[], float ProjAngle[], unsigned int TimeStamp[],
-                        unsigned int EventIDs[]); // float AngleNb
+                        unsigned int EventIDs[]); 
 
   void WriteRootFile(bool timeStampOutput, bool energyOutput, bool eventIDOutput, int fileNb,
 		       int study_date, int event_counter, double u[], float V0[], float V1[], float V2[], float V3[],
 		       float T0[], float T1[], float T2[], float T3[], float E1[], float E2[], float E3[], float E4[],
 		       float E5[], float WetBinary[], float ProjAngle[], unsigned int TimeStamp[],
-		       unsigned int EventIDs[]); // float AngleNb
-
-
+		       unsigned int EventIDs[]); 
 };
 #endif

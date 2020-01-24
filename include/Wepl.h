@@ -62,7 +62,7 @@ inline Wepl::~Wepl(){
   for(int i =1;i<5;i++) dEEhist_root[i]->Write("",TObject::kOverwrite);
   for(int i =1;i<5;i++) dEEhist_root[0]->Add(dEEhist_root[i]);
   dEEhist_root[0]->Write("dEEhist_tot",TObject::kOverwrite);
-
+  
   Weplroot_file->cd();
   Weplroot_file->mkdir("calWEPL");
   Weplroot_file->cd("calWEPL");
@@ -73,7 +73,6 @@ inline Wepl::~Wepl(){
 
 inline Wepl::Wepl(const char *WCalibFile, int year, int month, int day, int run, string partType, bool dodEEFilter,
                   string outputDir) {
-
   this->partType = partType;
   this->dodEEFilter = dodEEFilter;
   float scale = 1.0;
@@ -228,7 +227,7 @@ inline Wepl::Wepl(const char *WCalibFile, int year, int month, int day, int run,
             if (dodEEFilter && key == "dEE1") {
               vector<string> sep = split(value, ',');
               if (sep.size() == 6) {
-                for (int i = 0; i < 6; i++) dEEparams[0][i] = stof(sep.at(i));
+                //for (int i = 0; i < 6; i++) dEEparams[0][i] = stof(sep.at(i));
               } else {
                 cout << "Need 6 parameters for dEE filtering: the default "
                         "values will be used for stage 1" << endl;
@@ -237,7 +236,7 @@ inline Wepl::Wepl(const char *WCalibFile, int year, int month, int day, int run,
             if (dodEEFilter && key == "dEE2") {
               vector<string> sep = split(value, ',');
               if (sep.size() == 6) {
-                for (int i = 0; i < 6; i++) dEEparams[1][i] = stof(sep.at(i));
+                //for (int i = 0; i < 6; i++) dEEparams[1][i] = stof(sep.at(i));
               } else {
                 cout << "Need 6 parameters for dEE filtering: the default "
                         "values will be used for stage 2" << endl;
@@ -246,7 +245,7 @@ inline Wepl::Wepl(const char *WCalibFile, int year, int month, int day, int run,
             if (dodEEFilter && key == "dEE3") {
               vector<string> sep = split(value, ',');
               if (sep.size() == 6) {
-                for (int i = 0; i<6; i++) dEEparams[2][i] = stof(sep.at(i));
+                //for (int i = 0; i<6; i++) dEEparams[2][i] = stof(sep.at(i));
               } else {
                 cout << "Need 6 parameters for dEE filtering: the default "
                         "values will be used for stage 3" << endl;
@@ -255,11 +254,12 @@ inline Wepl::Wepl(const char *WCalibFile, int year, int month, int day, int run,
             if (dodEEFilter && key == "dEE4") {
               vector<string> sep = split(value, ',');
               if (sep.size() == 6) {
-                for (int i = 0; i<6;  i++) dEEparams[3][i] = stof(sep.at(i));
-              } else {
+                //for (int i = 0; i<6;  i++) dEEparams[3][i] = stof(sep.at(i));
+		}
+	      else {
                 cout << "Need 6 parameters for dEE filtering: the default "
                         "values will be used for stage 4" << endl;
-              }
+			}
             }
           }
         }
@@ -277,8 +277,7 @@ inline Wepl::Wepl(const char *WCalibFile, int year, int month, int day, int run,
             int maxD = (yr2 - 1) * 372 + mn2 * 31 + dy2;
             int D = (year - 1) * 372 + month * 31 + day;
             if (D <= maxD && D >= minD && run <= maxRun && run >= minRun) {
-              cout << "WEPL: the run and date of the data match the "
-                      "calibration file ranges.  Success!" << endl;
+              cout << "WEPL: the run and date of the data match the calibration file ranges.  Success!" << endl;
               checked = true;
             } else {
               cout << "WEPL: the WEPL calibration file date and run are not "
@@ -310,6 +309,9 @@ inline float Wepl::EtoWEPL(float Estage[5]) // Return calibrated WEPL from the w
   // if particle stop in Stage 4
   if (Estage[4] > thr4) { // 1 MeV
     dEEhist_root[4]->Fill(Estage[3], Estage[4]);
+    k = int(binFac * Estage[4]); 
+    if(k > nEnrg) k= nEnrg;//Unit Test
+    
     if (Estage[4] > cut4) return (1000 + (rvse4[k] * RSP)); // 1000 // Max Trans Filter
     if (Estage[3] < cut3 || Estage[2] < cut2 || Estage[1] < cut1 || Estage[0] < cut0) return (2000 + (rvse4[k] * RSP)); //-1000;  Threshold filter
 
@@ -318,55 +320,60 @@ inline float Wepl::EtoWEPL(float Estage[5]) // Return calibrated WEPL from the w
           Estage[3] > (dEEparams[3][3] * Estage[4] * Estage[4] + dEEparams[3][4] * Estage[4] + dEEparams[3][5]))
         return (5000 + (rvse4[k] * RSP)); //5000
     }
-    k = int(binFac * Estage[4]);
+    
     return rvse4[k] * RSP; // polystyrene to water equivalent // everything passed
   }
   // if particle stop in Stage 3
   else if (Estage[3] > thr3) {
     dEEhist_root[3]->Fill(Estage[2], Estage[3]);
+    k = int(binFac * Estage[3]); //Unit Test
+    if(k > nEnrg) k= nEnrg;
     if (Estage[3] > cut5) return (1000 + (rvse3[k] * RSP)); // 1000 // Max Trans Filter
     if (Estage[2] < cut2 || Estage[1] < cut1 || Estage[0] < cut0) return (2000 + rvse3[k] * RSP); //-1000 Threshold Filter
-      
     if (dodEEFilter) { // dEEFilter
       if (Estage[2] < (dEEparams[2][0] * Estage[3] * Estage[3] + dEEparams[2][1] * Estage[3] + dEEparams[2][2]) ||
           Estage[2] > (dEEparams[2][3] * Estage[3] * Estage[3] + dEEparams[2][4] * Estage[3] + dEEparams[2][5]))
         return (5000 + (rvse3[k] * RSP)); //-1000
     }
-    k = int(binFac * Estage[3]);
+
     return rvse3[k] * RSP; // polystyrene to water equivalent
   }
   // if particle stop in Stage 2
   else if (Estage[2] > thr2) { // 1 MeV
     dEEhist_root[2]->Fill(Estage[1], Estage[2]);
+    k = int(binFac * Estage[2]); //Unit Test
+    if(k > nEnrg) k= nEnrg;
     if (Estage[2] > cut5) return (1000 + (rvse2[k] * RSP)); // 1000 // Max Trans Filter
     if (Estage[1] < cut1 || Estage[0] < cut0) return (2000 + (rvse2[k] * RSP)); //-1000; Threshold Filter
 
     if (dodEEFilter) { // dEEFilter
       if (Estage[1] < (dEEparams[1][0] * Estage[2] * Estage[2] + dEEparams[1][1] * Estage[2] + dEEparams[1][2]) ||
           Estage[1] > (dEEparams[1][3] * Estage[2] * Estage[2] + dEEparams[1][4] * Estage[2] + dEEparams[1][5]))
-        return (5000 + (rvse2[k] * RSP)); //-1000;
+        return (5000 + (rvse2[k] * RSP)); 
     }
-    k = int(binFac * Estage[2]);
     return rvse2[k] * RSP; // polystyrene to water equivalent
   }
   // if particle stop in Stage 1
   else if (Estage[1] > thr1) {
     dEEhist_root[1]->Fill(Estage[0], Estage[1]);
+    k = int(binFac * Estage[1]); //Unit Test
+    if(k > nEnrg) k= nEnrg;
     if (Estage[1] > cut5) return (1000 + (rvse1[k] * RSP)); // 1000 // 1000 // Max Trans Filter      
-    if (Estage[0] < cut0) return (2000 + (rvse1[k] * RSP)); //-1000; Threshold Filter
-      
+    if (Estage[0] < cut0) return (2000 + (rvse1[k] * RSP)); //-1000; Threshold Filter      
     if (dodEEFilter) { // dEEFilter
       if (Estage[0] < (dEEparams[0][0] * Estage[1] * Estage[1] + dEEparams[0][1] * Estage[1] + dEEparams[0][2]) ||
           Estage[0] > (dEEparams[0][3] * Estage[1] * Estage[1] + dEEparams[0][4] * Estage[1] + dEEparams[0][5]))
         return (5000 + (rvse1[k] * RSP)); //-1000;
     }
-    k = int(binFac * Estage[1]);
     return rvse1[k] * RSP; // polystyrene to water equivalent
   }
   // if particle stop in Stage 0
   else if (Estage[0] > thr0) {
-    if (Estage[0] > cut5) return (1000 + (rvse0[k] * RSP)); // 1000; // 1000 // Max Trans Filter
     k = int(binFac * Estage[0]);
+    if(k > nEnrg) k= nEnrg; //Unit Test
+    if (Estage[0] > cut5){
+      return (1000 + (rvse0[k] * RSP)); // 1000 // Max Trans Filter
+    }
     return rvse0[k] * RSP; // polystyrene to water equivalent
   }
   else return 2000;   

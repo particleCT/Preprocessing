@@ -11,65 +11,35 @@
 #include <cmath>
 #include "TH2D.h"
 #include "Util.h"
+#include "TTree.h"
 #include "TFile.h"
 using namespace std;
 #define nStage 5
 #define nPix 380
-#define nPixRoot (100 + 2)*(10 + 2) // under and overflow
+#define nPixRoot (38 + 2)*(10 + 2) // under and overflow
 
 class TVcorrection {
 public:
-  float tPlaneShifts[4][4]  = {{0}}; // planes sensors array for sensors shifts (stored in TVcorr.txt but no longer used)
   float TVmap[nStage][nPixRoot] = {{0}}; // 5 TV maps with 1cm pixels, 10x38 cm2 area, total 10x38=380 pixels
-  float ped[5];   // Calibrated pedestals (the program will generally use values  generated on the fly, however)
-  float Eempt[6]; // ADC pedestals and energy depositions from Empty run
-
-  TH2D* TVcorrHist[5]; // TVcorr histogram for each stage 
+  float ped[5] = {0};   // Calibrated pedestals (the program will generally use values  generated on the fly, however)
+  float Eempt[6] = {0}; // ADC pedestals and energy depositions from Empty run  
+  TH2D* TVcorrHist[5]; // TVcorr histogram for each stage
 
   // Constructor -- read from the TV calibration file
-  TVcorrection(const char *TVfile, int year, int month, int day, int run) { // pass 0 for all of year, month, day, run to avoid checks on those values
-    cout << "TVcorrection: opening TV correction file " << TVfile << endl;
+  TVcorrection(TFile* calibFile, int calib) { // pass 0 for all of year, month, day, run to avoid checks on those values
 
-    // Initialize the histograms
-    for(int stage =0; stage<nStage; stage++) TVcorrHist[stage] = new TH2D(Form("TVcorrMap_%d", stage), "", 100, -190, 190, 10, -50, 50);
-    
-    fstream TVcalfile(TVfile, ios_base::in); // Open text file with TV-corr etc. data
-    if (!TVcalfile.is_open()) {
-      perror("Error opening TV correction file");
-      return;
+    if(calib){// Calibration we initialize the data be empty
+      for(int stage =0; stage<nStage; stage++) TVcorrHist[stage] = new TH2D(Form("TVcorrMap_%d", stage), "", 38, -190, 190, 10, -50, 50);
     }
-    for (int i = 0; i < nStage; ++i) {
-      for (int j = 0; j < nPix; ++j) {
-        TVcalfile >> TVmap[i][j];
+    else{ // Preprocessing we fill from the calibration file
+      TTree* header= (TTree*)calibFile->Get("header");
+      for(int stage =0; stage<nStage; stage++){
+	header->SetBranchAddress(Form("Est_%d", stage),&Eempt[stage]);
+	header->SetBranchAddress(Form("peds_%d",stage),&ped[stage]);
+	TVcorrHist[stage] = (TH2D*)calibFile->Get(Form("TVcorrProfile/TVcorrMap_%d",stage));
       }
+      header->GetEntry(0);
     }
-    for (int i = 0; i < nStage; ++i) {
-      TVcalfile >> ped[i];
-      cout << ped[i] << " ";
-    }
-    for (int i = 0; i < 6; ++i) {
-      TVcalfile >> Eempt[i];
-      cout << Eempt[i] << " ";
-    }
-    cout << endl;
-    for (int i = 0; i < 4; i++) {
-      for (int j = 0; j < 4; ++j)
-        TVcalfile >> tPlaneShifts[i][j];
-    }
-    TVcalfile.close();
-    if (ped[0] == 0 || ped[4] == 0 || Eempt[5] < 100.) {
-      perror("TVcorrection: Error reading TV correction file.");
-      exit(1);
-    }
-    cout << "TVcorrection: completed initialization of the TV corrections.\n";
-    cout << "   Pedestals = " << ped[0] << " " << ped[1] << " " << ped[2] << " " << ped[3] << " " << ped[4] << endl;  
-  }
-
-  //////////////////////////////////////////////////////
-  //////////////////////////////////////////////////////
-  void LoadTVCorrHist(TFile* f) {
-    for(int stage =0; stage<nStage; stage++) TVcorrHist[stage] = (TH2D*)f->Get(Form("TVcorrProfile/TVcorrMap_%d",stage));
-
   }
   //////////////////////////////////////////////////////
   //////////////////////////////////////////////////////
@@ -95,35 +65,9 @@ public:
       vPix = 9;
       inBounds = false;
     }
-    if (inBounds) {
-      //return TVcorrHist[stage]->Interpolate(T,V); // when we set root only
-      int tLow = floor(0.1 * (T + 185.)); //+ half a pixel
-      int tHigh = tLow + 1;
-      int vLow = floor(0.1 * (V + 45.));
-      int vHigh = vLow + 1;
-      if (tLow < 37 && tHigh > 0 && vLow < 9 && vHigh > 0) { // Bilinear interpolation
-        float f00 = TVmap[stage][vLow + 10 * tLow];
-        float f10 = TVmap[stage][vLow + 10 * tHigh];
-        float f01 = TVmap[stage][vHigh + 10 * tLow];
-        float f11 = TVmap[stage][vHigh + 10 * tHigh];
-        if (f00 > 0.9 || f10 > 0.9 || f01 > 0.9 || f11 > 0.9) { // Can't include any bad pixels in the interpolation
-          return TVmap[stage][vPix + 10 * tPix];
-        } else {
-          float T0 = -185.0 + 10.0 * tLow;
-          float V0 = -45.0 + 10.0 * vLow;
-          float VS = (V - V0) / 10.;
-          float TS = (T - T0) / 10.;
-          float result = f00 + (f10 - f00) * TS + (f01 - f00) * VS + (f11 + f00 - f10 - f01) * TS * VS;
-          return result;
-	  }
-      } else {
-        return TVmap[stage][vPix + 10 * tPix];
-	}
-    } else {
-      return TVmap[stage][vPix + 10 * tPix];
-    }
+    if (inBounds) return TVcorrHist[stage]->Interpolate(T,V); // bilinear interpolation
+    else return 0.;
   }
-
 
 }; // end of TVcorrection class
 #endif

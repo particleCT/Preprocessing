@@ -22,14 +22,12 @@ pCTraw::pCTraw(FILE *in_file, size_t file_size, int thread, int numbTkrFPGA, int
   required_bits = 0;
   reduceFlagCheck = -999;
   killTotal = 0;
-  if (numbTkrFPGA < 0 || numbTkrFPGA > num_tkr_fpga)
-    this->numbTkrFPGA = num_tkr_fpga;
-  else
-    this->numbTkrFPGA = numbTkrFPGA;
-  if (numbEdetFPGA < 0 || numbEdetFPGA > num_enrg_fpga)
-    this->numbEdetFPGA = num_enrg_fpga;
-  else
-    this->numbEdetFPGA = numbEdetFPGA;
+  if (numbTkrFPGA < 0 || numbTkrFPGA > num_tkr_fpga) this->numbTkrFPGA = num_tkr_fpga;
+  else this->numbTkrFPGA = numbTkrFPGA;
+
+  if (numbEdetFPGA < 0 || numbEdetFPGA > num_enrg_fpga) this->numbEdetFPGA = num_enrg_fpga;
+    
+  else this->numbEdetFPGA = numbEdetFPGA;
   this->in_file = in_file;
   this->file_size = file_size;
   if (this->in_file == NULL) {
@@ -175,40 +173,32 @@ void pCTraw::readRunHeader(const char *inFileName) { // This is called once afte
   ///////////////////////////////////////
 
   // Search for the run header start string
-  if (!findRunHdr())
-    pCTrawLogFile << "Unable to find the run header start string in file " << inFileName << std::endl;
+  if (!findRunHdr()) pCTrawLogFile << "Unable to find the run header start string in file " << inFileName << std::endl;
 
   if (read_file_header(extracted_bits, inFileName) == 0) {
 
     // reading Run Number: 24 bits
     required_bits = 24;
-    extracted_bits =
-        just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
+    extracted_bits = just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
     run_number = read_run_number(extracted_bits);
     pCTrawLogFile << "Input data file run header found.  Run number = " << run_number << std::endl;
 
     // reading Run start time:32 bits
     required_bits = 32;
-    extracted_bits =
-        just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
+    extracted_bits = just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
     start_time = read_run_startTime(extracted_bits);
-    study_date = (int)(extracted_bits); // Needed in integer format by the final
-                                        // output file
+    study_date = (int)(extracted_bits); // Needed in integer format by the final output file
 
     // reading status bits:8 bits
     required_bits  = 8;
     extracted_bits = just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
-
     int flgMsk[2] = { 0x01, 0x02 };
     TimeTags = extracted_bits & flgMsk[0];
     pCTrawLogFile << "The input data file is assumed to be real data from the Phase-II pCT scanner.\n";
 
     // bool time_tags = read_statusBits(extracted_bits);
-    if (TimeTags)
-      pCTrawLogFile << "Time tags are included in the data stream.\n";
-    else
-      pCTrawLogFile << "From the run header, time tags are NOT included in the "
-                   "data stream!\n";
+    if (TimeTags) pCTrawLogFile << "Time tags are included in the data stream.\n";
+    else pCTrawLogFile << "From the run header, time tags are NOT included in the data stream!\n";
 
     // reading program version number:8 bits
     required_bits  = 8;
@@ -568,7 +558,7 @@ uint32_t reverse_int_bytes(unsigned int x) {
 
 void pCTraw::read_append_data(FILE *in_file, unsigned long long &bit_container, unsigned int &num_bits,
                               long long &origin, size_t file_size, bool &stop_reading) {
-  unsigned int buffer;
+  unsigned int buffer; // 4 bytes
   unsigned int shift_by = BITS_PER_BYTE * sizeof(buffer); // shift is equivalent to the number of
   // bits in a byte (8) multiplied by the number of bytes composing the buffer (4)= 32 bits in total
   bit_container <<= shift_by; // Shift current_bits over by 4-bytes so another
@@ -646,6 +636,7 @@ int pCTraw::read_run_number(unsigned long long runNumber_bits) {
   pCTrawLogFile << "Run Number: " << runNumber_bits << std::endl;
   return runNumber_bits;
 }
+
 // ******************************* ******************************* *******************************
 // ******************************* ******************************* *******************************
 // Start time function
@@ -661,6 +652,7 @@ std::string pCTraw::read_run_startTime(unsigned long long startTime_bits) {
   pCTrawLogFile << "The run start time is " << Tout << "." << std::endl;
   return Tout;
 }
+
 // ******************************* ******************************* *******************************
 // ******************************* ******************************* *******************************
 // File header function

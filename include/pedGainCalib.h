@@ -36,9 +36,9 @@ class pedGainCalib {
   // functions
   void ClearHist();
   void FillPeds(pCTraw &rawEvt);
-  void GetPeds(const char *inFileName,int run_number, int program_version, float proj_angle, int nKeep, string start_time);
+  void GetPeds(const char *inFileName);
   void FillGains(float Vedet, float Tedet, float Ene[5]);
-  void GetGains(TVcorrection *TVcorr, const char *inFileName, int run_number, int program_version, int proj_angle, int nKeep, string start_time);
+  void GetGains(TVcorrection *TVcorr, const char *inFileName);
 
 }; // end of class pedGainCalib
 #endif

@@ -13,6 +13,7 @@
 #include "TH1D.h"
 #include "TH2D.h"
 #include "TFile.h"
+#include "TTree.h"
 #include "TF1.h"
 #include "TProfile.h"
 #include "TProfile2D.h"
@@ -42,7 +43,7 @@ class pCTcalib {
 
   // NIST PSTAR proton range in polystyrene vs E corrected for Birk's law with Kb=.02 cm/meV
   // Experimentally measured R vs E for our 5 stage detector:
-  inline float Rend(float x) {   return  0.0057 * x * x + 0.2463 * x; }    // -0.366;
+  inline float Rend(float x) {   return 0.0057 * x * x + 0.2463 * x; }    // -0.366;
   inline float RendHe(float x) { return -0.0057 * x * x + 0.2463 * x; } // -0.366; }
   
   void plot2D(string fn, string T, string TX, string TY, int N, float X[], float Y[], float E[]);
