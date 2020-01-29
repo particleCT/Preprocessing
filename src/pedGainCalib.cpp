@@ -29,23 +29,13 @@ pedGainCalib::pedGainCalib(TFile* root, int pedMin[5], float oldPed[5], float t1
     hEnrgTot = new TH1D("SumStageEnergies", "Sum of stage energies", 800, 0, 0 + 0.3*800);
   }
   else {
-    for (int i =0; i<5; i++) hEnrg[i] = new TH1D(Form("EnergyDistribution_%i",i), Form("Energy Distribution for stage %i",i), 400, 60, 60 + 400*0.7);
+    for (int i =0; i<5; i++) hEnrg[i] = new TH1D(Form("EnergyDistribution_%i",i), Form("Energy Distribution for stage %i",i), 400, 15, 15 + 400*0.9);
     hEnrgTot = new TH1D("SumStageEnergies", "Sum of stage energies", 800, 0, 0 + 1.2*800);
   }
   // Profile plot to make sure that the phantom does not extend into the regions used for gain calibration
   hProfT = new TProfile2D("Stage0EnergyProfile", "Stage 0 energy profile", 100, -150, -150 + 100*3.0, 100, -50., -50 + 1.0*100);
   hTedet = new TH1D("T_Ions_GainRecalib", "T of ions used for gain recalibration", 100, -150, -150 + 100*3.0);
   RootFile->mkdir("Pedestals");   
-}
-
-void pedGainCalib::ClearHist(){
-  hProfT->Reset();
-  hTedet->Reset();
-  hEnrgTot->Reset();
-  for (int i =0; i<5; i++){
-    hEnrg[i]->Reset();
-    hPed[i]->Reset();
-  }
 }
 
 void pedGainCalib::FillPeds(pCTraw &rawEvt) { // Called for each raw event read in from the input data file
@@ -65,20 +55,34 @@ void pedGainCalib::GetPeds(const char *inFileName) {
   RootFile->mkdir(Form("Pedestals/%s",inFileName_s.c_str()));
   RootFile->cd(Form("Pedestals/%s",inFileName_s.c_str()));
   // Calculate the pedestal
+  double std[5];
   for(int i =0; i<5; i++) hPed[i]->Write("", TObject::kOverwrite);
   for (int stage = 0; stage < 5; stage++) {
     float xLow, xHigh;
+    float max, xmax, xpeak;
+    int imax;
+    imax  = hPed[stage]->GetMaximumBin();
+    max   = hPed[stage]->GetMaximum();
+    xmax  = hPed[stage]->GetBinCenter(imax);
+
+    TF1 *f1 = new TF1("f1", "gaus", xmax-100, xmax+100);
+    f1->SetParameter(0, max);
+    f1->SetParameter(1, xmax);
+    Int_t fitStatus = hPed[stage]->Fit(f1,"QR"); // Q means quiet, R is
+    if(fitStatus==0) // Everything passed
+    {
+    Ped[stage]  = f1->GetParameter(1);// mean
+    std[stage]  = f1->GetParameter(2);// std
+    }
     //xLow  =  hPed[stage]->GetBinCenter(hPed[stage]->FindFirstBinAbove( hPed[stage]->GetMaximum()/2));
     //xHigh =  hPed[stage]->GetBinCenter(hPed[stage]->FindLastBinAbove(  hPed[stage]->GetMaximum()/2));
     //hPed[stage]->GetXaxis()->SetRange(xLow,xHigh);
-    if ( hPed[stage]->GetEntries()>100 ) Ped[stage] = hPed[stage]->GetBinCenter(hPed[stage]->GetMaximumBin());
-    else if(xLow > xHigh || xLow < 0 || xHigh < 0){  // sanity
+    //if ( hPed[stage]->GetEntries()>100 ) Ped[stage] = hPed[stage]->GetBinCenter(hPed[stage]->GetMaximumBin());
+    else{  // sanity
       Ped[stage] = 0.;
       cout << "pedGainCalib::getPeds ERROR: could not find the peak of the pedestal distribution for stage ************" << stage << endl;
     }
-    
-    //hPed[stage]->GetXaxis()->SetRange();
-    cout << inFileName_s <<" "<<hPed[stage]->Integral()<< " getPeds: measured pedestal for stage " << stage << " is " << Ped[stage] << endl;
+    cout << inFileName_s <<" "<<hPed[stage]->Integral()<< " getPeds: measured pedestal for stage " << stage << " is " << Ped[stage] << "with a width of "<<std[stage]<<endl;
   }
 }
 
@@ -105,6 +109,7 @@ void pedGainCalib::GetGains(TVcorrection *TVcorr, const char *inFileName) {
   // Save plots of the histograms so that the gains can be visualized
   // Create a folder with the filename
   // Write the files
+
   std::string inFileName_s = inFileName;
   inFileName_s = inFileName_s.substr(inFileName_s.find_last_of("\\/") +1,  inFileName_s.size());  
   RootFile->mkdir(Form("Pedestals/%s",inFileName_s.c_str()));
@@ -116,15 +121,27 @@ void pedGainCalib::GetGains(TVcorrection *TVcorr, const char *inFileName) {
 
   // Calculate the gain
   double Peak[5];
+  double std[5];
   for (int stage = 0; stage < 5; stage++) {
     float xLow, xHigh;
-    //xLow       =  hEnrg[stage]->GetBinCenter(hEnrg[stage]->FindFirstBinAbove( hEnrg[stage]->GetMaximum()/2));
-    //xHigh      =  hEnrg[stage]->GetBinCenter(hEnrg[stage]->FindLastBinAbove(  hEnrg[stage]->GetMaximum()/2));
-    //hEnrg[stage]->GetXaxis()->SetRange(xLow,xHigh);
-    if ( hEnrg[stage]->GetEntries()>100 )  Peak[stage] = hEnrg[stage]->GetBinCenter(hEnrg[stage]->GetMaximumBin());
-    else if(xLow > xHigh || xLow < 0 || xHigh < 0) Peak[stage] = 0.0;
-    //hEnrg[stage]->GetXaxis()->SetRange();
-    cout << "getGains: measured peak location for stage " << stage << " is " << Peak[stage] << endl;
+    float max, xmax, xpeak,min;
+    int imax;
+
+    imax  =  hEnrg[stage]->GetMaximumBin();
+    max   =  hEnrg[stage]->GetMaximum();
+    min   =  hEnrg[stage]->GetMinimum();
+    xmax  =  hEnrg[stage]->GetBinCenter(imax);
+    TF1 *f1 = new TF1("f1", "gaus", xmax-10, xmax+10);
+    f1->SetParameter(0, max);
+    f1->SetParameter(1, xmax);
+    Int_t fitStatus = hEnrg[stage]->Fit(f1,"QR"); // Q means quiet, R is*/
+    if(fitStatus==0) // Everything passed
+      {
+	Peak[stage]  = f1->GetParameter(1);// mean
+	std[stage]   = f1->GetParameter(2);//std
+      }
+      else Peak[stage] = 0.0;
+    cout << "getGains: measured peak location for stage " << stage << " is " << Peak[stage] << " and a width of "<<std[stage]<<endl;
     if (Peak[stage] > 0.01) GainFac[stage] = TVcorr->Eempt[stage] / Peak[stage];
     else {
       cout << "getGains ERROR: unable to find a peak position; leaving the gains unchanged. **********" << endl;

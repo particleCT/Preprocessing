@@ -43,25 +43,13 @@ Preprocessing::Preprocessing(pCTconfig cfg): config(cfg){
 
   if (config.item_int["max_events"] > 0) cout << "The preprocessing will halt after processing " << config.item_int["max_events"] << " events\n";
 
-  cout << "Reading the input raw data file " << config.item_str["inputFileName"] << endl;
-  in_file = fopen(config.item_str["inputFileName"].c_str(), "rb");
-
-  if (in_file == NULL) {
-    perror("Error opening the input raw data file.");
-    exit(1);
-  }
-
-  fseek(in_file, 0L, SEEK_END);
-  file_size = ftell(in_file);
-  rewind(in_file);
-  cout << "Input raw data file size=" << file_size << endl;
 
   pCTcalibRootFile = new TFile(config.item_str["calib"].c_str());
   TString filename = Form("%s/%s.root",
 			  config.item_str["outputDir"].c_str(),
 			  config.item_str["inputFileName"].substr(7, config.item_str["inputFileName"].size()-4).c_str());
 			  
-  projectionROOT = new TFile(filename,"update");
+  projectionROOT = new TFile(filename,"recreate");
   
 };
 
@@ -261,6 +249,7 @@ void Preprocessing::WriteRootFile(bool timeStampOutput, bool energyOutput, bool 
     ThresholdFilter = 1;
     t[0] = T0[i]  ; t[1] = T1[i]; t[2] = T2[i]; t[3] = T3[i];
     v[0] = V0[i]  ; v[1] = V1[i]; v[2] = V2[i]; v[3] = V3[i];
+
     //u should be already done
     x0   = u[1]; y0 = T1[i]; z0 = V1[i];
     x1   = u[2]; y1 = T2[i]; z1 = V2[i];
@@ -607,6 +596,23 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
   cout << "The file fraction to use is " << fileFraction << endl;
 
 
+  //////////////////////////////////////////////////////////
+  // Opening the input file
+  //////////////////////////////////////////////////////////
+  cout << "Reading the input raw data file " << config.item_str["inputFileName"] << endl;
+  in_file = fopen(config.item_str["inputFileName"].c_str(), "rb");
+  
+  if (in_file == NULL) {
+    perror("Error opening the input raw data file.");
+    exit(1);
+  }
+
+  fseek(in_file, 0L, SEEK_END);
+  file_size = ftell(in_file);
+  rewind(in_file);
+  
+  cout << "Input raw data file size=" << file_size << endl;
+
   if (fileFraction > 1.0)     fileFraction = 1.0;
   // Divide the file into pieces, one for each file
   float fractSize = fileFraction * static_cast<float>(file_size);
@@ -677,14 +683,14 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
 	    }*/
   for(int i =0; i<5; i++) StgThr[i] = config.item_float[Form("thr%d",i)];
   Wepl *WEPL = new Wepl(config.item_str["Wcalib"].c_str(), year, month, day, rawEvt.run_number,
-			config.item_str["partType"], config.item_int["dEEFilter"], config.item_str["outputDir"]);
+			config.item_str["partType"], config.item_int["dEEFilter"], projectionROOT);
   WEPL->SetEthresholds1(StgThr[0], StgThr[1], StgThr[2], StgThr[3], StgThr[4]);  
   theTVcorr = new TVcorrection(pCTcalibRootFile, 0);
   // Create a vector of pointers to instances of the pedestal and gain calibration class
-  float t1 = -90.; // These define two ranges for finding protons passing through zero phantom material, for gain calibration
-  float t2 = -1*config.item_float["size"];//-150/; // ****** Let's keep this to one side only, for now, to accommodate the wedge calibration runs with bricks
+  float t1 = -100.; // These define two ranges for finding protons passing through zero phantom material, for gain calibration
+  float t2 = -100.; // ****** Let's keep this to one side only, for now, to accommodate the wedge calibration runs with bricks
   float t3 = config.item_float["size"];// + config.item_float["wedgeoffset"];
-  float t4 = 90.;
+  float t4 = 100.;
   float pedestals[5];
   for (int stage = 0; stage < 5; stage++) pedestals[stage] = theTVcorr->ped[stage];
   int pdstlr[5];
@@ -916,7 +922,7 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
       if (eventIDOutput) EventIDs[k].push_back(event_id);
     }
   }
-  delete WEPL;
+  delete WEPL; // the class
   fclose(fptmp);
   cout << "Preprocessing.cpp: Try to delete the temporary file " << tempfile << endl;
   string cmd;

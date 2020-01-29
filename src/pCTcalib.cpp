@@ -105,16 +105,7 @@ pCTcalib::pCTcalib(pCTconfig cfg, string inputFileName): config(cfg)
   theTVcorr      = new TVcorrection(pCTcalibRootFile, 1);
   theEvtRecon    = new EvtRecon(config);
 
-  // to place in the calibration class
-  float wedgeLimit = theGeometry->getTWedgeBreaks(4) + 25.0; // NO BRICK OFFSET //+5.
-  float openRange = 20.0;
-  float pedestals[nStage];
-  int pedMin[5];
-  for (int stage = 0; stage < nStage; stage++) pedestals[stage] = 0.;
-  for (int stage = 0; stage < nStage; stage++){
-    pedMin[stage] = config.item_int[Form("pedrng%d",stage)];
-  }
-  theCalibration = new pedGainCalib(pCTcalibRootFile, pedMin, pedestals,-150., -151., wedgeLimit, wedgeLimit + openRange, config.item_str["partType"]);
+
 }
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -126,7 +117,18 @@ int pCTcalib::TVmapper() {
   }
   config.item_int["Nbricks"] = 0; // This is for the empty one for the TV correction
   config.item_int["doGains"] = false;
-  theCalibration->ClearHist();
+
+
+  // Calibration
+  float wedgeLimit = theGeometry->getTWedgeBreaks(4) + 25.0; // NO BRICK OFFSET //+5.
+  float openRange = 20.0;
+  float pedestals[nStage];
+  int pedMin[5];
+  for (int stage = 0; stage < nStage; stage++) pedestals[stage] = 0.;
+  for (int stage = 0; stage < nStage; stage++){
+    pedMin[stage] = config.item_int[Form("pedrng%d",stage)];
+  }
+  pedGainCalib* theCalibration = new pedGainCalib(pCTcalibRootFile, pedMin, pedestals,-150., -151., wedgeLimit, wedgeLimit + openRange, config.item_str["partType"]);  
   theEvtRecon->ReadInputFile(theGeometry, theTVcorr, calFileNames[0], theCalibration); // Pedestal are determined here
 
   // Position of the trackers
@@ -219,6 +221,8 @@ int pCTcalib::TVmapper() {
   pCTcalibRootFile->cd("TVcorrProfile");  
   for(int stage =0; stage<nStage; stage++) theTVcorr->TVcorrHist[stage]->Write("", TObject::kOverwrite);
   cout << "TVmapper: Finished with mapping the TV calibration" << endl;
+
+  delete (theCalibration);
   return 0;
 }
 //////////////////////////////////////////////////////////////////////
@@ -545,119 +549,6 @@ int pCTcalib::Wcalib(){
     }
   }
 
-  //////////////////////////////////
-  // Correction for the kink region
-  //////////////////////////////////
-  /*cout << "Wcalib: Interpolating the calibration curves through the kink region" << endl;
-  for (int stage = 0; stage < 4; ++stage) {
-    quadFit qF;
-    for (int i = j1[stage]; i < j2[stage]; i++) {
-      qF.addPnt(float(i) + 0.5, Rst[stage][i]);
-    }
-    for (int i = j3[stage]; i < j4[stage]; i++) {
-      qF.addPnt(float(i) + 0.5, Rst[stage][i]);
-    }
-    if (qF.solve() == 0) {
-      for (int i = j2[stage]; i < j3[stage]; i++) {
-        Rst[stage][i] = qF.eval(float(i) + 0.5);
-      }
-    } else
-      cout << "***************WARNING***************: Could not fit kink "
-              "region for stage " << stage << "!" << endl;
-	      }*/
-
-  // approximate the curve for stage 4 near range R = 0  with a quadratic spline
-  // to exclude R(E) distortion due to range R straggling in the MSS and allow
-  // negative range values
-  // for correct air RSP calculations in reconstruction.
-  // Fill calibration curve bins above 60 MeV (for protons) using quadratic
-  // spline
-  // Also, fill in the high energy ends of the other curves with fitted
-  // quadratic curves, although in general that energy range won't be used.
-  
-  double x0 = 4. * Est[4]; // Sadc / Sweight; // mean energy deposition for air (x 4)
-
-  qSpline Spl(&Rst[4][0], i1[4], i2[4], x0); // Quadratic spline extrapolation for the last stage
-  for (int i = i2[4] + 1; i < nEnrg; i++) {
-    Rst[4][i] = Spl.eval(float(i) + 0.5);
-  }
-
-  for (int stage = 0; stage < 5; stage++) { // Don't allow the extrapolations to curve back upwards
-    int iMin = i2[stage];
-    float rMin = Rst[stage][i2[stage]];
-    for (int i = i2[stage]; i < nEnrg; i++) {
-      if (Rst[stage][i] < rMin) {
-        rMin = Rst[stage][i];
-        iMin = i;
-      }
-    }
-    for (int i = iMin; i < nEnrg; i++) {
-      Rst[stage][i] = rMin;
-    }
-  }
-
-  cout << "Corrected stage 4 air W=0. E, dE: " << 0.25 * x0 << "  " << Est[4] - x0 / 4 << endl;
-  
-  //////////////////////////////////
-  // Correction for the beginning
-  //////////////////////////////////
-
-  // correct stage 0 low energy part for lack of data due to high threshold (up to 13 MeV Aug 2016,  18 MeV Oct 2016)
-  // using experimentally measured R(E) dependance approximated with pol2 (quadratic) function Rend.
-  // First, find where the calibration data start to look reasonable
-  int kGood = 79;
-  float diff, thisVal;
-  for (int k = 0; k < nEnrg - 7; k++) {
-    bool foundkGood = true;
-    if ( Rst[0][k]== 0.) continue;
-  
-    // Condition 1 within the next 8, nothing is larger than 5% differnece
-    for (int n = k + 1; n < k + 8; n++) {
-      if (abs((Rst[0][n] - Rst[0][k]) / Rst[0][k]) > 0.05) foundkGood = false;
-    }
-    
-    // Condition 2, next value is smaller than 0.5% difference    
-    if (abs( (Rst[0][k + 1] - Rst[0][k]) / Rst[0][k]) > 0.005) foundkGood = false;
-
-    if(foundkGood){
-      kGood = k;
-      break;
-    }
-  }
-
-  cout << "pCTcalib: Setting kGood to " << kGood << endl;
-  for (int k = 0; k < kGood; k++) {
-    if (config.item_str["partType"] == "H") Rst[0][k] = Rst[0][kGood] + Rend((kGood - k) * EnergyBinWidth) - float(kGood - k) * (52.16 - 51.12) / float(kGood);
-    else Rst[0][k] = Rst[0][kGood] + RendHe((kGood - k) * EnergyBinWidth) - float(kGood - k) * (52.39 - 51.12) / float(kGood);
-  }
-
-  cout << "Thickness of the stages 0 - 3 (should be 51.12 +/- 1mm) :" << endl;
-  cout << Rst[0][0] - Rst[1][0] << " " << Rst[1][0] - Rst[2][0] << " " << Rst[2][0] - Rst[3][0] << " "
-       << Rst[3][0] - Rst[4][0] << endl;
-
-  //////////////////////////////////
-  // Plot the final calibration result with corrections
-  //////////////////////////////////
-  pCTcalibRootFile->cd();
-  pCTcalibRootFile->mkdir("RangeVsEnergy");
-  pCTcalibRootFile->cd("RangeVsEnergy");
-  TGraphErrors* rngEnrg[nStage];
-  for (int stage = 0; stage < nStage; ++stage) {
-    string Title = "Range vs Energy for Stage " + to_string((long long int)stage);
-    rngEnrg[stage] = new TGraphErrors(nEnrg);        
-    rngEnrg[stage]->SetTitle(Title.c_str());
-    rngEnrg[stage]->SetName(Form("RangeVsEnergy_%d",stage));      
-    for (int nrg = 0; nrg < nEnrg; ++nrg){
-      rngB[nrg] = float(nrg) * EnergyBinWidth;
-      rngEnrg[stage]->SetPoint(nrg, double(rngB[nrg]), double(Rst[stage][nrg]));
-      rngEnrg[stage]->SetPointError(nrg, 0.,   double(Sst[stage][nrg]));
-    }
-    rngEnrg[stage]->GetXaxis()->SetTitle("Energy (MeV)");
-    rngEnrg[stage]->GetYaxis()->SetTitle("Range (mm)");
-
-    rngEnrg[stage]->Write("", TObject::kOverwrite);
-  }
-
   /// Lennart Volz, November 2018
   /// dE-E parameter evaluation:
   int Estep[3] = { 240, 120, 12 }; // work in the same way for helium and proton, but could also be set manually for optimization
@@ -812,7 +703,18 @@ void pCTcalib::procWEPLcal(Histogram2D *REhist[nStage],TH2D* REhist_root[nStage]
   for(int stage = 0; stage < nStage; ++stage) cout << config.item_int["Nbricks"] << " bricks, stage " << stage << ", title=  " << REhist[stage]->Title() << endl;
   theEvtRecon->config.item_int["doGains"] = true;
   theEvtRecon->config.item_int["Nbricks"] = config.item_int["Nbricks"];
-  theCalibration->ClearHist();
+
+  // Calibration
+  float wedgeLimit = theGeometry->getTWedgeBreaks(4) + 25.0; // NO BRICK OFFSET //+5.
+  float openRange = 20.0;
+  float pedestals[nStage];
+  int pedMin[5];
+  for (int stage = 0; stage < nStage; stage++) pedestals[stage] = 0.;
+  for (int stage = 0; stage < nStage; stage++){
+    pedMin[stage] = config.item_int[Form("pedrng%d",stage)];
+  }
+  pedGainCalib* theCalibration = new pedGainCalib(pCTcalibRootFile, pedMin, pedestals,-150., -151., wedgeLimit, wedgeLimit + openRange, config.item_str["partType"]);
+  //theCalibration->ClearHist();
   theEvtRecon->ReadInputFile(theGeometry, theTVcorr, config.item_str["inputFileName"], theCalibration);
 
   double Ut[2] , Uv[2] , T[2] , V[2];
@@ -1060,6 +962,7 @@ void pCTcalib::procWEPLcal(Histogram2D *REhist[nStage],TH2D* REhist_root[nStage]
   pCTcalibRootFile->cd();
   // memory management
   delete (hTotEcorr);
+  delete (theCalibration);
   for (int stage = 0; stage < nStage; ++stage) delete (hStgEcorr[stage]);
 }
 

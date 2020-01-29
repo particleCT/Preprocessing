@@ -12,6 +12,7 @@
 #include "TFile.h"
 #include "TVcorrection.h"
 #include "TH1D.h"
+#include "TF1.h"
 #include "TProfile2D.h"
 #include "pCTraw.h"
 

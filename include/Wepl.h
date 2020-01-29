@@ -38,11 +38,11 @@ class Wepl {
   // Common parameters
   float thr0, thr1, thr2, thr3, thr4; // Stage thresholds to define when a stage has a real signal
   float RSP;                          // Known phantom RSP
-
+  TFile* projectionROOT;
   TProfile* calWEPLprofile[5];
   TH2D* dEEhist_root[5];
   // Explicit constructor
-  Wepl(const char *WcalibFile, int year, int month, int day, int run, string partType, bool dodEEFilter, string outputDir);
+  Wepl(const char *WcalibFile, int year, int month, int day, int run, string partType, bool dodEEFilter,  TFile*);
        
   // Explicit destructor
   ~Wepl();
@@ -56,23 +56,24 @@ class Wepl {
 };
 
 inline Wepl::~Wepl(){
-  TFile* Weplroot_file = new TFile("wepl.root", "update");
-  Weplroot_file->mkdir("dEE");
-  Weplroot_file->cd("dEE");
+  projectionROOT->mkdir("dEE");
+  projectionROOT->cd("dEE");
   for(int i =1;i<5;i++) dEEhist_root[i]->Write("",TObject::kOverwrite);
   for(int i =1;i<5;i++) dEEhist_root[0]->Add(dEEhist_root[i]);
   dEEhist_root[0]->Write("dEEhist_tot",TObject::kOverwrite);
   
-  Weplroot_file->cd();
-  Weplroot_file->mkdir("calWEPL");
-  Weplroot_file->cd("calWEPL");
+  projectionROOT->cd();
+  projectionROOT->mkdir("calWEPL");
+  projectionROOT->cd("calWEPL");
   for(int i =0;i<5;i++) calWEPLprofile[i]->Write("",TObject::kOverwrite);
-  Weplroot_file->Close();
+  //projectionROOT->Close();
 
 }  
 
-inline Wepl::Wepl(const char *WCalibFile, int year, int month, int day, int run, string partType, bool dodEEFilter,
-                  string outputDir) {
+inline Wepl::Wepl(const char *WCalibFile, int year, int month, int day, int run, string partType, bool dodEEFilter, TFile *tempROOT)
+
+{
+  this->projectionROOT = tempROOT;
   this->partType = partType;
   this->dodEEFilter = dodEEFilter;
   float scale = 1.0;

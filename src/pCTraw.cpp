@@ -60,8 +60,7 @@ void pCTraw::pCTkillStrip(int FPGA, int chip, int channel) { // Kill a (noisy) c
                                                              // tracker readout
   killCh[FPGA][chip].push_back(channel);
   killTotal++;
-  pCTrawLogFile << "pCTraw for thread " << threadNumber << " killing tracker channel " << channel << " in chip " << chip
-            << " of FPGA " << FPGA << std::endl;
+  pCTrawLogFile << "pCTraw for thread " << threadNumber << " killing tracker channel " << channel << " in chip " << chip << " of FPGA " << FPGA << std::endl;
 }
 
 // ******************************* ******************************* *******************************
