@@ -15,31 +15,37 @@
 #include "TF1.h"
 #include "TProfile2D.h"
 #include "pCTraw.h"
-
+#include "pCTconfig.h"
 using namespace std;
 
 class pedGainCalib {
  public:
-  pedGainCalib(TFile* root, int pedMin[5], float oldPed[5], float t1, float t2, float t3, float t4,string partType);
+ pedGainCalib(TFile* root, int pedMin[5], float oldPed[5], float t1, float t2, float t3, float t4, pCTconfig cfg);
+ 
   ~pedGainCalib();  
   //Variables
+  pCTconfig config;
   double Ped[5];
   TH1D* hPed[5];
+  TH1D* hTotFil[5];
+  TH1D* hTotUnFil[5];
   TH1D* hEnrg[5];
   TH1D* hEnrgTot;
   TProfile2D* hProfT;
   TH1D* hTedet;
   TFile* RootFile;
   float emtrng1, emtrng2, emtrng3, emtrng4;
-  string partType;
+  string inFileName_s;
   float GainFac[5]; // Gain correction factor derived here for each stage
   
   // functions
   void ClearHist();
   void FillPeds(pCTraw &rawEvt);
-  void GetPeds(const char *inFileName);
+  void GetPeds();
+  void FillADC(int ADC[5]);
+  void WriteADC();
   void FillGains(float Vedet, float Tedet, float Ene[5]);
-  void GetGains(TVcorrection *TVcorr, const char *inFileName);
+  void GetGains(TVcorrection *TVcorr);
 
 }; // end of class pedGainCalib
 #endif

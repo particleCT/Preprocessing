@@ -28,25 +28,6 @@ pCTcalib::pCTcalib(pCTconfig cfg, string inputFileName): config(cfg)
   else EnergyBinWidth = 1.0;
   RangeBinWidth = 1.0;
 
-  // LOW E INTERPOLATION: NEVER USED DUE OF THRESHOLD OF 1MeV
-  if (config.item_str["partType"] == "He"){ k1[0] = 0; k1[1] = 2; k1[2] = 2; k1[3] = 2; k1[4] = 3;}
-  else{ k1[0] = 0; k1[1] = 5; k1[2] = 5; k1[3] = 5; k1[4] = 6;}
-  
-  if (config.item_str["partType"] == "He") {
-    // EXTRAPOLATION AT HIGH ENERGIES (LOW STATISTICS THERE) 
-    i1[0] = 230; i1[1] = 230; i1[2] = 247;
-    i1[3] = 247; i1[4] = 250; 
-
-    i2[0] = 242; i2[1] = 240; i2[2] = 255;
-    i2[3] = 255; i2[4] = 265;
-    i3    = 300;
-  }
-  else {
-    // NO EXTRAPOLATION
-    i1[0] = 280; i1[1] = 280; i1[2] = 288; i1[3] = 288; i1[4] = 200;
-    i2[0] = 292; i2[1] = 292; i2[2] = 304;
-    i2[3] = 304; i2[4] = 240; i3    = 330;   
-  }
   if (config.item_str["partType"] == "H") {
     EG4stage[0] = 25.25; EG4stage[1] = 28.01; EG4stage[2] = 32.76;// MC derived stage energies, used to calibrate to MeV
     EG4stage[3] = 42.62; EG4stage[4] = 67.71;                     // for protons
@@ -115,9 +96,8 @@ int pCTcalib::TVmapper() {
          << endl;
     return -2;
   }
-  config.item_int["Nbricks"] = 0; // This is for the empty one for the TV correction
-  config.item_int["doGains"] = false;
-
+  theEvtRecon->config.item_int["doGains"] = false; // This is for the empty one for the TV correction
+  theEvtRecon->config.item_int["Nbricks"] = 0;
 
   // Calibration
   float wedgeLimit = theGeometry->getTWedgeBreaks(4) + 25.0; // NO BRICK OFFSET //+5.
@@ -128,7 +108,7 @@ int pCTcalib::TVmapper() {
   for (int stage = 0; stage < nStage; stage++){
     pedMin[stage] = config.item_int[Form("pedrng%d",stage)];
   }
-  pedGainCalib* theCalibration = new pedGainCalib(pCTcalibRootFile, pedMin, pedestals,-150., -151., wedgeLimit, wedgeLimit + openRange, config.item_str["partType"]);  
+  pedGainCalib* theCalibration = new pedGainCalib(pCTcalibRootFile, pedMin, pedestals,-150., -151., wedgeLimit, wedgeLimit + openRange, config);  
   theEvtRecon->ReadInputFile(theGeometry, theTVcorr, calFileNames[0], theCalibration); // Pedestal are determined here
 
   // Position of the trackers
@@ -334,8 +314,6 @@ void pCTcalib::enrgDep() { // Calculate energy depositions in each stage and the
     theTVcorr->Eempt[stage] = Est[stage];
     cout << "pCTcalib::enrgDep, Energy in stage " << stage << " = " << Est[stage] << "; dE=" << Est[stage] - EG4stage[stage] << " MeV" << endl;
     delete stgHistE[stage];
-    //delete stgEvsT[stage];
-    //delete stgEvsV[stage];
     delete stgE[stage];
   }
   cout << "pCTcalib::enrgDep, MC - experiment difference |dE| should be <0.1 MeV ! " << endl;
@@ -523,32 +501,6 @@ int pCTcalib::Wcalib(){
     rngEnrg_unCorr[stage]->GetYaxis()->SetTitle("Range (mm)");      
     rngEnrg_unCorr[stage]->Write("", TObject::kOverwrite);
   }
-  // Correction of the range-energy curve starts here
-  cout << "Wcalib: interpolation parameters:" << endl;
-  cout << "        k1 is for extrapolating below the threshold" << endl;
-  cout << "        j1 through j4 are for interpolating through a kink region (if there is one)" << endl;
-  cout << "        i1 and i2 are for interpolating between stages or, for the "
-          "last stage, extrapolating to negative WET" << endl;
-  cout << "        These parameters can be set by comments in the WEPL calibration file." << endl;
-    
-  for (int stage = 0; stage < nStage; stage++) {
-    cout << "Wcalib: stage " << stage << "; k1=" << k1[stage] << endl;
-    cout << "Wcalib: stage " << stage << "; j1=" << j1[stage] << endl;
-    cout << "Wcalib: stage " << stage << "; j2=" << j2[stage] << endl;
-    cout << "Wcalib: stage " << stage << "; j3=" << j3[stage] << endl;
-    cout << "Wcalib: stage " << stage << "; j4=" << j4[stage] << endl;
-    cout << "Wcalib: stage " << stage << "; i1=" << i1[stage] << endl;
-    cout << "Wcalib: stage " << stage << "; i2=" << i2[stage] << endl;
-  }
-  
-  // Correct stages 1-4 for 1 MeV threshold (no data for E<1MeV, use first
-  // non-zero bin)
-  for (int stage = 1; stage < nStage; stage++) {
-    for (int k = 0; k < k1[stage]; k++) {
-      Rst[stage][k] = Rst[stage][k1[stage]];
-    }
-  }
-
   /// Lennart Volz, November 2018
   /// dE-E parameter evaluation:
   int Estep[3] = { 240, 120, 12 }; // work in the same way for helium and proton, but could also be set manually for optimization
@@ -603,98 +555,35 @@ int pCTcalib::Wcalib(){
 //////////////////////////////////////////////////////////////////////
 void pCTcalib::writeCalibfile() {
 
-  ////////////////////////////////////////////////////////////////
-  // TV Calibration
-  ////////////////////////////////////////////////////////////////
+  // Dump all relevant info in the header
   pCTcalibRootFile->cd();
   TTree* header = new TTree("header","meta-data");
   header->Branch("particle",&config.item_str["partType"]);
   header->Branch("minDate",&config.item_str["minDate"]);
   header->Branch("maxDate",&config.item_str["maxDate"]);
-  header->Branch("outputDir",&config.item_str["outputDir"]);
   header->Branch("minrun",&config.item_int["minrun"], "minrun/I");
   header->Branch("maxrun",&config.item_int["maxrun"], "maxrun/I" );
+  header->Branch("outputDir",&config.item_str["outputDir"]);
   for(int i=0; i<=5; i++) header->Branch(Form("calFileName_%d",i),&calFileNames[i]);
   for (int stage = 0; stage < nStage; ++stage) header->Branch(Form("peds_%d",stage),&theEvtRecon->Peds[stage]);
   for (int stage = 0; stage < nStage; ++stage) header->Branch(Form("Est_%d",stage),&Est[stage]);
   header->Branch("Esum",&EnS, "Esum/F");
+  header->Branch("EnergyBinWidth",&EnergyBinWidth, "EnergyBinWidth/F");
+  header->Branch("RangeBinWidth",&RangeBinWidth, "RangeBinWidth/F");
+  header->Branch("Year",&now->tm_year + 1900, "Year/I");
+  header->Branch("Month",&now->tm_mon + 1, "Month/I");
+  header->Branch("Day",&now->tm_mday , "Day/I");
+  header->Branch("Hour",&now->tm_hour , "Hour/I");
+  header->Branch("Min",&now->tm_min , "Min/I");
+  for (int stage = 0; stage < nStage; ++stage) header->Branch(Form("thr_%d",stage),&config.item_float[Form("thr%d",stage)]);
+  for (int stage = 0; stage < nStage; ++stage){
+    for (int i= 0;  i < 3; ++i) header->Branch(Form("dEElow_Stage%d_%d",stage,i),&dEElow[stage][i]);
+    for (int i= 0;  i < 3; ++i) header->Branch(Form("dEEhigh_Stage%d_%d",stage,i),&dEEhigh[stage][i]);
+  }  
   header->Fill();
   header->Write("", TObject::kOverwrite);
-
-  ////////////////////////////////////////////////////////////////
-  // W Calibration
-  ////////////////////////////////////////////////////////////////
-  /// Write the Rst0 through Rst4 range vs energy tables to the calibration text file
-  string Wfilename = config.item_str["outputDir"] + "/" + config.item_str["Wcalib"];
-  cout << "Opening output calibration file: " << Wfilename << endl;
-  ofstream Wcalfile;
-  Wcalfile.open(Wfilename, ios::out | ios::trunc); // text file R vs E tables
-  if (!Wcalfile.is_open()) {
-    cout << "Error opening W correction output file " << Wfilename << endl;
-    cout << "Trying to open " << config.item_str["Wcalib"] << " instead. . ." << endl;
-    Wcalfile.open(config.item_str["Wcalib"], ios::out | ios::trunc);
-    if (Wcalfile.is_open())
-      cout << "Successful file open!" << endl;
-    else {
-      cout << "Rats!  That didn't work either." << endl;
-      exit(1);
-    }
-  }
-  
-  for (int i = 0; i < nEnrg / 10; ++i) {
-    for (int k = 0; k < 10; ++k) Wcalfile << Rst[0][k + i * 10] << " ";
-    Wcalfile << endl;
-  }
-  for (int i = 0; i < nEnrg / 10; ++i) {
-    for (int k = 0; k < 10; ++k) Wcalfile << Rst[1][k + i * 10] << " ";
-    Wcalfile << endl;
-  }
-  for (int i = 0; i < nEnrg / 10; ++i) {
-    for (int k = 0; k < 10; ++k) Wcalfile << Rst[2][k + i * 10] << " ";
-    Wcalfile << endl;
-  }
-  for (int i = 0; i < nEnrg / 10; ++i) {
-    for (int k = 0; k < 10; ++k) Wcalfile << Rst[3][k + i * 10] << " ";
-    Wcalfile << endl;
-  }
-  for (int i = 0; i < nEnrg / 10; ++i) {
-    for (int k = 0; k < 10; ++k) Wcalfile << Rst[4][k + i * 10] << " ";
-    Wcalfile << endl;
-  }
-  
-  Wcalfile << endl;
-  Wcalfile << "# particle = " << config.item_str["partType"] << endl;
-  Wcalfile << "# EnergyBinWidth = " << EnergyBinWidth << endl;
-  Wcalfile << "# RangeBinWidth = " << RangeBinWidth << endl;
-  Wcalfile << "# Valid date and run ranges for this calibration:" << endl;
-  Wcalfile << "# minDate = " << config.item_str["mindate"] << endl;
-  Wcalfile << "# maxDate = " << config.item_str["maxdate"] << endl;
-  Wcalfile << "# minRun = " << config.item_int["minrun"] << endl;
-  Wcalfile << "# maxRun = " << config.item_int["maxrun"] << endl;
-  Wcalfile << "# Date and time of calibration run: " << now->tm_year + 1900 << "-" << now->tm_mon + 1 << "-"
-	   << now->tm_mday << "    " << now->tm_hour << ":" << now->tm_min << endl;
-  Wcalfile << "# File used for empty run for calibrating TV corrections was " << calFileNames[0] << endl;
-  Wcalfile << "# The file to where the TV corrections were written was " << config.item_str["outputDir"] + "/TVcorr.txt" << endl;
-  Wcalfile << "# File used for calibration with wedge and 0 bricks was " << calFileNames[1] << endl;
-  Wcalfile << "# File used for calibration with wedge and 1 brick  was " << calFileNames[2] << endl;
-  Wcalfile << "# File used for calibration with wedge and 2 bricks was " << calFileNames[3] << endl;
-  Wcalfile << "# File used for calibration with wedge and 3 bricks was " << calFileNames[4] << endl;
-  Wcalfile << "# File used for calibration with wedge and 4 bricks was " << calFileNames[5] << endl;
-  Wcalfile << "# Threshold0 = " << config.item_float["thr0"] << endl;
-  Wcalfile << "# Threshold1 = " << config.item_float["thr1"] << endl;
-  Wcalfile << "# Threshold2 = " << config.item_float["thr2"] << endl;
-  Wcalfile << "# Threshold3 = " << config.item_float["thr3"] << endl;
-  Wcalfile << "# Threshold4 = " << config.item_float["thr4"] << endl;
-  for (int stage = 1; stage < 5; stage++) {
-    Wcalfile << "# dEE" + to_string(stage) + " = ";
-    for (int i = 0; i < 3; i++)
-      Wcalfile << dEElow[stage][i] << ",";
-    for (int i = 0; i < 3; i++)
-      Wcalfile << dEEhigh[stage][i] << ",";
-    Wcalfile << endl;
-  }
-  Wcalfile.close();
 };
+
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 void pCTcalib::procWEPLcal(Histogram2D *REhist[nStage],TH2D* REhist_root[nStage], TH2D* dEEhist[nStage]) {
@@ -713,7 +602,7 @@ void pCTcalib::procWEPLcal(Histogram2D *REhist[nStage],TH2D* REhist_root[nStage]
   for (int stage = 0; stage < nStage; stage++){
     pedMin[stage] = config.item_int[Form("pedrng%d",stage)];
   }
-  pedGainCalib* theCalibration = new pedGainCalib(pCTcalibRootFile, pedMin, pedestals,-150., -151., wedgeLimit, wedgeLimit + openRange, config.item_str["partType"]);
+  pedGainCalib* theCalibration = new pedGainCalib(pCTcalibRootFile, pedMin, pedestals,-150., -151., wedgeLimit, wedgeLimit + openRange, config);
   //theCalibration->ClearHist();
   theEvtRecon->ReadInputFile(theGeometry, theTVcorr, config.item_str["inputFileName"], theCalibration);
 

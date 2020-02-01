@@ -216,13 +216,6 @@ int main(int argc, char *argv[]) {
     .show_default();
   cfg.addItem('j', "n_plot", n_plot);
 
-  int analysisLevel = 2;
-  parser.add_opt('l', "level")
-    .stow(analysisLevel)
-    .help("0= monitor raw data only, 1= monitor raw and WEPL, 2= output ","INT")
-    .show_default();
-  cfg.addItem('l', "level", analysisLevel);
-
   string logFile = "";
   parser.add_opt('g', "log")
       .stow(logFile)

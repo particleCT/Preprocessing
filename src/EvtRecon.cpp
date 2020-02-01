@@ -95,7 +95,7 @@ void EvtRecon::ReadInputFile(pCTgeo* Geometry, TVcorrection *const TVcorr , stri
   } // End of the loop over events
 
   cuts.summary(); // Summarize the event counts
-  Calibrate->GetPeds(inputFileName.c_str());
+  Calibrate->GetPeds();
   
   for (int stage = 0; stage < 5; stage++) Peds[stage] = Calibrate->Ped[stage];  
   if (config.item_int["doGains"]) {
@@ -133,7 +133,7 @@ void EvtRecon::ReadInputFile(pCTgeo* Geometry, TVcorrection *const TVcorr , stri
     } // end of the event loop
 
     if (config.item_int["recalibrate"]) {
-      Calibrate->GetGains(TVcorr, inputFileName.c_str());
+      Calibrate->GetGains(TVcorr);
 
       cout << "EvtRecon nBricks=" << config.item_int["Nbricks"] << ": Gain correction factors: ";
       for (int stage = 0; stage < 5; stage++) {
