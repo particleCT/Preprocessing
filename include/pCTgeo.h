@@ -193,7 +193,7 @@ public:
     // Geometry for the wedge phantom, all in mm (INCLUDING 0.1MM SHIFT AND  0.1MM SLIT between wedges):
     TwedgeBreaks[0] = -104.50 + tWedgeOffset; // Start of the wedge slope
     TwedgeBreaks[1] = -4.75   + tWedgeOffset;   // End of the slope, start of the flat
-    TwedgeBreaks[2] =  4.75   + tWedgeOffset;    // End of the slope, start of the opposite slope
+    TwedgeBreaks[2] =  4.75   + tWedgeOffset;    // End of the flat, start of the opposite slope
     TwedgeBreaks[3] =  104.50 + tWedgeOffset;  // End of the opposite slope.
     // Should also be the end of the bricks, if positioned correctly
 

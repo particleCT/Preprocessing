@@ -85,8 +85,6 @@ pCTcalib::pCTcalib(pCTconfig cfg, string inputFileName): config(cfg)
   theCuts        = new pCTcut(config);
   theTVcorr      = new TVcorrection(pCTcalibRootFile, 1);
   theEvtRecon    = new EvtRecon(config);
-
-
 }
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -149,9 +147,7 @@ int pCTcalib::TVmapper() {
       // Outside of the detector
       if (fabs(Tcorr) > 189.0) continue;
       if (fabs(Vcorr) > 49.0)  continue;
-
       int global = theTVcorr->TVcorrHist[0]->FindBin(Tcorr,Vcorr);
-      
       pxHistADC[stage][global]->Fill(thisEvent.ADC[stage] - theEvtRecon->Peds[stage]);
     }
   }
@@ -173,10 +169,8 @@ int pCTcalib::TVmapper() {
       float xLow, xHigh;
       float xpeak, xmax, max;
       if(pxHistADC[stage][pix]->GetEntries()>10){
-	int imax;
-	imax  =  pxHistADC[stage][pix]->GetMaximumBin();
 	max   =  pxHistADC[stage][pix]->GetMaximum();
-	xmax  =  pxHistADC[stage][pix]->GetBinCenter(imax); 
+	xmax  =  pxHistADC[stage][pix]->GetBinCenter(pxHistADC[stage][pix]->GetMaximumBin()); 
 	TF1 *f1 = new TF1("f1", "gaus", xmax-100, xmax+100);
 	f1->SetParameter(0, max);
 	f1->SetParameter(1, xmax);
@@ -229,7 +223,6 @@ void pCTcalib::enrgDep() { // Calculate energy depositions in each stage and the
       else pxHistE[stage][iPix] = new TH1D(Title.c_str(), Title.c_str(), 200, 60., 60 +200*1.4);
     }
   }
-  
   float mxEstage, mnEstage;
   if (config.item_str["partType"] == "H") { mnEstage = 15.; mxEstage = 100.; }
   else { mnEstage = 60.; mxEstage = 400.; }
@@ -310,7 +303,6 @@ void pCTcalib::enrgDep() { // Calculate energy depositions in each stage and the
   delete EsumH;
   cout << "pCTcalib::enrgDep,  Done with the TV calibration task" << endl;
 }
-
 //////////////////////////////////////////////////////////////////////
 // Wcalib function
 //////////////////////////////////////////////////////////////////////
@@ -366,25 +358,21 @@ int pCTcalib::Wcalib(){
       dEEhist[0][stage]->Add(dEEhist[nBricks][stage]);
       REhist[0][stage]->Add(REhist[nBricks][stage]);
     }
-
     // Save the added histograms
     pCTcalibRootFile->cd("dEE");
     dEEhist[0][stage]->Write(Form("dEE_Tot_stage%d",stage),TObject::kOverwrite);
     pCTcalibRootFile->cd("REhist");
     REhist[0][stage]->Write(Form("RE_Tot_stage%d",stage),TObject::kOverwrite);
   }
-  // Analyze energy slices of the summed maps, and plot the slices -- Charles
-  //Define a function to find the peaks  
+  // Analyze energy slices of the summed maps, and plot the slices 
   for (int stage = 0; stage < nStage; ++stage) {
     for (int nrg = 0; nrg < nEnrg; nrg++) { 
       float xLow, xHigh, Sadc,xmax, max;
-      int imax;
       TH1D* RESlice =  REhist[0][stage]->ProjectionX("ProjX_Stage",nrg,nrg+1);
       Int_t NEntries= RESlice->GetEntries();
       if(NEntries>10){
-      imax  =  RESlice->GetMaximumBin();
       max   =  RESlice->GetMaximum();
-      xmax  =  RESlice->GetBinCenter(imax);
+      xmax  =  RESlice->GetBinCenter(RESlice->GetMaximumBin());
       TF1 *f1 = new TF1("f1", "gaus", xmax-10, xmax+10);
       f1->SetParameter(0, max);
       f1->SetParameter(1, xmax);
@@ -408,8 +396,6 @@ int pCTcalib::Wcalib(){
       Sst[stage][nrg] = (xHigh - xLow) / 2.2;      
     }
    }
-
-
   // Plot the final calibration results before corrections
   float rngB[nEnrg];
   pCTcalibRootFile->cd();
@@ -432,25 +418,18 @@ int pCTcalib::Wcalib(){
     rngEnrg_unCorr[stage]->GetYaxis()->SetTitle("Range (mm)");      
     rngEnrg_unCorr[stage]->Write("", TObject::kOverwrite);
   }
-  /// Lennart Volz, November 2018
-  /// dE-E parameter evaluation:
+  /// Lennart Volz, November 2018 dE-E parameter evaluation:
   int Estep[3] = { 240, 120, 12 }; // work in the same way for helium and proton, but could also be set manually for optimization
   float E[3] = { Estep[0] * EnergyBinWidth, Estep[1] * EnergyBinWidth, Estep[2] * EnergyBinWidth };
-
-  FILE oFile;
-  string fn;
   for (int stage = 1; stage < 5; stage++) { // stage 
     float xlow[3], xhigh[3], xmax, max;
     for (int j = 0; j < 3; j++) {
       TH1D* dEESlice = dEEhist[0][stage]->ProjectionX(Form("ProjX_Stage%d_Bin%d",stage,Estep[j]),Estep[j],Estep[j]+1);
       // Cheesy fix to the low energy spike 
       int bin_cut = dEESlice->FindBin(110); // MeV
-      dEESlice->GetXaxis()->SetRange(bin_cut,dEESlice->GetNbinsX());
-      
-      int imax;
-      imax  =  dEESlice->GetMaximumBin();
+      dEESlice->GetXaxis()->SetRange(bin_cut,dEESlice->GetNbinsX());      
       max   =  dEESlice->GetMaximum();
-      xmax  =  dEESlice->GetBinCenter(imax);
+      xmax  =  dEESlice->GetBinCenter(dEESlice->GetMaximumBin());
       TF1 *f1 = new TF1("f1", "gaus", xmax-10, xmax+10);
       f1->SetParameter(0, max);
       f1->SetParameter(1, xmax);
@@ -569,19 +548,26 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage]) {
   Title = "nBricks " + to_string((long long int)config.item_int["Nbricks"]) + " calibration phantom thickness";
   TProfile* hLengthProf = new TProfile(Title.c_str(), Title.c_str(), 100, -150, -150 +3.0*100);
 
-  // Wedge phantom geometry and locations,
+  float cut0, cut1, cut3; // energy cuts to reject events incompatible with expected Bragg peak.
+  if (config.item_str["partType"] == "He"){ cut0 = 60.; cut1 = 80.; cut3 = 300;}
+  else{  cut0 = 15.; cut1 = 20.; cut3 = 100.;}
+  
+  // Wedge phantom geometry and locations in the T axis,
   double Tw1 = theGeometry->getTWedgeBreaks(1);
   double Tw2 = theGeometry->getTWedgeBreaks(2);
   double Tw3 = theGeometry->getTWedgeBreaks(3);
   double Tw4 = theGeometry->getTWedgeBreaks(4);
-  double tBrickEnd = theGeometry->getTWedgeBreaks(4);
-  double BrickThickness = theGeometry->getBrickThickness(); // Brick thickness; also the wedge thickness
+  double tBrickEnd = theGeometry->getTWedgeBreaks(4) + 25.0; // Bricks shifted
 
+  // Define the U Position of the bricks now
+  double BrickThickness = theGeometry->getBrickThickness(); // Brick thickness; also the wedge thickness
   double Ust[2]; // Polystyrene wedge phantom U coordinates, front and back
-  Ust[0] = -2.5 * BrickThickness;
+  Ust[0] = -2.5 * BrickThickness; // centered around the middle of the bricks, 4 bricks + 1 wedge
   Ust[1] = Ust[0] + BrickThickness;
   double Wbricks = BrickThickness * config.item_int["Nbricks"];
   double Uout = Ust[1] + Wbricks; // U coordinate of the last brick, downstream side
+
+
   cout << "procWEPLcal: The wedge phantom goes from u=" << Ust[0] << " to u=" << Ust[1] << endl;
   cout << "procWEPLcal: The " << config.item_int["Nbricks"] << " bricks go from u=" << Ust[1] << " to u=" << Uout << endl;
   cout << "procWEPLcal: Stage thresholds are " << config.item_float["thr0"] << " " << config.item_float["thr1"] << " " << config.item_float["thr2"] << " "
@@ -589,21 +575,19 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage]) {
   cout << "procWEPLcal: The wedge phantom break points are, in mm: " << Tw1 << ", " << Tw2 << ", " << Tw3 << ", " << Tw4 << endl;
   cout << "procWEPLcal: The calibration brick thickness is " << BrickThickness << " mm " << endl;
 
-  float cut0, cut1, cut3; // energy cuts to reject events incompatible with expected Bragg peak.
-  if (config.item_str["partType"] == "He"){ cut0 = 60.; cut1 = 80.; cut3 = 300;}
-  else{  cut0 = 15.; cut1 = 20.; cut3 = 100.;}
 
-  double maxV     = 45.;    // limit of range in V for calibration
-  double maxT     = 170.;   // limit of range in T for calibration
-  double deltaInt = 20.;    // intercept and slope to calculate maximum difference in V or T vs stage number
+  double maxV       = 45.;    // limit of range in V for calibration
+  double maxT       = 170.;   // limit of range in T for calibration
+  double deltaInt   = 20.;    // intercept and slope to calculate maximum difference in V or T vs stage number
   double deltaSlope = 30.;
-  //double brickC     = 6.5;  // Distance in t from wedge for center of range to take protons through bricks only
   float mxEstage;
 
   if (config.item_str["partType"] == "He") mxEstage = 400.;
   else  mxEstage = 100.;
   double diff = 0;
   int N = 0;
+  
+  // Start of the event loop
   for (int EvtNum = 0; EvtNum < theEvtRecon->nEvents; ++EvtNum) {
     Event thisEvent;
     thisEvent = theEvtRecon->evtList[EvtNum];
@@ -631,22 +615,15 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage]) {
       if (abs(Vcorr) > 40.0 || abs(Tcorr) > 160.0) { // To avoid protons that scatter out of the device
         good = false;
         break;
-      } 
+      }
       eTot += eStage[stage];
     }
     if (!good) continue;
-    // Skip events not compatible with parameterized energy deposit
-    // (Lennart Volz, December 2017)
-    // bool dropEvt = pCTcut->EnrgCut(eStage, eTot, cut0, cut1,cut3);
-    // ENERGY CUTS FOR REMOVING EVENT PILE-UP AND BAD EVENTS
-    // if (dropEvt) continue;
-
     // calculate geometric WET "wt0" for the wedge phantom using tracker info.
-    double Uin  = Ust[0];
-    
+
     // First estimate of the u coordinate at entry into the phantom wedge
-    double Tin  = theGeometry->extrap2D(Uft, Tf, Uin);
-    double Vin  = theGeometry->extrap2D(Ufv, Vf, Uin);
+    double Tin  = theGeometry->extrap2D(Uft, Tf, Ust[0]);
+    double Vin  = theGeometry->extrap2D(Ufv, Vf, Ust[0]);
 
     // First brick past the wedge
     double TinB = theGeometry->extrap2D(Uft, Tf, Ust[1]); 
@@ -658,92 +635,71 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage]) {
     double Tout = theGeometry->extrap2D(Ut, T, Uout); 
     double Vout = theGeometry->extrap2D(Uv, V, Uout);
     if (fabs(Vout) > maxV || fabs(Tout) > maxT) continue;  // if track is outside of detector in T/V- skip it
-        
+
+    double Uin  = Ust[0];
     bool emptyEvt = false;
-    int cs = 0;
-    
-    if ((Tin > Tw2 && Tin < Tw3) || (TinB < Tw1) || (TinB > Tw4))
-      {// ONLY WEDGE SLOPE TO BE USED EVERYTHING ELSE CREATES ISSUES!
-	if(Tin < Tw3) continue; // left to the wedge
-	if (TinB > tBrickEnd) emptyEvt = true;	// empty event
-	cs = 1;
-	continue;
-      }
-    
-    else if (TinB >= Tw1 && Tin <= Tw2) { // in the -t wedge of the phantom; Uin
-                                          // and Tin get overwritten here
-      if (getLineIntersection(theEvtRecon->uhitT[0], thisEvent.Thit[0], theEvtRecon->uhitT[1], thisEvent.Thit[1],
-                              Uin + BrickThickness, Tw1, Uin, Tw2, Uin, Tin)) {
-        Vin = theGeometry->extrap2D(Ufv, Vf, Uin);
-        cs = 4;
-      } else
-        continue;
-    } else if (Tin >= Tw3 && TinB <= Tw4) { //&& Tout<tBrickEnd) {    // in the +t wedge of
-      // the phantom; Uin and Tin get overwritten here
-      // ALSO EXCLUDE PARTICLES THAT LEFT THE BRICKS
-      if (getLineIntersection(theEvtRecon->uhitT[0], thisEvent.Thit[0], theEvtRecon->uhitT[1], thisEvent.Thit[1], Uin, Tw3,
-                              Uin + BrickThickness, Tw4, Uin, Tin)) {
-        Vin = theGeometry->extrap2D(Ufv, Vf, Uin);
-        // if (config.item_int["Nbricks"] == 0 || (Tw4-TinB)>0.0) {  // stay away from the
-        // large discontinuity at edges of bricks??
-        cs = 5;
-        //} else continue;
-      } else
-        continue;
-    } else {
-      cs = 2;
-      continue;
+    // Before the negative slope
+    if(TinB < Tw1) continue;
+
+    // Negative Slope
+    else if (TinB >= Tw1 && Tin <= Tw2) { 
+      if(!getLineIntersection(theEvtRecon->uhitT[0], thisEvent.Thit[0], theEvtRecon->uhitT[1], thisEvent.Thit[1],
+                              Uin + BrickThickness, Tw1, Uin, Tw2, Uin, Tin)) continue;
     }
-    // calculate polystyrene thickness
+    // Flat part of the wedge
+    else if(Tin > Tw2 && Tin < Tw3) continue;
+    
+    // Positive Slope
+    else if (Tin >= Tw3 && TinB <= Tw4) {  // Verify the particle hasn't weirdly scattered
+      if (!getLineIntersection(theEvtRecon->uhitT[0], thisEvent.Thit[0], theEvtRecon->uhitT[1], thisEvent.Thit[1],
+			      Uin, Tw3 ,Uin + BrickThickness, Tw4, Uin, Tin)) continue;
+    }
+    // Past the positive slope 
+    else if(TinB > Tw4){
+      Uin = Ust[1];
+      Tin = TinB;
+    }
+
+    // Past the end of the brick
+    else if(TinB > tBrickEnd) emptyEvt = true;   // Empty event
+    else continue;
+    
     double Length;
     if (emptyEvt) {
-      Length = 0.0;
+      Length = 0;
       hTotEcorr->Fill(eTot);
       for (int stage = 0; stage < nStage; ++stage){
 	hStgEcorr[stage]->Fill(eStage[stage]);
       }
+      continue;
     }
     else {
       Vin = theGeometry->extrap2D(Ufv, Vf, Uin);
-      // if (fabs(Vin-Vout) > deltaInt +
-      // deltaSlope*sqrt(float(config.item_int["Nbricks"]))) continue;   // Too much scatter;
-      // skip the event //NO SCATTERING FILTER NEEDED
       Length = sqrt( pow((Tin - Tout),2) + pow((Vin - Vout),2) + pow((Uin - Uout),2) ); // Length  crossed (converted to WET in Wepl.h)
     }
     hLengthProf->Fill(TinB,Length);
     // For each stage where the proton stops, increment the corresponding range-energy table cell content.
     // Energy cuts are now performed in seperate funcion (Last modified: Lenny, December 2017)
-    
     if (eStage[4] > config.item_float["thr4"]) { // Particles end in stage 4
-      if (cs > 3) {
 	REhist[4]->Fill(Length, eStage[4]);
 	dEEhist[4]->Fill(eStage[3], eStage[4]);
-      }
     }
     
     else if (eStage[3] > config.item_float["thr3"]) { // Particles end in stage 3
-      if (cs > 3) {
 	REhist[3]->Fill(Length, eStage[3]);
 	dEEhist[3]->Fill(eStage[2], eStage[3]);
-      }
     }
 
     else if (eStage[2] > config.item_float["thr2"] ) { // Particles end in stage 2
-      if (cs > 3) {
 	REhist[2]->Fill(Length, eStage[2]);
 	dEEhist[2]->Fill(eStage[1], eStage[2]);
-      }
     }
     else if (eStage[1] > config.item_float["thr1"]) { // Particles end in stage 1
-      if (cs > 3) {
 	REhist[1]->Fill(Length, eStage[1]);
 	dEEhist[1]->Fill(eStage[0], eStage[1]);
-      }
     }
     else if (eStage[0] > config.item_float["thr0"]) { // Particles end in stage 0
-	if (cs > 3){
 	  REhist[0]->Fill(Length, eStage[0]);
-	}
     }
   } // End of the event loop
 
@@ -766,19 +722,18 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage]) {
 //////////////////////////////////////////////////////////////////////
 // 2D equation to find line intersection
 //////////////////////////////////////////////////////////////////////
-bool pCTcalib::getLineIntersection(double p0u, double p0t,                   // Two points on the first line
-                         double p1u, double p1t, double p2u, double p2t,     // Two points on the second line
-                         double p3u, double p3t, double &ipu, double &ipt) { // Return the intersection point
-  if (p0u == p1u || p2u == p3u)
-    return false;
+bool pCTcalib::getLineIntersection(double p0u, double p0t, double p1u, double p1t,  // Two points on the first line
+				   double p2u, double p2t, double p3u, double p3t,  // Two points on the second line
+				   double &ipu, double &ipt) { // Return the intersection point
+  if (p0u == p1u || p2u == p3u) return false;
+    
   double slope1 = (p1t - p0t) / (p1u - p0u); // Slope of the first line
   double slope2 = (p3t - p2t) / (p3u - p2u); // Slope of the second line
-  if (slope1 == slope2)
-    return false;                   // There is no intersection
+  if (slope1 == slope2) return false;                   // There is no intersection
   double int1 = p0t - slope1 * p0u; // Intercept of the first line
   double int2 = p2t - slope2 * p2u; // Intercept of the second line
-
-  ipu = (int1 - int2) / (slope2 - slope1);
-  ipt = (slope2 * int1 - slope1 * int2) / (slope2 - slope1);
+  
+  ipu = (int1 - int2) / (slope2 - slope1); // intersection point U
+  ipt = (slope2 * int1 - slope1 * int2) / (slope2 - slope1); // Intersection Point T
   return true;
 }
