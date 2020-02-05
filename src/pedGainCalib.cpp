@@ -6,7 +6,18 @@
 #include "TFile.h"
 pedGainCalib::~pedGainCalib()
 {
+  // Delete all histograms to avoid memory leak
+  for (int i =0; i<5; i++){
+    delete gROOT->FindObject(Form("PedestalStage_%i",i));
+    delete gROOT->FindObject(Form("FullADCStage_Unfiltered_%i",i));
+    delete gROOT->FindObject(Form("FullADCStage_Filtered_%i",i));
+    delete gROOT->FindObject(Form("EnergyDistribution_%i",i));
+  }
+  delete gROOT->FindObject("Stage0EnergyProfile");
+  delete gROOT->FindObject("T_Ions_GainRecalib");
+  delete gROOT->FindObject("SumStageEnergies");
 }
+
 pedGainCalib::pedGainCalib(TFile* root, int pedMin[5], float oldPed[5], float t1, float t2, float t3, float t4, pCTconfig cfg):RootFile(root), config(cfg)
 {  
   // Two ranges in t occupied by unobstructed (empty) protons
@@ -19,7 +30,6 @@ pedGainCalib::pedGainCalib(TFile* root, int pedMin[5], float oldPed[5], float t1
     GainFac[stage] = 1.0;
     cout << "pedGainCalib setting the default pedestal for stage " << stage << " to " << Ped[stage] << endl;
   }
-
   // Define histograms for pedestal calculation
   for (int i =0; i<5; i++) hPed[i] = new TH1D(Form("PedestalStage_%i",i), Form("Pedestal region for stage %i",i), 400, pedMin[i], pedMin[i] +400*5);
   for (int i =0; i<5; i++) hTotFil[i] = new TH1D(Form("FullADCStage_Filtered_%i",i), Form("Full ADC for stage %i",i), 400, pedMin[i], pedMin[i] +400*50);

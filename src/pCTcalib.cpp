@@ -108,6 +108,7 @@ int pCTcalib::TVmapper() {
   for (int stage = 0; stage < nStage; stage++){
     pedMin[stage] = config.item_int[Form("pedrng%d",stage)];
   }
+  config.item_str["inputFileName"] = calFileNames[0];
   pedGainCalib* theCalibration = new pedGainCalib(pCTcalibRootFile, pedMin, pedestals,-150., -151., wedgeLimit, wedgeLimit + openRange, config);  
   theEvtRecon->ReadInputFile(theGeometry, theTVcorr, calFileNames[0], theCalibration); // Pedestal are determined here
 
@@ -124,11 +125,11 @@ int pCTcalib::TVmapper() {
   for (int Stage = 0; Stage < nStage; Stage++) {
     for (int pix = 0; pix < nPixRoot ; pix++) { // 480 with the underflow overflow 
       string Title = "Stage " + to_string((long long int)Stage) + ", Pixel " + to_string((long long int)pix);
-      if(config.item_str["partType"] == "H") pxHistADC_root[Stage][pix] = new TH1D(Title.c_str(), Title.c_str(), 2000, bin0[Stage], bin0[Stage] +4.*2000);
-      else pxHistADC_root[Stage][pix] = new TH1D(Title.c_str(), Title.c_str(), 2000, bin0[Stage], bin0[Stage] +8.*2000);
+      if(config.item_str["partType"] == "H") pxHistADC[Stage][pix] = new TH1D(Title.c_str(), Title.c_str(), 2000, bin0[Stage], bin0[Stage] +4.*2000);
+      else pxHistADC[Stage][pix] = new TH1D(Title.c_str(), Title.c_str(), 2000, bin0[Stage], bin0[Stage] +8.*2000);
     }
   }
-  TH2D* hTVmap_root = new TH2D("Profile of tracks at energy detector","",150, -150, 150 , 80, -40, 40);
+  TH2D* hTVmap = new TH2D("Profile of tracks at energy detector","",150, -150, 150 , 80, -40, 40);
   cout << "TVmapper: starting event loop" << endl;
   for (int EvtNum = 0; EvtNum < theEvtRecon->nEvents; EvtNum++) {
     Event thisEvent;
@@ -140,7 +141,7 @@ int pCTcalib::TVmapper() {
       cout << "  Processing event " << EvtNum << endl;
       theEvtRecon->dumpEvt(thisEvent);
     }
-    hTVmap_root->Fill(T[1], V[1]);
+    hTVmap->Fill(T[1], V[1]);
     for (int stage = 0; stage < nStage; stage++) {
       // Extrapolate the rear track vector to the energy detector stage
       double Tcorr = theGeometry->extrap2D(Ut, T, theGeometry->energyDetectorU(stage));
@@ -151,13 +152,13 @@ int pCTcalib::TVmapper() {
 
       int global = theTVcorr->TVcorrHist[0]->FindBin(Tcorr,Vcorr);
       
-      pxHistADC_root[stage][global]->Fill(thisEvent.ADC[stage] - theEvtRecon->Peds[stage]);
+      pxHistADC[stage][global]->Fill(thisEvent.ADC[stage] - theEvtRecon->Peds[stage]);
     }
   }
   pCTcalibRootFile->cd("");
   pCTcalibRootFile->mkdir("tracksProfile");
   pCTcalibRootFile->cd("tracksProfile");
-  hTVmap_root->Write("");
+  hTVmap->Write("");
   
   // Save plots of the histograms
   pCTcalibRootFile->mkdir("ADC_Stage");
@@ -168,18 +169,18 @@ int pCTcalib::TVmapper() {
   for (int pix = 0; pix < nPixRoot; pix++) {
     cout << "TVmapper pixel stage ADC values:  " << pix;
     for (int stage = 0; stage < nStage; stage++) {
-      pxHistADC_root[stage][pix]->Write("");
+      pxHistADC[stage][pix]->Write("");
       float xLow, xHigh;
       float xpeak, xmax, max;
-      if(pxHistADC_root[stage][pix]->GetEntries()>10){
+      if(pxHistADC[stage][pix]->GetEntries()>10){
 	int imax;
-	imax  =  pxHistADC_root[stage][pix]->GetMaximumBin();
-	max   =  pxHistADC_root[stage][pix]->GetMaximum();
-	xmax  =  pxHistADC_root[stage][pix]->GetBinCenter(imax); 
+	imax  =  pxHistADC[stage][pix]->GetMaximumBin();
+	max   =  pxHistADC[stage][pix]->GetMaximum();
+	xmax  =  pxHistADC[stage][pix]->GetBinCenter(imax); 
 	TF1 *f1 = new TF1("f1", "gaus", xmax-100, xmax+100);
 	f1->SetParameter(0, max);
 	f1->SetParameter(1, xmax);
-	Int_t fitStatus = pxHistADC_root[stage][pix]->Fit(f1,"QR"); // Q means quiet, R is 
+	Int_t fitStatus = pxHistADC[stage][pix]->Fit(f1,"QR"); // Q means quiet, R is 
 	if(fitStatus==0) // Everything passed
 	  {
 	    xpeak  = f1->GetParameter(1);// mean
@@ -191,7 +192,7 @@ int pCTcalib::TVmapper() {
       }
       else theTVcorr->TVcorrHist[stage]->SetBinContent(pix, 0.999);
       cout << " stg" << stage << "=       "<< theTVcorr->TVcorrHist[stage]->GetBinContent(pix);
-      delete pxHistADC_root[stage][pix]; // Free up the memory that was sucked up by the pixel histograms
+      delete pxHistADC[stage][pix]; // Free up the memory that was sucked up by the pixel histograms
    }
    cout << endl;
   }
@@ -201,8 +202,7 @@ int pCTcalib::TVmapper() {
   pCTcalibRootFile->cd("TVcorrProfile");  
   for(int stage =0; stage<nStage; stage++) theTVcorr->TVcorrHist[stage]->Write("", TObject::kOverwrite);
   cout << "TVmapper: Finished with mapping the TV calibration" << endl;
-
-  delete (theCalibration);
+  delete theCalibration;
   return 0;
 }
 //////////////////////////////////////////////////////////////////////
@@ -211,41 +211,29 @@ void pCTcalib::enrgDep() { // Calculate energy depositions in each stage and the
   // Create Histogram  for each stage
   for (int stage = 0; stage < nStage; ++stage) {
     string Title = "pCTcalib::enrgDep Energy of stage " + to_string((long long int)stage);
-    if (config.item_str["partType"] == "H"){
-      stgHistE_root[stage]  = new TH1D(Title.c_str(), Title.c_str(),  400, 15, 15 + 400*0.175); 
-      stgHistE[stage]       = new Histogram(400, 15., 0.175, Title, "E (MeV)", "protons");
-    }
-    else{
-      stgHistE_root[stage]  = new TH1D(Title.c_str(), Title.c_str(),  400, 15, 15 + 400*0.9); 
-      stgHistE[stage]       = new Histogram(400, 15., 0.9, Title, "E (MeV)", "He ions");
-    }
+    if (config.item_str["partType"] == "H") stgHistE[stage]  = new TH1D(Title.c_str(), Title.c_str(),  400, 15, 15 + 400*0.175); 
+    else stgHistE[stage]  = new TH1D(Title.c_str(), Title.c_str(),  400, 15, 15 + 400*0.9); 
     Title = "pCTcalib::enrgDep Energy of stage " + to_string((long long int)stage);
     stgE[stage] = new TProfile2D(Form("Profile Energy of stage %d",stage), "", 100, -150, -150+3.0*100, 100, -50., -50 + 1.0*100);
   }
   // Sum of stage energies
   if (config.item_str["partType"] == "H") EsumH = new TH1D("pCTcalib::enrgDep Sum of stage energies","pCTcalib::enrgDep Sum of stage energies", 900, 0, 0.25*900);
   else EsumH = new TH1D("pCTcalib::enrgDep Sum of stage energies", "pCTcalib::enrgDep Sum of stage energies", 900, 0, 1.0*900);
-
+  
   // Create Histogram for each pixel
   for (int iPix = 0; iPix < nPix; iPix++) {
     for (int stage = 0; stage < nStage; ++stage) {
       string Title = "pCTcalib::enrgDep Energy of stage " + to_string((long long int)stage) + " for pixel " +
                      to_string((long long int)iPix);
-      if (config.item_str["partType"] == "H"){
-        pxHistE[stage][iPix] = new Histogram(200, 15., .35, Title, "E (MeV)", "protons");
-	pxHistE_root[stage][iPix] = new TH1D(Title.c_str(), Title.c_str(), 200, 15., 15 +200*0.35);
-      }
-      else{
-        pxHistE[stage][iPix] = new Histogram(200, 60., 1.4, Title, "E (MeV)", "He ions");
-	pxHistE_root[stage][iPix] = new TH1D(Title.c_str(), Title.c_str(), 200, 60., 60 +200*1.4);
-      }
+      if (config.item_str["partType"] == "H") pxHistE[stage][iPix] = new TH1D(Title.c_str(), Title.c_str(), 200, 15., 15 +200*0.35);
+      else pxHistE[stage][iPix] = new TH1D(Title.c_str(), Title.c_str(), 200, 60., 60 +200*1.4);
     }
   }
   
   float mxEstage, mnEstage;
   if (config.item_str["partType"] == "H") { mnEstage = 15.; mxEstage = 100.; }
   else { mnEstage = 60.; mxEstage = 400.; }
-  
+
   for (int EvtNum = 0; EvtNum < theEvtRecon->nEvents; EvtNum++) { // loop over events
     if (EvtNum % 1000000 == 0) cout << "pCTcalib::enrgDep, Processing event " << EvtNum << endl;
     Event thisEvent;
@@ -274,22 +262,18 @@ void pCTcalib::enrgDep() { // Calculate energy depositions in each stage and the
         perror("pCTcalib: invalid pixel");
         iPix = 0;
       }
-      pxHistE[stage][iPix]->entry(Ecorr);
-      pxHistE_root[stage][iPix]->Fill(Ecorr);
-      stgHistE_root[stage]->Fill(Ecorr);
-      stgHistE[stage]->entry(Ecorr);
-      //if (Ecorr > mnEstage && Ecorr < mxEstage) {
-      //if (fabs(Vcorr) < 35.0)  stgEvsT[stage]->Fill(Tcorr, Ecorr);
-      //if (fabs(Tcorr) < 140.0) stgEvsV[stage]->Fill(Vcorr, Ecorr);
+      pxHistE[stage][iPix]->Fill(Ecorr);
+      stgHistE[stage]->Fill(Ecorr);
+      if (Ecorr > mnEstage && Ecorr < mxEstage) {
       if (fabs(Vcorr) < 35.0 && fabs(Tcorr) < 140.0)  stgE[stage]->Fill(Tcorr, Vcorr, Ecorr);
-	//}
+      }
       Esum += Ecorr;
     }
     EsumH->Fill(Esum);
   }
   pCTcalibRootFile->mkdir("EnergyHistogram");  
   pCTcalibRootFile->cd("EnergyHistogram");
-  for(int i =0; i<5; i++) stgHistE_root[i]->Write("", TObject::kOverwrite);
+  for(int i =0; i<5; i++) stgHistE[i]->Write("", TObject::kOverwrite);
   EsumH->Write("TotalEnergy",TObject::kOverwrite);
   pCTcalibRootFile->cd();
 
@@ -299,16 +283,20 @@ void pCTcalib::enrgDep() { // Calculate energy depositions in each stage and the
   pCTcalibRootFile->cd();  
   //
   for (int stage = 0; stage < nStage; ++stage) {
-    float xLow, xHigh, Sadc;
-    /*if(stgHistE_root[stage]->GetEntries()>500){
-      Sadc = stgHistE_root[stage]->GetBinCenter(stgHistE_root[stage]->GetMaximumBin());
-      }*/
-    int ret = stgHistE[stage]->FWHMboundaries(xLow, xHigh);
-    if (ret == 0) Sadc = stgHistE[stage]->mean(xLow, xHigh); 
-    else {
-      Sadc = 0.;
+    float Sadc, xmax, max;
+    if(stgHistE[stage]->GetEntries()>10){
+      max   =  stgHistE[stage]->GetMaximum();
+      xmax  =  stgHistE[stage]->GetBinCenter(stgHistE[stage]->GetMaximumBin());
+      TF1 *f1 = new TF1("f1", "gaus", xmax-100, xmax+100);
+      f1->SetParameter(0, max);
+      f1->SetParameter(1, xmax);
+      Int_t fitStatus = stgHistE[stage]->Fit(f1,"QR"); // Q means quiet, R is    
+      if(fitStatus==0) Sadc = f1->GetParameter(1);// mean // Everything passed
+      else { Sadc = 0.;
       cout << "pCTcalib::enrgDep, no data for stage " << stage << endl;
+      }
     }
+    else Sadc = 0;
     Est[stage] = Sadc;
     theTVcorr->ped[stage]   = theEvtRecon->Peds[stage];
     theTVcorr->Eempt[stage] = Est[stage];
@@ -322,6 +310,7 @@ void pCTcalib::enrgDep() { // Calculate energy depositions in each stage and the
   delete EsumH;
   cout << "pCTcalib::enrgDep,  Done with the TV calibration task" << endl;
 }
+
 //////////////////////////////////////////////////////////////////////
 // Wcalib function
 //////////////////////////////////////////////////////////////////////
@@ -334,8 +323,7 @@ int pCTcalib::Wcalib(){
   }
   for (int nBricks = 0; nBricks < 5; nBricks++) cout << "The raw data file for " << nBricks << " bricks is " << calFileNames[nBricks] << endl;
   TH2D* dEEhist[nStage][5];
-  TH2D* REhist_root[nStage][5];
-  struct { Histogram2D *h[nStage];}  REhist[5];// Range Energy histogram
+  TH2D* REhist[nStage][5];
   for (int nBricks = 0; nBricks < 5; ++nBricks) {
     for (int stage = 0; stage < nStage; ++stage) {
 
@@ -344,28 +332,21 @@ int pCTcalib::Wcalib(){
 					      
       float enrgB0 = 0.; // The analysis of energy slices further down assumes that the first energy bin starts at zero
       string Title = "WEPL calibration array for stage " + to_string((long long int)stage) + " and nBricks=" + to_string((long long int)nBricks);
-      //REhist_root[nBricks][stage] = new TH2D(Form("WEPLcalib_stage%d_bricks%d",stage,nBricks), Form("WEPLcalib_stage%d_bricks%d",stage,nBricks),
-      //nRange, 0, RangeBinWidth*nRange, nEnrg, enrgB0, enrgB0 + nEnrg*EnergyBinWidth);
-      REhist_root[nBricks][stage] = new TH2D(Form("WEPLcalib_stage%d_bricks%d",stage,nBricks), Form("WEPLcalib_stage%d_bricks%d",stage,nBricks),
+      REhist[nBricks][stage] = new TH2D(Form("WEPLcalib_stage%d_bricks%d",stage,nBricks), Form("WEPLcalib_stage%d_bricks%d",stage,nBricks),
 					     nRange, 0, RangeBinWidth*nRange, nEnrg, enrgB0, enrgB0 + nEnrg*EnergyBinWidth);
-      REhist_root[nBricks][stage]->GetXaxis()->SetTitle("Range (mm)");
-      REhist_root[nBricks][stage]->GetYaxis()->SetTitle("Energy (MeV)");      
-
-      if (config.item_str["partType"] == "H") REhist[nBricks].h[stage] = new Histogram2D(nRange, 0., RangeBinWidth, nEnrg, enrgB0, EnergyBinWidth, Title,
-											 "proton range (mm)", "energy (MeV)", "counts");
-      else REhist[nBricks].h[stage] = new Histogram2D(nRange, 0., RangeBinWidth, nEnrg, enrgB0, EnergyBinWidth, Title,
-						      "He range (mm)", "energy (MeV)", "counts");
+      REhist[nBricks][stage]->GetXaxis()->SetTitle("Range (mm)");
+      REhist[nBricks][stage]->GetYaxis()->SetTitle("Energy (MeV)");      
     }
   }
   // Submit the event processing  -- fill the histograms
   for (int nBricks = 1; nBricks < 5; nBricks++) {
     config.item_str["inputFileName"] = calFileNames[nBricks + 1];
     config.item_int["Nbricks"] = nBricks;
-    procWEPLcal(REhist[nBricks].h, REhist_root[nBricks] , dEEhist[nBricks]);
+    procWEPLcal(REhist[nBricks] , dEEhist[nBricks]);
   }
   config.item_str["inputFileName"] = calFileNames[1];
   config.item_int["Nbricks"] = 0;
-  procWEPLcal(REhist[0].h, REhist_root[0], dEEhist[0]);
+  procWEPLcal(REhist[0], dEEhist[0]);
 
   cout << "pCTcalib::Wcalib, begin adding together the range-energy tables from the runs with different numbers of bricks." << endl;
   // Combine the resulting maps into one map for each stage by simply adding them
@@ -377,120 +358,70 @@ int pCTcalib::Wcalib(){
     pCTcalibRootFile->cd("dEE");
     for (int nBricks = 0; nBricks < 5; ++nBricks) dEEhist[nBricks][stage]->Write("",TObject::kOverwrite);
     pCTcalibRootFile->cd("REhist");
-    for (int nBricks = 0; nBricks < 5; ++nBricks) REhist_root[nBricks][stage]->Write("",TObject::kOverwrite);
+    for (int nBricks = 0; nBricks < 5; ++nBricks) REhist[nBricks][stage]->Write("",TObject::kOverwrite);
     
     //Add them up together
     for (int nBricks = 1; nBricks < 5; ++nBricks) {
       string Title = "Summed WEPL calibration array for stage " + to_string((long long int)stage);
-      REhist[0].h[stage]->add(REhist[nBricks].h[stage],Title);
-      delete REhist[nBricks].h[stage];
       dEEhist[0][stage]->Add(dEEhist[nBricks][stage]);
-      REhist_root[0][stage]->Add(REhist_root[nBricks][stage]);
+      REhist[0][stage]->Add(REhist[nBricks][stage]);
     }
 
     // Save the added histograms
     pCTcalibRootFile->cd("dEE");
     dEEhist[0][stage]->Write(Form("dEE_Tot_stage%d",stage),TObject::kOverwrite);
     pCTcalibRootFile->cd("REhist");
-    REhist_root[0][stage]->Write(Form("RE_Tot_stage%d",stage),TObject::kOverwrite);
-  }
-  // Analyze energy slices of the summed maps, and plot the slices -- Roberts
-  for (int stage = 0; stage < nStage; ++stage) {
-    int nrg = 0;
-    for (int hst = 0; hst < nEnrg / 6 + 1; ++hst) { // Group by 6 slices, to plot 6 histograms per page
-      for (int j = 0; j < 6; ++j) {
-        if (nrg >= nEnrg) break;
-	float xLow, xHigh, Sadc;
-	Histogram Slice = REhist[0].h[stage]->rowSlice(nrg);
-	int ret = Slice.FWHMboundaries(xLow, xHigh);
-        if (ret == 0) {
-	Sadc = Slice.mean(xLow, xHigh);
-        }
-	else {
-          if (stage == 4) {
-            if (Slice.imode() == 0)  // max
-              Sadc = 0.; // Up against the wall at zero range
-            else {
-              cout << ret << " Cannot find the FWHM bounds for stage " << stage << ", slice " << nrg << endl;
-              float mode = Slice.mode();
-              Sadc = Slice.mean(mode - 2. * RangeBinWidth, mode + 2 * RangeBinWidth);
-            }
-          }
-	  else {
-            cout << ret << " Cannot find the FWHM bounds for stage " << stage << ", slice " << nrg << endl;
-            float mode = Slice.mode();
-            Sadc = Slice.mean(mode - 2. * RangeBinWidth, mode + 2 * RangeBinWidth);
-          }
-        }
-	// Fit the Range from the adc value
-        Rst[stage][nrg] = Sadc;
-        Sst[stage][nrg] = (xHigh - xLow) / 2.2;
-        nrg++;
-	}
-      }
+    REhist[0][stage]->Write(Form("RE_Tot_stage%d",stage),TObject::kOverwrite);
   }
   // Analyze energy slices of the summed maps, and plot the slices -- Charles
-  //Define a function to find the peaks
-  
-  /*for (int stage = 0; stage < nStage; ++stage) {
+  //Define a function to find the peaks  
+  for (int stage = 0; stage < nStage; ++stage) {
     for (int nrg = 0; nrg < nEnrg; nrg++) { 
-      float xLow, xHigh, Sadc,xpeak;
-      TH1D* RESlice =  REhist_root[0][stage]->ProjectionX("ProjX_Stage",nrg,nrg+1);
+      float xLow, xHigh, Sadc,xmax, max;
+      int imax;
+      TH1D* RESlice =  REhist[0][stage]->ProjectionX("ProjX_Stage",nrg,nrg+1);
       Int_t NEntries= RESlice->GetEntries();
-      xpeak  =  RESlice->GetBinCenter(RESlice->GetMaximumBin()); // cheesy fix because of high level of low energy data
-      xHigh  =  RESlice->GetBinCenter(RESlice->FindLastBinAbove(  RESlice->GetMaximum()/2));
-      xLow   =  xpeak - (xHigh -xpeak);	
-      RESlice->GetXaxis()->SetRange(xLow,xHigh);  
-      Sadc   =  RESlice->GetMean();
-      if(NEntries>1000){
-
-	xpeak  =  RESlice->GetBinCenter(RESlice->GetMaximumBin()); // cheesy fix because of high level of low energy data
-	xHigh  =  RESlice->GetBinCenter(RESlice->FindLastBinAbove(  RESlice->GetMaximum()/2));
-	xLow   =  xpeak - (xHigh -xpeak);	
-	Sadc   =  xpeak;
-
-	TF1 *f1 = new TF1("f1", "gaus", xLow, xHigh);
-	f1->SetParameter(0, xpeak);
-	Int_t fitStatus = RESlice->Fit(f1,"Q"); // Q means quiet
-	if(fitStatus==0) // Everything passed
-	  { 
-	    //TF1* g = RESlice->GetFunction("gaus");
-	    Sadc  = f1->GetParameter(1);// mean
-	    xHigh = Sadc + f1->GetParameter(2); //sigma
-	    xLow  = Sadc - f1->GetParameter(2); //sigma
-	    //delete g;
-	  }
-      }
-
-      else if (NEntries>200){
-	xpeak       =  RESlice->GetBinCenter(RESlice->GetMaximumBin()); // cheesy fix because of high level of low energy data
-	xHigh       =  RESlice->GetBinCenter(RESlice->FindLastBinAbove(  RESlice->GetMaximum()/2));
-	xLow        =  xpeak - (xHigh -xpeak);
-	Sadc        =  xpeak;
+      if(NEntries>10){
+      imax  =  RESlice->GetMaximumBin();
+      max   =  RESlice->GetMaximum();
+      xmax  =  RESlice->GetBinCenter(imax);
+      TF1 *f1 = new TF1("f1", "gaus", xmax-10, xmax+10);
+      f1->SetParameter(0, max);
+      f1->SetParameter(1, xmax);
+      Int_t fitStatus = RESlice->Fit(f1,"QR"); // Q means quiet, R is
+      if(fitStatus==0) // Everything passed
+	{
+	  Sadc      = f1->GetParameter(1);// mean
+	  xHigh     = Sadc + f1->GetParameter(2); //sigma
+	  xLow      = Sadc - f1->GetParameter(2); //sigma
 	}
-
-	//else{Sadc  = 0;	 xLow  = 0;  xHigh = 0;}
+      else if (NEntries>200){
+	Sadc        =  RESlice->GetBinCenter(RESlice->GetMaximumBin()); // cheesy fix because of high level of low energy data
+	xHigh       =  RESlice->GetBinCenter(RESlice->FindLastBinAbove(  RESlice->GetMaximum()/2));
+	xLow        =  Sadc - (xHigh -xmax);
+	}
+      else{Sadc  = 0;	 xLow  = 0;  xHigh = 0;}
+      }
+      else{Sadc  = 0;	 xLow  = 0;  xHigh = 0;}
       delete RESlice;
-      
       Rst[stage][nrg] = Sadc;
-      Sst[stage][nrg] = (xHigh - xLow) / 2.2;
-      
+      Sst[stage][nrg] = (xHigh - xLow) / 2.2;      
     }
-   }*/
+   }
 
 
   // Plot the final calibration results before corrections
   float rngB[nEnrg];
   pCTcalibRootFile->cd();
-  pCTcalibRootFile->mkdir("RangeVsEnergy_Uncorr");
-  pCTcalibRootFile->cd("RangeVsEnergy_Uncorr");
+  pCTcalibRootFile->mkdir("RangeVsEnergy");
+  pCTcalibRootFile->cd("RangeVsEnergy");
   TGraphErrors* rngEnrg_unCorr[nStage];
   
   for (int stage = 0; stage < nStage; ++stage) {
     string Title = "Range vs Energy Uncorrected for Stage " + to_string((long long int)stage);
     rngEnrg_unCorr[stage] = new TGraphErrors(nEnrg);
     rngEnrg_unCorr[stage]->SetTitle(Title.c_str());
-    rngEnrg_unCorr[stage]->SetName(Form("RangeVsEnergy_Uncorr_%d",stage));
+    rngEnrg_unCorr[stage]->SetName(Form("RangeVsEnergy_%d",stage));
 
     for (int nrg = 0; nrg < nEnrg; ++nrg){
       rngB[nrg] = float(nrg) * EnergyBinWidth;
@@ -509,10 +440,13 @@ int pCTcalib::Wcalib(){
   FILE oFile;
   string fn;
   for (int stage = 1; stage < 5; stage++) { // stage 
-    float xlow[3], xhigh[3];
-    float xpeak, xmax, max;
+    float xlow[3], xhigh[3], xmax, max;
     for (int j = 0; j < 3; j++) {
       TH1D* dEESlice = dEEhist[0][stage]->ProjectionX(Form("ProjX_Stage%d_Bin%d",stage,Estep[j]),Estep[j],Estep[j]+1);
+      // Cheesy fix to the low energy spike 
+      int bin_cut = dEESlice->FindBin(110); // MeV
+      dEESlice->GetXaxis()->SetRange(bin_cut,dEESlice->GetNbinsX());
+      
       int imax;
       imax  =  dEESlice->GetMaximumBin();
       max   =  dEESlice->GetMaximum();
@@ -523,21 +457,18 @@ int pCTcalib::Wcalib(){
       Int_t fitStatus = dEESlice->Fit(f1,"QR"); // Q means quiet, R is
       if(fitStatus==0) // Everything passed
 	{
-	  xpeak     = f1->GetParameter(1);// mean
-	  xhigh[j]  = xpeak + f1->GetParameter(2); //sigma
-	  xlow[j]   = xpeak - f1->GetParameter(2); //sigma
+	  xmax      = f1->GetParameter(1);// mean
+	  xhigh[j]  = xmax + f1->GetParameter(2); //sigma
+	  xlow[j]   = xmax - f1->GetParameter(2); //sigma
 	}
-      
-      /*float energy_cut = 130; // MeV
-      int bin_cut = dEESlice->FindBin(energy_cut);
-      dEESlice->GetXaxis()->SetRange(bin_cut,dEESlice->GetNbinsX());
-      float xpeak =  dEESlice->GetBinCenter(dEESlice->GetMaximumBin());     
-      xhigh[j]    =  dEESlice->GetBinCenter(dEESlice->FindLastBinAbove(dEESlice->GetMaximum()/2));
-      xlow[j]     =  xpeak - (xhigh[j] -xpeak); */
+      else{
+	xmax        =  dEESlice->GetBinCenter(dEESlice->GetMaximumBin());     
+	xhigh[j]    =  dEESlice->GetBinCenter(dEESlice->FindLastBinAbove(dEESlice->GetMaximum()/2));
+	xlow[j]     =  xmax - (xhigh[j] -xmax);
+      }
       // extend to 3 sigma region instead of 1 FWHM
       xlow[j]     = xlow[j] - (xhigh[j] - xlow[j]) * 0.7848;
-      xhigh[j]    =   xhigh[j] + (xhigh[j] - xlow[j]) * 0.7848;          
-      
+      xhigh[j]    =   xhigh[j] + (xhigh[j] - xlow[j]) * 0.7848;                
     }    
     dEElow[stage][0] = (E[0] * (xlow[2] - xlow[1]) + E[1] * (xlow[0] - xlow[2]) + E[2] * (xlow[1] - xlow[0])) /
                        ((E[0] - E[1]) * (E[0] - E[2]) * (E[1] - E[2]));
@@ -586,10 +517,10 @@ void pCTcalib::writeCalibfile() {
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
-void pCTcalib::procWEPLcal(Histogram2D *REhist[nStage],TH2D* REhist_root[nStage], TH2D* dEEhist[nStage]) {
+void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage]) {
   // Routine passed to process the WEPL calibration.
   cout << "Entering procWEPLcal for Nbricks=" << config.item_int["Nbricks"] << ".  The list of histograms to fill is" << endl;
-  for(int stage = 0; stage < nStage; ++stage) cout << config.item_int["Nbricks"] << " bricks, stage " << stage << ", title=  " << REhist[stage]->Title() << endl;
+  for(int stage = 0; stage < nStage; ++stage) cout << config.item_int["Nbricks"] << " bricks, stage " << stage << ", title=  " << REhist[stage]->GetTitle() << endl;
   theEvtRecon->config.item_int["doGains"] = true;
   theEvtRecon->config.item_int["Nbricks"] = config.item_int["Nbricks"];
 
@@ -603,7 +534,6 @@ void pCTcalib::procWEPLcal(Histogram2D *REhist[nStage],TH2D* REhist_root[nStage]
     pedMin[stage] = config.item_int[Form("pedrng%d",stage)];
   }
   pedGainCalib* theCalibration = new pedGainCalib(pCTcalibRootFile, pedMin, pedestals,-150., -151., wedgeLimit, wedgeLimit + openRange, config);
-  //theCalibration->ClearHist();
   theEvtRecon->ReadInputFile(theGeometry, theTVcorr, config.item_str["inputFileName"], theCalibration);
 
   double Ut[2] , Uv[2] , T[2] , V[2];
@@ -621,36 +551,21 @@ void pCTcalib::procWEPLcal(Histogram2D *REhist[nStage],TH2D* REhist_root[nStage]
   cout << "Front tracker t: " << Uv[0] << " " << Uv[1] << endl;
 
   //Define histograms
-  Histogram *hStgEcorr[nStage];
-  TH1D *hStgEcorr_root[nStage];
+  TH1D *hStgEcorr[nStage];
   for (int stage = 0; stage < nStage; ++stage) {
     cout << "procWEPLcal " << config.item_int["Nbricks"] << ": Pedestal measured for stage " << stage << " is " << theEvtRecon->Peds[stage] << " ADC counts " << endl;
     cout << "procWEPLcal " << config.item_int["Nbricks"] << ": Gain correction factor for stage " << stage << " is " << theEvtRecon->GainFac[stage] << endl;
     string Title = "nBricks= " + to_string((long long int)config.item_int["Nbricks"]) + " corrected energy for stage " +
       to_string((long long int)stage);
-    if (config.item_str["partType"] == "H"){
-      hStgEcorr[stage] = new Histogram(400, 15., 0.175, Title, "Energy (MeV)", "protons");
-      hStgEcorr_root[stage] = new TH1D(Title.c_str(), Title.c_str(), 400, 15.,  15. +400*0.175);
-    }
-    else{
-      hStgEcorr[stage] = new Histogram(400, 15., 0.7, Title, "Energy (MeV)", "He ions");
-      hStgEcorr_root[stage] = new TH1D(Title.c_str(), Title.c_str(), 400, 15.,  15. +400*0.7);
-    }
+    if (config.item_str["partType"] == "H") hStgEcorr[stage] = new TH1D(Title.c_str(), Title.c_str(), 400, 15.,  15. +400*0.175);
+    else hStgEcorr[stage] = new TH1D(Title.c_str(), Title.c_str(), 400, 15.,  15. +400*0.7);
   }
 
   //Define more histograms
   string Title = "nBricks " + to_string((long long int)config.item_int["Nbricks"]) + " sum of corrected stage energies";
-  Histogram *hTotEcorr;
-  TH1D *hTotEcorr_root;
-  if (config.item_str["partType"] == "H"){
-    hTotEcorr = new Histogram(800, 0., 0.3, Title, "Energy (MeV)", "protons");
-    hTotEcorr_root = new TH1D(Title.c_str(), Title.c_str(), 800, 0., 0.3*800);
-    }
-  else{
-    hTotEcorr = new Histogram(840, 0., 1.0, Title, "Energy (MeV)", "He ions");
-    hTotEcorr_root = new TH1D(Title.c_str(), Title.c_str(), 840, 0., 1.0*840);
-  }
-
+  TH1D *hTotEcorr;
+  if (config.item_str["partType"] == "H") hTotEcorr = new TH1D(Title.c_str(), Title.c_str(), 800, 0., 0.3*800);
+  else hTotEcorr = new TH1D(Title.c_str(), Title.c_str(), 840, 0., 1.0*840);
   Title = "nBricks " + to_string((long long int)config.item_int["Nbricks"]) + " calibration phantom thickness";
   TProfile* hLengthProf = new TProfile(Title.c_str(), Title.c_str(), 100, -150, -150 +3.0*100);
 
@@ -728,7 +643,7 @@ void pCTcalib::procWEPLcal(Histogram2D *REhist[nStage],TH2D* REhist_root[nStage]
 
     // calculate geometric WET "wt0" for the wedge phantom using tracker info.
     double Uin  = Ust[0];
-
+    
     // First estimate of the u coordinate at entry into the phantom wedge
     double Tin  = theGeometry->extrap2D(Uft, Tf, Uin);
     double Vin  = theGeometry->extrap2D(Ufv, Vf, Uin);
@@ -749,12 +664,12 @@ void pCTcalib::procWEPLcal(Histogram2D *REhist[nStage],TH2D* REhist_root[nStage]
     
     if ((Tin > Tw2 && Tin < Tw3) || (TinB < Tw1) || (TinB > Tw4))
       {// ONLY WEDGE SLOPE TO BE USED EVERYTHING ELSE CREATES ISSUES!
-	if(Tin < Tw3) continue;
-	if (TinB > tBrickEnd) emptyEvt = true;	
+	if(Tin < Tw3) continue; // left to the wedge
+	if (TinB > tBrickEnd) emptyEvt = true;	// empty event
 	cs = 1;
 	continue;
       }
-
+    
     else if (TinB >= Tw1 && Tin <= Tw2) { // in the -t wedge of the phantom; Uin
                                           // and Tin get overwritten here
       if (getLineIntersection(theEvtRecon->uhitT[0], thisEvent.Thit[0], theEvtRecon->uhitT[1], thisEvent.Thit[1],
@@ -783,11 +698,9 @@ void pCTcalib::procWEPLcal(Histogram2D *REhist[nStage],TH2D* REhist_root[nStage]
     double Length;
     if (emptyEvt) {
       Length = 0.0;
-      hTotEcorr->entry(eTot);
-      hTotEcorr_root->Fill(eTot);
+      hTotEcorr->Fill(eTot);
       for (int stage = 0; stage < nStage; ++stage){
-        hStgEcorr[stage]->entry(eStage[stage]);
-	hStgEcorr_root[stage]->Fill(eStage[stage]);
+	hStgEcorr[stage]->Fill(eStage[stage]);
       }
     }
     else {
@@ -803,46 +716,41 @@ void pCTcalib::procWEPLcal(Histogram2D *REhist[nStage],TH2D* REhist_root[nStage]
     
     if (eStage[4] > config.item_float["thr4"]) { // Particles end in stage 4
       if (cs > 3) {
-        REhist[4]->entry(Length, eStage[4]);
-	REhist_root[4]->Fill(Length, eStage[4]);
+	REhist[4]->Fill(Length, eStage[4]);
 	dEEhist[4]->Fill(eStage[3], eStage[4]);
       }
     }
     
     else if (eStage[3] > config.item_float["thr3"]) { // Particles end in stage 3
       if (cs > 3) {
-        REhist[3]->entry(Length, eStage[3]);
-	REhist_root[3]->Fill(Length, eStage[3]);
+	REhist[3]->Fill(Length, eStage[3]);
 	dEEhist[3]->Fill(eStage[2], eStage[3]);
       }
     }
 
     else if (eStage[2] > config.item_float["thr2"] ) { // Particles end in stage 2
       if (cs > 3) {
-        REhist[2]->entry(Length, eStage[2]);
-	REhist_root[2]->Fill(Length, eStage[2]);
+	REhist[2]->Fill(Length, eStage[2]);
 	dEEhist[2]->Fill(eStage[1], eStage[2]);
       }
     }
     else if (eStage[1] > config.item_float["thr1"]) { // Particles end in stage 1
       if (cs > 3) {
-        REhist[1]->entry(Length, eStage[1]);
-	REhist_root[1]->Fill(Length, eStage[1]);
+	REhist[1]->Fill(Length, eStage[1]);
 	dEEhist[1]->Fill(eStage[0], eStage[1]);
       }
     }
     else if (eStage[0] > config.item_float["thr0"]) { // Particles end in stage 0
 	if (cs > 3){
-	REhist_root[0]->Fill(Length, eStage[0]);
-        REhist[0]->entry(Length, eStage[0]);
+	  REhist[0]->Fill(Length, eStage[0]);
 	}
     }
   } // End of the event loop
 
   pCTcalibRootFile->mkdir("runCorrEnrgs");
   pCTcalibRootFile->cd("runCorrEnrgs");
-  for (int stage = 0; stage < nStage; ++stage) hStgEcorr_root[stage]->Write("",TObject::kOverwrite);
-  hTotEcorr_root->Write("",TObject::kOverwrite);
+  for (int stage = 0; stage < nStage; ++stage) hStgEcorr[stage]->Write("",TObject::kOverwrite);
+  hTotEcorr->Write("",TObject::kOverwrite);
 
   pCTcalibRootFile->cd();
   pCTcalibRootFile->mkdir("Phantom");  
@@ -850,8 +758,8 @@ void pCTcalib::procWEPLcal(Histogram2D *REhist[nStage],TH2D* REhist_root[nStage]
   hLengthProf->Write("",TObject::kOverwrite);
   pCTcalibRootFile->cd();
   // memory management
-  delete (hTotEcorr);
-  delete (theCalibration);
+  delete theCalibration;
+  delete hTotEcorr;
   for (int stage = 0; stage < nStage; ++stage) delete (hStgEcorr[stage]);
 }
 

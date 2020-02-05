@@ -19,14 +19,6 @@
 // from strip clusters
 // - pCT_Tracking.cpp and pCT_Tracking.h: pattern recognition for the tracking;
 // includes printing and plotting
-//
-// - TDB: the geometry and calibration constants need to be accessed from a
-// database with date key
-//
-// Compile it with g++ using -std=c++0x -lpthread -g -rdynamic (the -g and
-// -rdynamic can be omitted if all is working well)
-//
-
 #include "pCTconfig.h"
 #include "TVcorrection.h"
 #include "pedGainCalib.h"
@@ -38,10 +30,6 @@
 #include "TFile.h"
 class Preprocessing { // Top level program from the pCT preprocessing task.
  public:
-  /*Preprocessing(std::string, std::string, std::string, std::string, std::string,
-		float*, int,  int, bool, bool, float, bool , int, int, 
-		int, int, float, bool, int*, float, float);*/
-
   Preprocessing(pCTconfig cfg);
   TFile* projectionROOT;
   pCTconfig config;
@@ -63,17 +51,5 @@ class Preprocessing { // Top level program from the pCT preprocessing task.
   struct tm *now;
   static int findEvt(FILE *fp);
   void pCTevents(pCTconfig config, pCTgeo* Geometry, pCTraw rawEvt, pedGainCalib *Calibrate, int &nKeep, double Uhit[]);
-  void WriteBinaryFile(bool timeStampOutput, bool energyOutput, bool eventIDOutput, float AngleNb,
-                        const char OutputFilename[], const char DATA_SOURCE[], const char PHANTOM_NAME[],
-                        int study_date, int event_counter, double u[], float V0[], float V1[], float V2[], float V3[],
-                        float T0[], float T1[], float T2[], float T3[], float E1[], float E2[], float E3[], float E4[],
-                        float E5[], float WetBinary[], float ProjAngle[], unsigned int TimeStamp[],
-                        unsigned int EventIDs[]); 
-
-  void WriteRootFile(bool timeStampOutput, bool energyOutput, bool eventIDOutput, int fileNb,
-		       int study_date, int event_counter, double u[], float V0[], float V1[], float V2[], float V3[],
-		       float T0[], float T1[], float T2[], float T3[], float E1[], float E2[], float E3[], float E4[],
-		       float E5[], float WetBinary[], float ProjAngle[], unsigned int TimeStamp[],
-		       unsigned int EventIDs[]); 
 };
 #endif

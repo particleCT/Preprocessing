@@ -109,7 +109,7 @@ inline Wepl::Wepl(pCTconfig cfg, TFile* calibFile, TFile* outputFile): config(cf
 			       nEnrg, 0., nEnrg * EnergyBinWidth, nEnrg, 0., nEnrg * EnergyBinWidth);} // X-Y binning 
       
   for(int stage =0;stage<5;stage++){
-    calWEPL[stage]= (TGraphErrors*)calibFile->Get(Form("RangeVsEnergy_Uncorr/RangeVsEnergy_Uncorr_%d",stage)); // Load the Range-Energy calibration
+    calWEPL[stage]= (TGraphErrors*)calibFile->Get(Form("RangeVsEnergy/RangeVsEnergy_%d",stage)); // Load the Range-Energy calibration
     header->SetBranchAddress(Form("thr_%d", stage),&thr[stage]); // Load the threshold
   }
 

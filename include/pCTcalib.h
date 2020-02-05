@@ -18,7 +18,6 @@
 #include "TProfile.h"
 #include "TProfile2D.h"
 #include "TSpectrum.h"
-#include "Histogram.h"
 #include "pCTgeo.h"
 #include "EvtRecon.h"
 #include "pCTcut.h"
@@ -39,7 +38,7 @@ class pCTcalib {
 
   pCTconfig config;
   int Wcalib();
-  void procWEPLcal(Histogram2D *[nStage], TH2D*[nStage], TH2D*[nStage]);
+  void procWEPLcal(TH2D*[nStage], TH2D*[nStage]);
 
   // NIST PSTAR proton range in polystyrene vs E corrected for Birk's law with Kb=.02 cm/meV
   // Experimentally measured R vs E for our 5 stage detector:
@@ -78,15 +77,12 @@ class pCTcalib {
   float dEEhigh[5][3];
     
   TFile* pCTcalibRootFile = new TFile("pCTcalib.root", "recreate"); // General File for Recalibration
-  TH1D *pxHistE_root[nStage][nPixRoot];
-  TH1D *pxHistADC_root[nStage][nPixRoot];
-  TH1D *stgHistE_root[nStage];
+  TH1D *pxHistE[nStage][nPixRoot];
+  TH1D *pxHistADC[nStage][nPixRoot];
+  TH1D *stgHistE[nStage];
   TH1D *EsumH;
   TH2D* TVcorrHist[5]; // TVcorr histogram for each stage
   TProfile2D *stgE[nStage];
-  Histogram *pxHistADC[nStage][nPix];
-  Histogram *stgHistE[nStage];
-  Histogram *pxHistE[nStage][nPix];
 
   time_t currentTime;
   struct tm *now;
