@@ -1,3 +1,4 @@
+
 // Top-level driving routines for the pCT preprocessing task
 // R.P. Johnson   September 15, 2016
 #include <iostream>
@@ -11,15 +12,12 @@
 #include <cmath>
 #include <ctime>
 #include <string>
-#include "arg.h" // Command line options
-
 #include "TTree.h"
 #include "TFile.h"
 #include "Wepl.h"
 #include "pCTcut.h"
 #include "Preprocessing.h"
 #include "BadEvent.h"
-
 using namespace std;
 Preprocessing::Preprocessing(pCTconfig cfg): config(cfg){
   
@@ -453,7 +451,7 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
   phase->Branch("t", &Thit, "t[4]/F");  
   phase->Branch("v", &Vhit, "v[4]/F");
   phase->Branch("u", &Uhit, "u[4]/F");
-  phase->Branch("E", &Ene, "E[4]/F");
+  phase->Branch("E", &Ene, "E[5]/F");
   phase->Branch("wepl", &Wet, "wepl/F");
   phase->Branch("theta", &theta, "theta/F");
 

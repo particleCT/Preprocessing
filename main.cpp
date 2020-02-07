@@ -8,12 +8,9 @@
 // R.P. Johnson  May 8, 2016
 // R.P. Johnson  October 4, 2016  Integrated all of the TV and WEPL calibration
 // code of Vladimir Bashkirov.
-//
 // The objective was to package all of the different pieces of the program into
 // C++ classes, to make
 // the code easier to follow and maintain. This includes
-// - arg.h and arg.cpp: quasi-unix-style command-line parsing (Copyright (C)
-// 2010 Chun-Chung Chen <cjj@u.washington.edu>)
 // - Preprocessing.h and Preprocessing.cpp: the top level driving program,
 // called either by main here or from within another program
 // - pCTgeo.h: a geometry package to encapsulate all of the geometry constants
@@ -31,13 +28,6 @@
 // 6 calibration run raw data files.
 // - EvtRecon does the raw data event reconstruction in the case of calibration
 // runs.
-// - Histogram.cpp and Histogram.h: simple facilities for making histograms and
-// profile plots
-//
-// Compile it with g++ using -std=c++0x -lpthread -g -rdynamic (the -g and
-// -rdynamic can be omitted if all is working well)
-// For Linux, see the provided Makefile.
-//
 //*******************************************************************************************************
 
 #include <iostream>
@@ -51,21 +41,13 @@
 #include <cmath>
 #include <ctime>
 #include <signal.h>
-#include "arg.h" // Command line options
 #include "Preprocessing.h"
 #include "pCTcalib.h"
 #include "pCTconfig.h"
 #include "Util.h"
 
 using namespace std;
-
-// |\\  //|    //\    ||  |\\  || 
-// ||\\//||   // \\   ||  ||\\ || 
-// || \/ ||  //ZZZ\\  ||  || \\|| 
-// ||    || //     \\ ||  ||  \\| 
-
 int main(int argc, char *argv[]) {
-
   // Entry point for preprocessing of data from the pCT phase-II scanner.
   // R.P. Johnson 5/22/2016
   // R.P. Johnson 10/2/2016  Integrated Vladimir's TV and WEPL calibration
@@ -79,330 +61,134 @@ int main(int argc, char *argv[]) {
     cout << argv[i] << " ";
   cout << endl;
 
-  const string configFile = "pCT_config.txt";
+  const string configFile = argv[1];//"pCT_config.txt";
   pCTconfig cfg(configFile); // Create a class instance for parsing the configuration file
-  arg::Parser parser; // Create a class instance for parsing the command line (see the program arg.cc and header arg.h)
 
-  parser.set_header(" \n ******** pCT preprocessing version " + version + " **********");
-  parser.add_help("");
-  parser.add_help(" There is one positional argument: file_name");
-  parser.add_help("   The file name is either the raw data file or, for "
-                  "calibration, the text file with a list of ");
-  parser.add_help("   calibration raw data files (default 'CalFileList.txt').");
-  parser.add_help(" Default values of all parameters may be set with a "
-                  "pCT_config.txt file.");
-  parser.add_help(" Command line options will override the pCT_config.txt settings.");
-  parser.add_help("   The command line option syntax can take either a short "
-                  "or long form, e.g.:");
-  parser.add_help("          -n 3000000");
-  parser.add_help("               or equivalently");
-  parser.add_help("          --number=3000000");
-  parser.add_help("   The parser for pCT_config.txt can recognize the short "
-                  "and long names, but the syntax is always as follows:");
-  parser.add_help("          n = 3000000");
-  parser.add_help("               or equivalently");
-  parser.add_help("          number = 3000000");
-  parser.add_help("   Use the string NULL to represent a null or empty string.");
-  parser.add_help(" Available options are:");
-
-  // Define all of the command line options
   int numbTkrFPGA = 12;
-  parser.add_opt('q', "nTracker")
-      .stow(numbTkrFPGA)
-      .help("number of tracker FPGAs in the readout", "INT")
-      .show_default();
   cfg.addItem('q', "nTracker", numbTkrFPGA);
 
   int numbEdetFPGA = 2;
-  parser.add_opt('Q', "nEdet")
-      .stow(numbEdetFPGA)
-      .help("number of energy detector FPGAs in the readout", "INT")
-      .show_default();
   cfg.addItem('Q', "nEdet", numbEdetFPGA);
 
   int pdstlr[5];
   pdstlr[0] = -500;
-  parser.add_opt('5', "pedrng0")
-      .stow(pdstlr[0])
-      .help("stage 0 start of pedestal region (ADC counts)", "INT")
-      .show_default();
   cfg.addItem('5', "pedrng0", pdstlr[0]);
 
   pdstlr[1] = -500;
-  parser.add_opt('6', "pedrng1")
-      .stow(pdstlr[1])
-      .help("stage 1 start of pedestal region (ADC counts)", "INT")
-      .show_default();
   cfg.addItem('6', "pedrng1", pdstlr[1]);
 
   pdstlr[2] = -500;
-  parser.add_opt('7', "pedrng2")
-      .stow(pdstlr[2])
-      .help("stage 2 start of pedestal region (ADC counts)", "INT")
-      .show_default();
   cfg.addItem('7', "pedrng2", pdstlr[2]);
 
   pdstlr[3] = -500;
-  parser.add_opt('8', "pedrng3")
-      .stow(pdstlr[3])
-      .help("stage 3 start of pedestal region (ADC counts)", "INT")
-      .show_default();
   cfg.addItem('8', "pedrng3", pdstlr[3]);
 
   pdstlr[4] = -500;
-  parser.add_opt('9', "pedrng4")
-      .stow(pdstlr[4])
-      .help("stage 4 start of pedestal region (ADC counts)", "INT")
-      .show_default();
   cfg.addItem('9', "pedrng4", pdstlr[4]);
 
   float fileFraction = 1.0;
-  parser.add_opt('f', "fraction").stow(fileFraction).help("Fraction of the input file to use", "FLOAT").show_default();
   cfg.addItem('f', "fraction", fileFraction);
 
   string partType = "H";
-  parser.add_opt('S', "particle")
-      .stow(partType)
-      .help("Particle type, hydrogen (H) or helium (He)", "STRING")
-      .show_default();
   cfg.addItem('S', "partType", partType);
 
   int fileBins = 1;
-  parser.add_opt('b', "bins")
-      .stow(fileBins)
-      .help("Number of files to sub-divise the results into", "INT")
-      .show_default();
   cfg.addItem('b', "bins", fileBins);
 
   int continuous_scan = 1;
-  parser.add_opt('b', "bins")
-    .stow(continuous_scan)
-    .help("for a continuous scan, set to 1", "INT")
-    .show_default();
   cfg.addItem('c', "continuous", continuous_scan);
 
   string Outputdir = ".";
-  parser.add_opt('o', "outputDir")
-    .stow(Outputdir)
-    .help("set the output directory", "STRING")
-    .show_default();
   cfg.addItem('o', "outputDir", Outputdir);
   
   int max_events = 0;
-  parser.add_opt('n', "max_events")
-      .stow(max_events)
-      .help("set maximum number of events to read and analyze", "INT")
-      .show_default();
   cfg.addItem('n', "max_events", max_events);
 
   int max_time = 0;
-  parser.add_opt('M', "time")
-      .stow(max_time)
-      .help("set the maximum time stamp to read and analyze", "INT")
-      .show_default();
   cfg.addItem('M', "max_time", max_time);
 
   int n_debug = 1;
-  parser.add_opt('d', "debug")
-    .stow(n_debug)
-    .help("set the number of events for debug printout", "INT")
-    .show_default();
   cfg.addItem('d', "n_debug", n_debug);
 
   int n_plot = 0;
-  parser.add_opt('j', "plot")
-    .stow(n_plot)
-    .help("set the number of tracker events to plot", "INT")
-    .show_default();
   cfg.addItem('j', "n_plot", n_plot);
 
   string logFile = "";
-  parser.add_opt('g', "log")
-      .stow(logFile)
-      .help("path to the log file for the run; used for continuous scans to "
-            "find the start angle",
-            "STRING")
-      .show_default();
   cfg.addItem('g', "log", logFile);
 
   float initialAngle = 0.0;
-  parser.add_opt('a', "angle")
-      .stow(initialAngle)
-      .help("initial angle, at time 0, for a continuous scan (better to provide the log file)", "FLOAT")
-      .show_default();
   cfg.addItem('a', "angle", initialAngle);
 
   float beamEnergy = 200.; // Unless a value is supplied by the user, this angle will be taken from the input file
-  parser.add_opt('p', "energy")
-      .stow(beamEnergy)
-      .help("set the energy (Mev/u) to override the value from the input file", "FLOAT")
-      .show_default();
   cfg.addItem('e', "energy", beamEnergy);
 
   float proj_angle = -999.; // Unless a value is supplied by the user, this angle will be taken from the input file
-  parser.add_opt('p', "projection")
-      .stow(proj_angle)
-      .help("set the projection angle to override the value from the input file", "FLOAT")
-      .show_default();
   cfg.addItem('p', "projection", proj_angle);
 
   int reCalibrate = 1;
-  parser.add_opt('r', "recalibrate")
-      .stow(reCalibrate)
-      .help("Execute real-time energy detector gain corrections? yes or no", "INT")
-      .show_default();
   cfg.addItem('r', "recalibrate", reCalibrate);
 
   float phantomSize = 110.;
-  parser.add_opt('Z', "size")
-      .stow(phantomSize)
-      .help("Maximum radius of the phantom in mm, for real-time gain "
-            "recalibration",
-            "FLOAT")
-      .show_default();
   cfg.addItem('S', "size", phantomSize);
 
   int Calibrate = 0;
-  parser.add_opt('C', "calibrate")
-      .stow(Calibrate)
-      .help("Produce the TV and WEPL calibration constants from calibration "
-            "data? yes or no",
-            "INT")
-      .show_default();
   cfg.addItem('C', "calibrate", Calibrate);
 
   int Normalize = 0;
-  parser.add_opt('L', "normalize")
-      .stow(Normalize)
-      .help("Normalize the colums of the WET vs E plot all to be equal area? yes or no", "INT")
-      .show_default();
   cfg.addItem('L', "normalize", Normalize);
   
   float wedgeOff = 0.0;
-  parser.add_opt('F', "offset")
-      .stow(wedgeOff)
-      .help("Offset of the calibration wedge phantom from center (normally "
-            "zero)",
-            "FLOAT")
-      .show_default();
   cfg.addItem('F', "wedgeoffset", wedgeOff);
 
   string minDate = "2030/01/01";
-  parser.add_opt('x', "minDate")
-      .stow(minDate)
-      .help("Minimum valid date for the calibration, for calibration runs, to "
-            "write in the output file",
-            "STRING")
-      .show_default();
   cfg.addItem('x', "minDate", minDate);
 
   string maxDate = "2000/01/01";
-  parser.add_opt('y', "maxDate")
-      .stow(maxDate)
-      .help("Maximum valid date for the calibration, for calibration runs, to "
-            "write in the output file",
-            "STRING")
-      .show_default();
   cfg.addItem('y', "maxDate", maxDate);
 
   int minRun = 999;
-  parser.add_opt('w', "minrun")
-      .stow(minRun)
-      .help("Minimum valid run number for the calibration, for calibration "
-            "runs, to write in the output file",
-            "INT")
-      .show_default();
   cfg.addItem('w', "minrun", minRun);
 
   int maxRun = -1;
-  parser.add_opt('z', "maxrun")
-      .stow(maxRun)
-      .help("Maximum valid run number for the calibration, for calibration "
-            "runs, to write in the output file",
-            "INT")
-      .show_default();
   cfg.addItem('z', "maxrun", maxRun);
 
   string study_name = "";
-  parser.add_opt('s', "study")
-      .stow(study_name)
-      .help("set the study name to override the one derived from the filename", "STRING")
-      .show_default();
   cfg.addItem('s', "study", study_name);
 
   string WcalibFile = "Wcalib.txt";
-  parser.add_opt('W', "Wcalib")
-      .stow(WcalibFile)
-      .help("path and name of WEPL calibration file", "STRING")
-      .show_default();
   cfg.addItem('W', "Wcalib", WcalibFile);
 
   string TVcorrFile = "TVcorr.txt";
-  parser.add_opt('T', "TVcorr")
-      .stow(TVcorrFile)
-      .help("path and name of TV gain-correction calibration file", "STRING")
-      .show_default();
   cfg.addItem('T', "TVcorr", TVcorrFile);
+
   string rootCalibFile = "pCTcalib.root";
-  parser.add_opt('R', "calib")
-      .stow(rootCalibFile)
-      .help("path and name of root calibration file", "STRING")
-      .show_default();
   cfg.addItem('R', "calib", rootCalibFile);
   
   float thr[5]; // Array of stage thresholds for WEPL analysis
   thr[0] = 1.0;
-  parser.add_opt('0', "thr0")
-    .stow(thr[0]).help("stage 0 threshold (MeV)", "FLOAT")
-    .show_default();
   cfg.addItem('0', "thr0", thr[0]);
 
   thr[1] = 1.0;
-  parser.add_opt('1', "thr1")
-    .stow(thr[1]).help("stage 1 threshold (MeV)", "FLOAT")
-    .show_default();
   cfg.addItem('1', "thr1", thr[1]);
 
   thr[2] = 1.0;
-  parser.add_opt('2', "thr2")
-    .stow(thr[2]).help("stage 2 threshold (MeV)", "FLOAT")
-    .show_default();
   cfg.addItem('2', "thr2", thr[2]);
 
   thr[3] = 1.0;
-  parser.add_opt('3', "thr3")
-    .stow(thr[3]).help("stage 3 threshold (MeV)", "FLOAT")
-    .show_default();
   cfg.addItem('3', "thr3", thr[3]);
 
   thr[4] = 1.0;
-  parser.add_opt('4', "thr4")
-    .stow(thr[4]).help("stage 4 threshold (MeV)", "FLOAT")
-    .show_default();
   cfg.addItem('4', "thr4", thr[4]);
 
   int dodEEFilter = 1; // changed default to yes
-  parser.add_opt('e', "dEEFilter")
-      .stow(dodEEFilter) // Add an option to the command line parser
-      .help("Use the dEE filter to filter out nuclear interactions/fragments? 1 or 0", "INT")
-      .show_default();
   cfg.addItem('e', "dEEFilter", dodEEFilter); // Also add the option to the list used for parsing the config file
-
-  parser.add_opt_help();
-  parser.add_opt_version(version);
 
   // Read the default configuration from the config file
   if (cfg.Configure() != 0) {
     cout << "Was not able to read a default configuration from " << configFile << endl;
     cout << "The hardwired default configuration will be used." << endl;
   }
-  // Parse the command options
-  try {parser.parse(argc, argv);}
-  catch (arg::Error e) {
-    cout << " Error parsing command line: " << e.get_msg() << '\n';
-    return 1;
-  }
-
+  //////////////////////////////////////////////////////
   // Printing out some number
   //////////////////////////////////////////////////////
   if (numbTkrFPGA  != 12) cout << "Non-standard number of tracker FPGAs in the readout = " << numbTkrFPGA << endl;
@@ -439,15 +225,15 @@ int main(int argc, char *argv[]) {
   string inputFileName;
 
   // Get the list of required, position-sensitive arguments, in this case just the input filename
-  vector<string> requiredArgs = parser.args();
-  if (requiredArgs.size() == 0) {
+  //vector<string> requiredArgs = //parser.args();
+  if (argc == 0) {
     if (!cfg.item_int["calibrate"]) {
       cout << "pCT_Preprocessing: no input raw data file was specified!\n";
       exit(1);
     }
   } else {
-    inputFileName = requiredArgs[0];
-    CalFile = requiredArgs[0];
+    inputFileName = argv[2];
+    CalFile = argv[2];
   }
   if (cfg.item_int["calibrate"]) cout << "Calibration run.  The list of input files is from " << CalFile << endl;
   else cout << "Preprocessing run, the input file name is " << inputFileName << endl;

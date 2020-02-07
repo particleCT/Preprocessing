@@ -31,17 +31,17 @@ pedGainCalib::pedGainCalib(TFile* root, int pedMin[5], float oldPed[5], float t1
     cout << "pedGainCalib setting the default pedestal for stage " << stage << " to " << Ped[stage] << endl;
   }
   // Define histograms for pedestal calculation
-  for (int i =0; i<5; i++) hPed[i] = new TH1D(Form("PedestalStage_%i",i), Form("Pedestal region for stage %i",i), 400, pedMin[i], pedMin[i] +400*5);
+  for (int i =0; i<5; i++) hPed[i] = new TH1D(Form("PedestalStage_%i",i), Form("Pedestal region for stage %i",i), 400, pedMin[i], pedMin[i] +400*2.5);
   for (int i =0; i<5; i++) hTotFil[i] = new TH1D(Form("FullADCStage_Filtered_%i",i), Form("Full ADC for stage %i",i), 400, pedMin[i], pedMin[i] +400*50);
   for (int i =0; i<5; i++) hTotUnFil[i] = new TH1D(Form("FullADCStage_Unfiltered_%i",i), Form("Full ADC for stage %i",i), 400, pedMin[i], pedMin[i] +400*50); 
 
   // Define histograms for gain calibration
   if (config.item_str["partType"] == "H") {
-    for (int i =0; i<5; i++) hEnrg[i] = new TH1D(Form("EnergyDistribution_%i",i), Form("Energy Distribution for stage %i",i), 400, 15, 15 + 400*0.175);
+    for (int i =0; i<5; i++) hEnrg[i] = new TH1D(Form("EnergyDistribution_%i",i), Form("Energy Distribution for stage %i",i), 800, 15, 15 + 800*0.175);
     hEnrgTot = new TH1D("SumStageEnergies", "Sum of stage energies", 800, 0, 0 + 0.3*800);
   }
   else {
-    for (int i =0; i<5; i++) hEnrg[i] = new TH1D(Form("EnergyDistribution_%i",i), Form("Energy Distribution for stage %i",i), 400, 15, 15 + 400*0.9);
+    for (int i =0; i<5; i++) hEnrg[i] = new TH1D(Form("EnergyDistribution_%i",i), Form("Energy Distribution for stage %i",i), 800, 15, 15 + 800*0.9);
     hEnrgTot = new TH1D("SumStageEnergies", "Sum of stage energies", 800, 0, 0 + 1.2*800);
   }
   // Profile plot to make sure that the phantom does not extend into the regions used for gain calibration
@@ -91,10 +91,8 @@ void pedGainCalib::GetPeds() {
   for (int stage = 0; stage < 5; stage++) {
     float xLow, xHigh;
     float max, xmax, xpeak;
-    int imax;
-    imax  = hPed[stage]->GetMaximumBin();
     max   = hPed[stage]->GetMaximum();
-    xmax  = hPed[stage]->GetBinCenter(imax);
+    xmax  = hPed[stage]->GetBinCenter(hPed[stage]->GetMaximumBin());
 
     TF1 *f1 = new TF1("f1", "gaus", xmax-100, xmax+100);
     f1->SetParameter(0, max);
@@ -105,10 +103,6 @@ void pedGainCalib::GetPeds() {
     Ped[stage]  = f1->GetParameter(1);// mean
     std[stage]  = f1->GetParameter(2);// std
     }
-    //xLow  =  hPed[stage]->GetBinCenter(hPed[stage]->FindFirstBinAbove( hPed[stage]->GetMaximum()/2));
-    //xHigh =  hPed[stage]->GetBinCenter(hPed[stage]->FindLastBinAbove(  hPed[stage]->GetMaximum()/2));
-    //hPed[stage]->GetXaxis()->SetRange(xLow,xHigh);
-    //if ( hPed[stage]->GetEntries()>100 ) Ped[stage] = hPed[stage]->GetBinCenter(hPed[stage]->GetMaximumBin());
     else{  // sanity
       Ped[stage] = 0.;
       cout << "pedGainCalib::getPeds ERROR: could not find the peak of the pedestal distribution for stage ************" << stage << endl;
@@ -151,12 +145,9 @@ void pedGainCalib::GetGains(TVcorrection *TVcorr) {
   for (int stage = 0; stage < 5; stage++) {
     float xLow, xHigh;
     float max, xmax, xpeak,min;
-    int imax;
-
-    imax  =  hEnrg[stage]->GetMaximumBin();
     max   =  hEnrg[stage]->GetMaximum();
     min   =  hEnrg[stage]->GetMinimum();
-    xmax  =  hEnrg[stage]->GetBinCenter(imax);
+    xmax  =  hEnrg[stage]->GetBinCenter(hEnrg[stage]->GetMaximumBin());
     TF1 *f1 = new TF1("f1", "gaus", xmax-10, xmax+10);
     f1->SetParameter(0, max);
     f1->SetParameter(1, xmax);
