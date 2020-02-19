@@ -28,10 +28,11 @@ pedGainCalib::pedGainCalib(TFile* root, int pedMin[5], float oldPed[5], float t1
   for (int stage = 0; stage < 5; stage++) {
     Ped[stage] = oldPed[stage];
     GainFac[stage] = 1.0;
+
     cout << "pedGainCalib setting the default pedestal for stage " << stage << " to " << Ped[stage] << endl;
   }
   // Define histograms for pedestal calculation
-  for (int i =0; i<5; i++) hPed[i] = new TH1D(Form("PedestalStage_%i",i), Form("Pedestal region for stage %i",i), 400, pedMin[i], pedMin[i] +400*2.5);
+  for (int i =0; i<5; i++) hPed[i] = new TH1D(Form("PedestalStage_%i",i), Form("Pedestal region for stage %i",i), 400, pedMin[i], pedMin[i] +400*5);
   for (int i =0; i<5; i++) hTotFil[i] = new TH1D(Form("FullADCStage_Filtered_%i",i), Form("Full ADC for stage %i",i), 400, pedMin[i], pedMin[i] +400*50);
   for (int i =0; i<5; i++) hTotUnFil[i] = new TH1D(Form("FullADCStage_Unfiltered_%i",i), Form("Full ADC for stage %i",i), 400, pedMin[i], pedMin[i] +400*50); 
 
@@ -107,7 +108,7 @@ void pedGainCalib::GetPeds() {
       Ped[stage] = 0.;
       cout << "pedGainCalib::getPeds ERROR: could not find the peak of the pedestal distribution for stage ************" << stage << endl;
     }
-    cout << inFileName_s <<" "<<hPed[stage]->Integral()<< " getPeds: measured pedestal for stage " << stage << " is " << Ped[stage] << "with a width of "<<std[stage]<<endl;
+    cout<< inFileName_s <<" "<<hPed[stage]->Integral()<< " getPeds: measured pedestal for stage " << stage << " is " << Ped[stage] << " with a width of "<<std[stage]<<endl;
   }
 }
 

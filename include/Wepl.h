@@ -26,7 +26,7 @@ using namespace std;
 #define nEnrg 340
 class Wepl {
  public:
-  float cut0, cut1, cut2, cut3, cut4, cut5;
+  float cut0, cut1, cut2, cut3, cut4, maxEnergy, minEnergy;
   float dEElow[4][3], dEEhigh[4][3];
 
   // Common parameters
@@ -36,13 +36,16 @@ class Wepl {
   pCTconfig config;
   TGraphErrors* calWEPL[5];
   TH2D* dEEhist_root[5];
+  TGraphErrors* Test;
+  TGraphErrors* Test2;
+
   // Explicit constructor
   Wepl(pCTconfig, TFile*, TFile*);
        
   // Explicit destructor
   ~Wepl();
   // Set energy thresholds in stages
-  void SetEthresholds1(float, float, float, float, float);
+  void SetEthresholds(float, float, float, float, float);
 
   // Convert energy in stages to WEPL (mm)
   float EtoWEPL(float Estage[5], Int_t &, Int_t &, Int_t &);
@@ -60,8 +63,10 @@ inline Wepl::~Wepl(){
   projectionROOT->cd();
   projectionROOT->mkdir("calWEPL");
   projectionROOT->cd("calWEPL");
-  for(int i =0;i<5;i++) calWEPL[i]->Write("",TObject::kOverwrite);
-
+  Test->Write("",TObject::kOverwrite);
+  Test2->Write("",TObject::kOverwrite);
+  //for(int i =0;i<5;i++) calWEPL[i]->Write("",TObject::kOverwrite);*/
+  
 }  
 
 inline Wepl::Wepl(pCTconfig cfg, TFile* calibFile, TFile* outputFile): config(cfg)
@@ -71,10 +76,14 @@ inline Wepl::Wepl(pCTconfig cfg, TFile* calibFile, TFile* outputFile): config(cf
   float scale = 1.0;
   if (config.item_str["partType"] == "He") {  // sanity cuts
     cut0 = 87. ; cut1 = 95.;  cut2 = 100.;
-    cut3 = 120.; cut4 = 300.; cut5 = 270.;
+    cut3 = 120.; cut4 = 300.;
+    maxEnergy = 270;
+    minEnergy = 1;
   } else {
     cut0 = 19.; cut1 = 21.; cut2 = 25.;
-    cut3 = 35.; cut4 = 75.; cut5 = 77.;
+    cut3 = 35.; cut4 = 75.;
+    maxEnergy = 77.;
+    minEnergy = 1;
   }
   float EnergyBinWidth = 0.25;
   if (config.item_str["partType"] == "He") EnergyBinWidth = 1.0;
@@ -109,10 +118,11 @@ inline Wepl::Wepl(pCTconfig cfg, TFile* calibFile, TFile* outputFile): config(cf
 			       nEnrg, 0., nEnrg * EnergyBinWidth, nEnrg, 0., nEnrg * EnergyBinWidth);} // X-Y binning 
       
   for(int stage =0;stage<5;stage++){
-    calWEPL[stage]= (TGraphErrors*)calibFile->Get(Form("RangeVsEnergy/RangeVsEnergy_%d",stage)); // Load the Range-Energy calibration
+    //calWEPL[stage]= (TGraphErrors*)calibFile->Get(Form("RangeVsEnergy/RangeVsEnergy_%d",stage)); // Load the Range-Energy calibration
     header->SetBranchAddress(Form("thr_%d", stage),&thr[stage]); // Load the threshold
   }
-
+  Test = (TGraphErrors*)calibFile->Get("RangeVsEnergy/RangeVsEnergy_YX");
+  Test2 = (TGraphErrors*)calibFile->Get("RangeVsEnergy/RangeVsEnergy_XY");
   for(int stage =0;stage<4;stage++){ // 1 stage less due to the fact that the 1st-stage can't do dEE
     for(int i =0; i<3; i++){
       header->SetBranchAddress(Form("dEElow_Stage%d_%d", stage,i),&dEElow[stage][i]); // Load the dEE parameters
@@ -120,19 +130,23 @@ inline Wepl::Wepl(pCTconfig cfg, TFile* calibFile, TFile* outputFile): config(cf
     }
   }
   header->GetEntry(0);
-  RSP = 1.030; // 1.0300 is for real calibration phantoms
-  cout << "The RSP of the WEPL calibration phantom is assumed to be " << RSP << endl;
+  //RSP = 1.030; // 1.0300 is for real calibration phantoms
+  //cout << "The RSP of the WEPL calibration phantom is assumed to be " << RSP << endl;
 }
 
 inline float Wepl::EtoWEPL(float Estage[5], Int_t &MaxTrans, Int_t &Threshold, Int_t &dEE) // Return calibrated WEPL from the wedge calibration
 {
   double WET;
+  double E_tot;
+  E_tot = Estage[0] + Estage[1] + Estage[2] + Estage[3] + Estage[4];
   // dE-E parameterization and energy check to cut out fragments for helium if particle stop in Stage 4
   if (Estage[4] > thr[4]) { // 1 MeV
     dEEhist_root[4]->Fill(Estage[3], Estage[4]);
-    WET = calWEPL[4]->Eval(Estage[4])*RSP;
+    WET = Test->Eval(E_tot);//*RSP;
+    //WET = calWEPL[4]->Eval(Estage[4])*RSP;
+    
     if( WET < 0 ) return -1000;  // Unit Test
-    if (Estage[4] > cut4) MaxTrans = 0; // 1000 // Max Trans Filter
+    if (Estage[4] > maxEnergy || Estage[4] < minEnergy) MaxTrans = 0;
     if (Estage[3] < cut3 || Estage[2] < cut2 || Estage[1] < cut1 || Estage[0] < cut0) Threshold = 0; 
     if (config.item_int["dEEFilter"]) { // dEEFilter
       if (Estage[3] < (dEElow[3][0]  * pow(Estage[4],2) + dEElow[3][1] * Estage[4] + dEElow[3][2]) ||
@@ -143,9 +157,10 @@ inline float Wepl::EtoWEPL(float Estage[5], Int_t &MaxTrans, Int_t &Threshold, I
   // if particle stop in Stage 3
   else if (Estage[3] > thr[3]) {
     dEEhist_root[3]->Fill(Estage[2], Estage[3]);
-    WET = calWEPL[3]->Eval(Estage[3])*RSP;
+    WET = Test->Eval(E_tot);//*RSP;
+    //WET = calWEPL[3]->Eval(Estage[3])*RSP;
     if( WET < 0 ) return -1000; // Unit Test
-    if (Estage[3] > cut5) MaxTrans = 0;
+    if (Estage[3] > maxEnergy || Estage[3] < minEnergy) MaxTrans = 0;
     if (Estage[2] < cut2 || Estage[1] < cut1 || Estage[0] < cut0) Threshold = 0; 
     if (config.item_int["dEEFilter"]) { // dEEFilter
       if (Estage[2] < (dEElow[2][0]  * pow(Estage[3],2) + dEElow[2][1] * Estage[3] + dEElow[2][2]) ||
@@ -156,8 +171,9 @@ inline float Wepl::EtoWEPL(float Estage[5], Int_t &MaxTrans, Int_t &Threshold, I
   // if particle stop in Stage 2
   else if (Estage[2] > thr[2]) { // 1 MeV
     dEEhist_root[2]->Fill(Estage[1], Estage[2]);
-    WET = calWEPL[2]->Eval(Estage[2])*RSP;
-    if (Estage[2] > cut5) MaxTrans = 0;
+    WET = Test->Eval(E_tot);//*RSP;
+    //WET = calWEPL[2]->Eval(Estage[2])*RSP;
+    if (Estage[2] > maxEnergy || Estage[2] < minEnergy) MaxTrans = 0;
     if (Estage[1] < cut1 || Estage[0] < cut0) Threshold = 0;
     if (config.item_int["dEEFilter"]) { // dEEFilter
       if (Estage[1] < (dEElow[1][0]  * pow(Estage[2],2) + dEElow[1][1] * Estage[2] + dEElow[1][2]) ||
@@ -168,30 +184,29 @@ inline float Wepl::EtoWEPL(float Estage[5], Int_t &MaxTrans, Int_t &Threshold, I
   // if particle stop in Stage 1
   else if (Estage[1] > thr[1]) {
     dEEhist_root[1]->Fill(Estage[0], Estage[1]);
-    WET = calWEPL[1]->Eval(Estage[1])*RSP;
+    WET = Test->Eval(E_tot);//*RSP;
+    //WET = calWEPL[1]->Eval(Estage[1])*RSP;
     if( WET < 0 ) return -1000;  // Unit Test
-    if (Estage[1] > cut5) MaxTrans = 0;
+    if (Estage[1] > maxEnergy || Estage[1] < minEnergy) MaxTrans = 0;
     if (Estage[0] < cut0) Threshold = 0;
     if (config.item_int["dEEFilter"]) { // dEEFilter
       if (Estage[0] < (dEElow[0][0]  * pow(Estage[1],2) + dEElow[0][1] * Estage[1] + dEElow[0][2]) ||
-          Estage[0] > (dEEhigh[0][3] * pow(Estage[1],2) + dEEhigh[0][4] * Estage[1] + dEEhigh[0][5])) dEE = 0;
-        
+          Estage[0] > (dEEhigh[0][3] * pow(Estage[1],2) + dEEhigh[0][4] * Estage[1] + dEEhigh[0][5])) dEE = 0;        
     }
     return WET; // polystyrene to water equivalent
   }
   // if particle stop in Stage 0
   else if (Estage[0] > thr[0]) {
-    WET = calWEPL[0]->Eval(Estage[0])*RSP;
-    if(WET>1000) cout<<"0 "<<WET<<endl;
+    WET = Test->Eval(E_tot);//*RSP;
+    //WET = calWEPL[0]->Eval(Estage[0])*RSP;
     if( WET < 0 ) return -1000;  // Unit Test
-    if (Estage[0] > cut5) MaxTrans = 0;
+    if (Estage[0] > maxEnergy || Estage[0] < minEnergy) MaxTrans = 0;
     return WET; // polystyrene to water equivalent
   }
   else return 2000;    // No Energy found in any stage above the thresold, returning big WEPL
 }
-inline void Wepl::SetEthresholds1(float t0, float t1, float t2, float t3, float t4) {
-  thr[0] = t0; thr[1] = t1; thr[2] = t2;
-  thr[3] = t3; thr[4] = t4;
+inline void Wepl::SetEthresholds(float t0, float t1, float t2, float t3, float t4) {
+  thr[0] = t0; thr[1] = t1; thr[2] = t2; thr[3] = t3; thr[4] = t4;
   cout << "Wepl::SetEthresholds1: WEPL energy thresholds are set to " << thr[0] << " " << thr[1]<< " " << thr[2] << " " << thr[3] << " " << thr[4]<< " MeV" << endl;
 }
 #endif 

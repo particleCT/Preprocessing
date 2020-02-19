@@ -370,18 +370,16 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
     cout << "    Year = " << year << endl;
     cout << "    Month= " << month << endl;
     cout << "    Day=   " << day << endl;
-  } else
-    cout << "Preprocessing.cpp: Was not able to parse the run date from " << rawEvt.start_time << endl;
-
+  } else cout << "Preprocessing.cpp: Was not able to parse the run date from " << rawEvt.start_time << endl;
+    
   ///////////////////////////////////////////// ////////////
   // GET EXISTING WEPL CALIBRATION CONSTANTS  [CEO Aug 2016]
   /////////////////////////////////////////////////////////
 
-  for(int i =0; i<5; i++) StgThr[i] = config.item_float[Form("thr%d",i)];
+  for(int i =0; i<5; i++)StgThr[i] = config.item_float[Form("thr%d",i)];
   Wepl *WEPL = new Wepl(config, pCTcalibRootFile, projectionROOT);
-  WEPL->SetEthresholds1(StgThr[0], StgThr[1], StgThr[2], StgThr[3], StgThr[4]);  
-
   theTVcorr = new TVcorrection(pCTcalibRootFile, 0);
+  WEPL->SetEthresholds(StgThr[0], StgThr[1], StgThr[2], StgThr[3], StgThr[4]);  
   // Create a vector of pointers to instances of the pedestal and gain calibration class
   float t1 = -100.; // These define two ranges for finding protons passing through zero phantom material, for gain calibration
   float t2 = -100.; // ****** Let's keep this to one side only, for now, to accommodate the wedge calibration runs with bricks
@@ -391,11 +389,10 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
   for (int stage = 0; stage < 5; stage++) pedestals[stage] = theTVcorr->ped[stage];
   int pdstlr[5];
   for (int stage = 0; stage < nStage; stage++) pdstlr[stage] = config.item_int[Form("pedrng%d",stage)];
-  pedGainCalib* Calibrate = new pedGainCalib(projectionROOT, pdstlr, pedestals, t1, t2, t3, t4, config); 
+  pedGainCalib* Calibrate = new pedGainCalib(projectionROOT, pdstlr, pedestals, t1, t2, t3, t4, config);
   /////////////////////////////////////////////////////////////////
   // Call the routine that reads the data and does the analysis.
   /////////////////////////////////////////////////////////////////
-
   int nKeep;
   // Uhit is filled and returned for use below, just to save space in the temporary file.
   pCTevents(config, Geometry, rawEvt, Calibrate, std::ref(nKeep), Uhit);
@@ -436,6 +433,7 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
   header->Branch("study_name",&study_name_string);
   header->Branch("data_source",&data_source_string);
   header->Branch("prepared_by",&prepared_by_string);
+  for (int stage = 0; stage < nStage; ++stage) header->Branch(Form("Gain_%d",stage),&Calibrate->GainFac[stage]);
   header->Fill();
 
   // Prepare the root file phasespace

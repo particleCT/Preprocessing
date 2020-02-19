@@ -33,7 +33,8 @@ pCTcalib::pCTcalib(pCTconfig cfg, string inputFileName): config(cfg)
     EG4stage[3] = 42.62; EG4stage[4] = 67.71;                     // for protons
   } else {
     EG4stage[0] = 100.; EG4stage[1] = 111.; EG4stage[2] = 129.;// MC derived stage energies, used to calibrate to MeV for He
-    EG4stage[3] = 166.; EG4stage[4] = 279.;
+    //EG4stage[3] = 166.; EG4stage[4] = 279.;
+    EG4stage[3] = 166.; EG4stage[4] = 215.;
   }
   cout << "pCTcalib: reading the list of raw data file names from " << CalFile << endl;
   cout << "pCTcalib: the list of raw data file names for calibration is as follows:" << endl;
@@ -182,7 +183,8 @@ int pCTcalib::TVmapper() {
 	    xpeak  = f1->GetParameter(1);// mean
 	    xHigh  = xpeak + f1->GetParameter(2); //sigma
 	    xLow   = xpeak - f1->GetParameter(2); //sigma
-	    theTVcorr->TVcorrHist[stage]->SetBinContent(pix, EG4stage[stage] / xpeak);
+	    //theTVcorr->TVcorrHist[stage]->SetBinContent(pix, EG4stage[stage] / xpeak);
+	    theTVcorr->TVcorrHist[stage]->SetBinContent(pix, 200. / xpeak);
 	  }
 	else theTVcorr->TVcorrHist[stage]->SetBinContent(pix, 0.999);
       }
@@ -245,6 +247,7 @@ void pCTcalib::enrgDep() { // Calculate energy depositions in each stage and the
 
       bool inBounds = true;
       float Ecorr = ((float)thisEvent.ADC[stage] - theEvtRecon->Peds[stage]) * theTVcorr->corrFactor(stage, Tcorr, Vcorr, inBounds);
+      
       if (!inBounds) continue;
 
       int tPix = floor(0.1 * (Tcorr + 190.));
@@ -258,9 +261,9 @@ void pCTcalib::enrgDep() { // Calculate energy depositions in each stage and the
       }
       pxHistE[stage][iPix]->Fill(Ecorr);
       stgHistE[stage]->Fill(Ecorr);
-      if (Ecorr > mnEstage && Ecorr < mxEstage) {
+      //if (Ecorr > mnEstage && Ecorr < mxEstage) {
       if (fabs(Vcorr) < 35.0 && fabs(Tcorr) < 140.0)  stgE[stage]->Fill(Tcorr, Vcorr, Ecorr);
-      }
+      //}
       Esum += Ecorr;
     }
     EsumH->Fill(Esum);
@@ -317,6 +320,7 @@ int pCTcalib::Wcalib(){
   for (int nBricks = 0; nBricks < 5; nBricks++) cout << "The raw data file for " << nBricks << " bricks is " << calFileNames[nBricks] << endl;
   TH2D* dEEhist[nStage][5];
   TH2D* REhist[nStage][5];
+
   for (int nBricks = 0; nBricks < 5; ++nBricks) {
     for (int stage = 0; stage < nStage; ++stage) {
 
@@ -331,15 +335,18 @@ int pCTcalib::Wcalib(){
       REhist[nBricks][stage]->GetYaxis()->SetTitle("Energy (MeV)");      
     }
   }
+
+  TH2D* REhist_test = new TH2D("Test","Test",250,0,260, 1000, 0,260*4);
+  
   // Submit the event processing  -- fill the histograms
   for (int nBricks = 1; nBricks < 5; nBricks++) {
     config.item_str["inputFileName"] = calFileNames[nBricks + 1];
     config.item_int["Nbricks"] = nBricks;
-    procWEPLcal(REhist[nBricks] , dEEhist[nBricks]);
+    procWEPLcal(REhist[nBricks] , dEEhist[nBricks], REhist_test);
   }
   config.item_str["inputFileName"] = calFileNames[1];
   config.item_int["Nbricks"] = 0;
-  procWEPLcal(REhist[0], dEEhist[0]);
+  procWEPLcal(REhist[0], dEEhist[0], REhist_test);
 
   cout << "pCTcalib::Wcalib, begin adding together the range-energy tables from the runs with different numbers of bricks." << endl;
   // Combine the resulting maps into one map for each stage by simply adding them
@@ -352,7 +359,7 @@ int pCTcalib::Wcalib(){
     for (int nBricks = 0; nBricks < 5; ++nBricks) dEEhist[nBricks][stage]->Write("",TObject::kOverwrite);
     pCTcalibRootFile->cd("REhist");
     for (int nBricks = 0; nBricks < 5; ++nBricks) REhist[nBricks][stage]->Write("",TObject::kOverwrite);
-    
+    REhist_test->Write("",TObject::kOverwrite);
     //Add them up together
     for (int nBricks = 1; nBricks < 5; ++nBricks) {
       string Title = "Summed WEPL calibration array for stage " + to_string((long long int)stage);
@@ -398,8 +405,9 @@ int pCTcalib::Wcalib(){
       Sst[stage][nrg] = (xHigh - xLow) / 2.2;      
     }
     }*/
-  
-  for (int stage = 0; stage < nStage; ++stage) {
+
+  //Fit all stages by Range Proejction
+  /*for (int stage = 0; stage < nStage; ++stage) {
     for (int nrg = 0; nrg < nRange; nrg++) { 
       float xLow, xHigh, Sadc,xmax, max;
       TH1D* RESlice =  REhist[0][stage]->ProjectionY("ProjY_Stage",nrg,nrg+1);
@@ -426,15 +434,62 @@ int pCTcalib::Wcalib(){
       Rst[stage][nrg] = Sadc;
       Sst[stage][nrg] = (xHigh - xLow) / 2.2;      
     }
+  }*/
+  // New
+  TGraphErrors* Test_XY = new TGraphErrors(nEnrg);
+  TGraphErrors* Test_YX = new TGraphErrors(nEnrg);
+  Test_XY->SetName("RangeVsEnergy_XY");
+  Test_YX->SetName("RangeVsEnergy_YX");
+  
+  for (int nrg = 0; nrg < 1000; nrg++) {
+    float xLow, xHigh, Sadc,xmax, max;
+    TH1D* RESlice =  REhist_test->ProjectionY("ProjY_Stage",nrg,nrg+1);
+    int bin_cut = RESlice->FindBin(5); // MeV
+    RESlice->GetXaxis()->SetRange(bin_cut,RESlice->GetNbinsX());
+    Int_t NEntries= RESlice->GetEntries();
+    if(NEntries>200){
+      max   =  RESlice->GetMaximum();
+      xmax  =  RESlice->GetBinCenter(RESlice->GetMaximumBin());
+      TF1 *f1 = new TF1("f1", "gaus", xmax-10, xmax+10);
+      f1->SetParameter(0, max);
+      f1->SetParameter(1, xmax);
+      Int_t fitStatus = RESlice->Fit(f1,"QR"); // Q means quiet, R is
+      if(fitStatus==0) // Everything passed
+	{
+	  Sadc      = f1->GetParameter(1);// mean
+	  xHigh     = Sadc + f1->GetParameter(2); //sigma
+	  xLow      = Sadc - f1->GetParameter(2); //sigma
+	}
+      else{Sadc  = 0;    xLow  = 0;  xHigh = 0;}
+    }
+    else{Sadc  = 0;    xLow  = 0;  xHigh = 0;}
+    delete RESlice;
+    //Rst[0][nrg] = Sadc;
+    //Sst[0][nrg] = (xHigh - xLow) / 2.2;
+    
+    double rngB = REhist_test->GetXaxis()->GetBinCenter(nrg);
+    double Sst  = (xHigh - xLow) / 2.2;
+    
+    int N =  Test_XY->GetN();
+    Test_XY->SetPoint(N, rngB, Sadc);
+    Test_XY->SetPointError(N, 0.,Sst);
+    Test_YX->SetPoint(N, Sadc, rngB);
+    Test_YX->SetPointError(N, Sst, 0.);
   }
+  
+
+
   // Plot the final calibration results before corrections
   float rngB[nEnrg];
   pCTcalibRootFile->cd();
   pCTcalibRootFile->mkdir("RangeVsEnergy");
   pCTcalibRootFile->cd("RangeVsEnergy");
+  Test_XY->Write("", TObject::kOverwrite);
+  Test_YX->Write("", TObject::kOverwrite);
+    
+/*
   TGraphErrors* rngEnrg[nStage];
   TGraphErrors* rngEnrg_XY[nStage];
-  /*
   for (int stage = 0; stage < nStage; ++stage) {
     string Title = "Range vs Energy Uncorrected for Stage " + to_string((long long int)stage);
     rngEnrg[stage] = new TGraphErrors(nEnrg);
@@ -452,7 +507,7 @@ int pCTcalib::Wcalib(){
     }*/
   
   // Define a region of validity for this brick
-  float xmin = -13;
+/*float xmin = -13;
   float xmax = 42; // arbitrary;
     for (int stage = nStage-1 ; stage >= 0 ; --stage) {
     string Title = "Range vs Energy Uncorrected for Stage " + to_string((long long int)stage);
@@ -485,8 +540,7 @@ int pCTcalib::Wcalib(){
     rngEnrg[stage]->Write("", TObject::kOverwrite);
 
     }
-
-
+*/
   
   /// Lennart Volz, November 2018 dE-E parameter evaluation:
   int Estep[3] = { 240, 120, 12 }; // work in the same way for helium and proton, but could also be set manually for optimization
@@ -566,7 +620,7 @@ void pCTcalib::writeCalibfile() {
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
-void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage]) {
+void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* REhist_test) {
   // Routine passed to process the WEPL calibration.
   cout << "Entering procWEPLcal for Nbricks=" << config.item_int["Nbricks"] << ".  The list of histograms to fill is" << endl;
   for(int stage = 0; stage < nStage; ++stage) cout << config.item_int["Nbricks"] << " bricks, stage " << stage << ", title=  " << REhist[stage]->GetTitle() << endl;
@@ -678,8 +732,7 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage]) {
 
       // Apply the pedestals and TV correction to the stage ADC values
       bool inBounds;
-      //eStage[stage] = theEvtRecon->GainFac[stage] * theTVcorr->corrFactor(stage, Tcorr, Vcorr, inBounds) * (thisEvent.ADC[stage] - theEvtRecon->Peds[stage]);
-      eStage[stage] = theTVcorr->corrFactor(stage, Tcorr, Vcorr, inBounds) * (thisEvent.ADC[stage] - theEvtRecon->Peds[stage]);
+      eStage[stage] = theEvtRecon->GainFac[stage] * theTVcorr->corrFactor(stage, Tcorr, Vcorr, inBounds) * (thisEvent.ADC[stage] - theEvtRecon->Peds[stage]);
       if (!inBounds){// || eStage[stage] > mxEstage) {
         good = false;
         break;
@@ -749,7 +802,8 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage]) {
       Vin = theGeometry->extrap2D(Ufv, Vf, Uin);
       Length = sqrt( pow((Tin - Tout),2) + pow((Vin - Vout),2) + pow((Uin - Uout),2) ); // Length  crossed (converted to WET in Wepl.h)
     }
-    hLengthProf->Fill(TinB,Length);
+    float RSP = 1.030; // Transformation to WET
+    hLengthProf->Fill(TinB,Length*RSP);
 
     //if(emptyEvt) continue;
     //For each stage where the proton stops, increment the corresponding range-energy table cell content.
@@ -762,35 +816,38 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage]) {
       cut3 = 35.; cut4 = 75.; cut5 = 77.;
     }
     if (eStage[4] > config.item_float["thr4"]) { // Particles end in stage 4
-      if (eStage[4] > cut4) continue; // Max Trans
-      if (eStage[3] < cut3 || eStage[2] < cut2 || eStage[1] < cut1 || eStage[0] < cut0) continue; // Threshold
-      REhist[4]->Fill(Length, eStage[4]);
+      //if (eStage[4] > cut4) continue; // Max Trans
+      //if (eStage[3] < cut3 || eStage[2] < cut2 || eStage[1] < cut1 || eStage[0] < cut0) continue; // Threshold
+      REhist[4]->Fill(Length*RSP, eStage[4]);
       dEEhist[4]->Fill(eStage[3], eStage[4]);
     }
     
     else if (eStage[3] > config.item_float["thr3"]) { // Particles end in stage 3
-      if (eStage[3] > cut5) continue; // Max Trans
-      if (eStage[2] < cut2 || eStage[1] < cut1 || eStage[0] < cut0) continue; // Threshold
-      REhist[3]->Fill(Length, eStage[3]);
+      //if (eStage[3] > cut5) continue; // Max Trans
+      //if (eStage[2] < cut2 || eStage[1] < cut1 || eStage[0] < cut0) continue; // Threshold
+      REhist[3]->Fill(Length*RSP, eStage[3]);
       dEEhist[3]->Fill(eStage[2], eStage[3]);
     }
 
     else if (eStage[2] > config.item_float["thr2"] ) { // Particles end in stage 2
-      if (eStage[2] > cut5) continue; // Max Trans
-      if (eStage[1] < cut1 || eStage[0] < cut0) continue; //Threshold
-      REhist[2]->Fill(Length, eStage[2]);
+      //if (eStage[2] > cut5) continue; // Max Trans
+      //if (eStage[1] < cut1 || eStage[0] < cut0) continue; //Threshold
+      REhist[2]->Fill(Length*RSP, eStage[2]);
       dEEhist[2]->Fill(eStage[1], eStage[2]);
     }
     else if (eStage[1] > config.item_float["thr1"]) { // Particles end in stage 1
-      if (eStage[1] > cut5) continue; // Max Trans
-      if (eStage[0] < cut0) continue ; //Threshold 
-      REhist[1]->Fill(Length, eStage[1]);
+      //if (eStage[1] > cut5) continue; // Max Trans
+      //if (eStage[0] < cut0) continue ; //Threshold 
+      REhist[1]->Fill(Length*RSP, eStage[1]);
       dEEhist[1]->Fill(eStage[0], eStage[1]);
     }
     else if (eStage[0] > config.item_float["thr0"]) { // Particles end in stage 0
-      if (eStage[0] > cut5) continue; // Max Trans
-      REhist[0]->Fill(Length, eStage[0]);
+      //if (eStage[0] > cut5) continue; // Max Trans
+      REhist[0]->Fill(Length*RSP, eStage[0]);
     }
+    double E_tot = eStage[0] +eStage[1] +eStage[2] +eStage[3] + eStage[4];
+    REhist_test->Fill(Length*RSP,E_tot);
+
   } // End of the event loop
 
   pCTcalibRootFile->mkdir("runCorrEnrgs");

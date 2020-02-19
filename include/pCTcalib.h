@@ -38,7 +38,7 @@ class pCTcalib {
 
   pCTconfig config;
   int Wcalib();
-  void procWEPLcal(TH2D*[nStage], TH2D*[nStage]);
+  void procWEPLcal(TH2D*[nStage], TH2D*[nStage], TH2D*);
 
   // NIST PSTAR proton range in polystyrene vs E corrected for Birk's law with Kb=.02 cm/meV
   // Experimentally measured R vs E for our 5 stage detector:
@@ -71,6 +71,7 @@ class pCTcalib {
 
   float Rst[nStage][nEnrg] = {{0.}}; // 5 arrays to store range vs E
   float Sst[nStage][nEnrg] = {{0.}}; // Peak width for each energy (sigma)
+  float TestArray[nEnrg] = {0.};
   float est[nEnrg] = { 0. };         // Corresponding E array in MeV/4
 
   float dEElow[5][3];

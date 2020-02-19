@@ -65,7 +65,20 @@ public:
       vPix = 9;
       inBounds = false;
     }
-    if (inBounds) return TVcorrHist[stage]->Interpolate(T,V); // bilinear interpolation
+    if (inBounds){
+      Int_t bin_x = TVcorrHist[stage]->GetXaxis()->FindFixBin(T);
+      Int_t bin_y = TVcorrHist[stage]->GetYaxis()->FindFixBin(V);
+      for(int i =-1; i<2; i++){
+	for(int j =-1; j<2; j++){
+	  if(  TVcorrHist[stage]->GetBinContent(bin_x+i, bin_y+j) >0.9){
+	    return TVcorrHist[stage]->GetBinContent( TVcorrHist[stage]->FindBin(T,V));
+	  }
+	}
+      }
+	
+      return TVcorrHist[stage]->Interpolate(T,V); // bilinear interpolation
+
+      }
     else return 0.;
   }
 
