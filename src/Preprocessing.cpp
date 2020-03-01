@@ -517,7 +517,7 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
 	timeStampOffset = timeStampOffset + pow(2, 36);
       }
     }
-    
+
     timeStampOld = timeStamp;
     if (config.item_int["continuous"]) {
       long long longTimeStamp = 16 * ((long long)timeStamp);
@@ -530,6 +530,7 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
 	Tback[lyr - 2] = Thit[lyr];
 	Vback[lyr - 2] = Vhit[lyr];
     }
+
     bool inBounds;
     int nGood = 0;
     for (int stage = 0; stage < 5; stage++) {
@@ -542,6 +543,7 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
       if(inBounds) nGood++;
 
     }
+
     Wet = WEPL->EtoWEPL(Ene, MaxEnergyTransFilter, ThresholdFilter, dEEFilter); // Energy to WEPL conversion
     if(!dEEFilter) ++ndEEFilter;
     if(!ThresholdFilter) ++nThreshold;

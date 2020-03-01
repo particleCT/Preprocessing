@@ -11,7 +11,7 @@ using namespace std;
 #include <fstream>
 
 class pCTgeo {
-  int fpgaLyr[12]; // mapping from fpga number to layer
+  int fpgaLyr[12];          // mapping from fpga number to layer
 
   double uPosV[4];          // u locations of each of the V layers
   int VBoard[4];            // hardware identifier for each V layer
@@ -130,12 +130,12 @@ public:
           { -43.7193, -43.716 },
           { -43.7193, -43.716 },
           { -43.686, -43.687 } };
-    double fSV_MC[2] = { -43.717, -43.717 }; // V board alignment assumed in the simulation
 
-    Tpin[0] = 215.168; // T board alignment pin locations, including corrections derived from data analysis
-    Tpin[1] = 211.373;
-    Tpin[2] = -203.373;
-    Tpin[3] = -207.168;
+    // T board alignment pin locations, including corrections derived from data analysis
+    Tpin[0] =  215.168;//  +0.1125 - 1.45;  // First direction then position
+    Tpin[1] =  211.373;//  - 1.45; // Position 
+    Tpin[2] = -203.373;//
+    Tpin[3] = -207.168;// +0.04109; // First direction
 
     Tdir[0] = -1.; // T board orientations (front and back trackers are reflected in u)
     Tdir[1] = -1.;
@@ -150,16 +150,18 @@ public:
       geoLogFile << "pCTgeo.h: T layer " << i << " is board " << TBoard[i] << " with alignment pin at t=" << Tpin[i]
                  << " mm and direction " << Tdir[i] << endl;
     }
-    double fST[7][4] = { // T board internal alignment from optical surveys of
-                         // the physical boards
-      { -999, -999, -999, -999 }, { 38.60, 126.87, 215.15, 303.42 }, { 38.48, 126.76, 215.04, 303.32 },
-      { 38.69, 126.95, 215.23, 303.57 }, { 38.58, 126.85, 215.11, 303.37 }, { 38.62, 126.90, 215.16, 303.41 },
+    double fST[7][4] = { // T board internal alignment from optical surveys of the physical boards
+      { -999, -999, -999, -999 },
+      { 38.60, 126.87, 215.15, 303.42 },
+      { 38.48, 126.76, 215.04, 303.32 },
+      { 38.69, 126.95, 215.23, 303.57 },
+      { 38.58, 126.85, 215.11, 303.37 },
+      { 38.62, 126.90, 215.16, 303.41 },
       { 38.58, 126.85, 215.11, 303.37 } };
 
     for (int i = 0; i < 7; i++) {
       for (int j = 0; j < 4; j++) {
-        if (j < 2)
-          firstStripV[i][j] = fSV[i][j];
+        if (j < 2) firstStripV[i][j] = fSV[i][j];
         firstStripT[i][j] = fST[i][j];
       }
     }
@@ -191,10 +193,10 @@ public:
     }
     
     // Geometry for the wedge phantom, all in mm (INCLUDING 0.1MM SHIFT AND  0.1MM SLIT between wedges):
-    TwedgeBreaks[0] = -104.50 + tWedgeOffset; // Start of the wedge slope
-    TwedgeBreaks[1] = -4.75   + tWedgeOffset; // End of the slope, start of the flat
-    TwedgeBreaks[2] =  4.75   + tWedgeOffset; // End of the flat, start of the opposite slope
-    TwedgeBreaks[3] =  104.50 + tWedgeOffset; // End of the opposite slope.
+    TwedgeBreaks[0] = -104.50 + tWedgeOffset;// - 1.45; // Start of the wedge slope
+    TwedgeBreaks[1] = -4.75   + tWedgeOffset;// - 1.45; // End of the slope, start of the flat
+    TwedgeBreaks[2] =  4.75   + tWedgeOffset;// - 1.45; // End of the flat, start of the opposite slope
+    TwedgeBreaks[3] =  104.50 + tWedgeOffset;// - 1.45; // End of the opposite slope.
     // Should also be the end of the bricks, if positioned correctly
 
     BrickThickness = 50.8; // Brick thickness in U; also the wedge maximum thickness
@@ -266,6 +268,7 @@ public:
     int brd = VBoard[fpga];
     return firstStripV[brd][side] + Vpin[fpga] + global_strip * stripPitch;
   }
+
 
   // Method to translate strip number to coordinate for T layers
   inline double strip_position_T(int fpga, int chip, double strip) const {

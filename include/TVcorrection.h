@@ -15,12 +15,12 @@
 #include "TFile.h"
 using namespace std;
 #define nStage 5
-#define nPix 380
-#define nPixRoot (38 + 2)*(10 + 2) // under and overflow
+#define nPixX 38
+#define nPixY 10  // under and overflow
+#define nPix (nPixX+2)*(nPixY+2)
 
 class TVcorrection {
 public:
-  float TVmap[nStage][nPixRoot] = {{0}}; // 5 TV maps with 1cm pixels, 10x38 cm2 area, total 10x38=380 pixels
   float ped[5] = {0};   // Calibrated pedestals (the program will generally use values  generated on the fly, however)
   float Eempt[6] = {0}; // ADC pedestals and energy depositions from Empty run  
   TH2D* TVcorrHist[5]; // TVcorr histogram for each stage
@@ -29,7 +29,7 @@ public:
   TVcorrection(TFile* calibFile, int calib) { // pass 0 for all of year, month, day, run to avoid checks on those values
 
     if(calib){// Calibration we initialize the data be empty
-      for(int stage =0; stage<nStage; stage++) TVcorrHist[stage] = new TH2D(Form("TVcorrMap_%d", stage), "", 38, -190, 190, 10, -50, 50);
+      for(int stage =0; stage<nStage; stage++) TVcorrHist[stage] = new TH2D(Form("TVcorrMap_%d", stage), "", nPixX, -190, 190, nPixY, -50, 50);
     }
     else{ // Preprocessing we fill from the calibration file
       TTree* header= (TTree*)calibFile->Get("header");
@@ -52,8 +52,8 @@ public:
       tPix = 0;
       inBounds = false;
     }
-    if (tPix > 37) {
-      tPix = 37;
+    if (tPix > TVcorrHist[stage]->GetNbinsX()-1) {
+      tPix = TVcorrHist[stage]->GetNbinsX()-1;
       inBounds = false;
     }
 
@@ -61,8 +61,8 @@ public:
       vPix = 0;
       inBounds = false;
     }
-    if (vPix > 9) {
-      vPix = 9;
+    if (vPix > TVcorrHist[stage]->GetNbinsY()-1) {
+      vPix = TVcorrHist[stage]->GetNbinsY()-1;
       inBounds = false;
     }
     if (inBounds){
@@ -75,7 +75,7 @@ public:
 	  }
 	}
       }
-	
+      //return TVcorrHist[stage]->GetBinContent( TVcorrHist[stage]->FindBin(T,V));
       return TVcorrHist[stage]->Interpolate(T,V); // bilinear interpolation
 
       }

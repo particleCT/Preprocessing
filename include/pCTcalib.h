@@ -78,8 +78,8 @@ class pCTcalib {
   float dEEhigh[5][3];
     
   TFile* pCTcalibRootFile = new TFile("pCTcalib.root", "recreate"); // General File for Recalibration
-  TH1D *pxHistE[nStage][nPixRoot];
-  TH1D *pxHistADC[nStage][nPixRoot];
+  TH1D *pxHistE[nStage][nPix];
+  TH1D *pxHistADC[nStage][nPix];
   TH1D *stgHistE[nStage];
   TH1D *EsumH;
   TH2D* TVcorrHist[5]; // TVcorr histogram for each stage
@@ -88,9 +88,10 @@ class pCTcalib {
   time_t currentTime;
   struct tm *now;
 
-  double V[2], T[2], Ut[2], Uv[2];
+  double V[2], T[2], Ut[2], Uv[2], Uft[2], Ufv[2], Tf[2], Vf[2]; 
   // Here are a bunch of parameters used to extract the calibration
   float EG4stage[nStage]; // MC derived stage energies, used to calibrate to MeV (CDH setup)
+  float TVnormalizeFactor;
   float Teststage[nStage];
   int k1[nStage];         // Lots of interpolation parameters for cleaning up calibration curves
   int j1[nStage], j2[nStage], j3[nStage], j4[nStage];
