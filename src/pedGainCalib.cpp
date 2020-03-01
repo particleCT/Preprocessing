@@ -4,6 +4,8 @@
 
 #include "pedGainCalib.h"
 #include "TFile.h"
+#include "TROOT.h"
+
 pedGainCalib::~pedGainCalib()
 {
   // Delete all histograms to avoid memory leak
