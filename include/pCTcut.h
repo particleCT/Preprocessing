@@ -4,6 +4,8 @@
 #include "TkrHits.h"
 #include "pCT_Tracking.h"
 #include "pCTconfig.h"
+#include "TH2D.h"
+#include "TF1.h"
 using namespace std;
 class TkrHits;
 class pCT_Tracking;
@@ -28,6 +30,8 @@ class pCTcut {
   // classes
   bool cutEvt(pCT_Tracking&, TkrHits&);
   bool EnrgCut(float [5], float, float, float, float );
+  bool dEEFilter(float, float, float*, float*);
+  void dEEFilterParameters(TH2D* dEEhist, float dEElow[3], float dEEhigh[3], int stage);
     
   void summary();
 };

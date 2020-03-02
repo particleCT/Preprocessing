@@ -24,7 +24,8 @@
 #include "TGraphErrors.h"
 #include "pCTconfig.h"
 using namespace std;
-
+#define nStage 5
+#define nBricks 5
 #define nRange 260
 #define nEnrg 340
 class pCTcut;
@@ -47,11 +48,12 @@ class pCTcalib {
   
   void plot2D(string fn, string T, string TX, string TY, int N, float X[], float Y[], float E[]);
   int TVmapper();
+  int TVmapper_FlatBricks();
   void enrgDep();
   void writeCalibfile();
   bool getLineIntersection(double, double, double, double, double, double, double, double, double &, double &);
   bool EnrgCut(float [5], float, float, float, float);
-
+  void FinddEEFilterParameters(TH2D* dEEhist[nStage][5]);
   // Other classes
   EvtRecon *theEvtRecon;
   pCTgeo *theGeometry;

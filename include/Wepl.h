@@ -21,6 +21,7 @@ float EtoWEPL    Converts energy (in Mev) deposited in 5 stages to WEPL (in mm)
 #include "TH2D.h"
 #include "TGraphErrors.h"
 #include "TFile.h"
+#include "pCTcut.h"
 #include "pCTconfig.h"
 using namespace std;
 #define nEnrg 340
@@ -38,7 +39,7 @@ class Wepl {
   TH2D* dEEhist_root[5];
   TGraphErrors* Test;
   TGraphErrors* Test2;
-
+  pCTcut *theCuts;
   // Explicit constructor
   Wepl(pCTconfig, TFile*, TFile*);
        
@@ -85,11 +86,15 @@ inline Wepl::Wepl(pCTconfig cfg, TFile* calibFile, TFile* outputFile): config(cf
     maxEnergy = 77.;
     minEnergy = 1;
   }
+
+  theCuts = new pCTcut(config);
+  
   float EnergyBinWidth = 0.5;
   if (config.item_str["partType"] == "He") EnergyBinWidth = 1.0;
   for(int i =0; i<5; i++){
     dEEhist_root[i] = new TH2D(Form("dE-EStage_%d_bricks",i), Form("dE-E spectra for stage %d ", i), // Name-Title
-			       nEnrg, 0., nEnrg * EnergyBinWidth, nEnrg, 0., nEnrg * EnergyBinWidth);} // X-Y binning 
+			       nEnrg, 0., nEnrg * EnergyBinWidth, nEnrg, 0., nEnrg * EnergyBinWidth);
+  } // X-Y binning 
       
   for(int stage =0;stage<5;stage++){
     calWEPL[stage]= (TGraphErrors*)calibFile->Get(Form("RangeVsEnergy/RangeVsEnergy_%d",stage)); // Load the Range-Energy calibration
@@ -117,32 +122,23 @@ inline float Wepl::EtoWEPL(float Estage[5], Int_t &MaxTrans, Int_t &Threshold, I
   if (Estage[4] > thr[4]) { // 1 MeV
     dEEhist_root[4]->Fill(Estage[3], Estage[4]);
     WET = Test->Eval(E_tot);
-    //WET = calWEPL[4]->Eval(Estage[4]);
-    
+    //WET = calWEPL[4]->Eval(Estage[4]);    
     if( WET < 0 ) return -1000;  // Unit Test
     if (Estage[4] > maxEnergy || Estage[4] < minEnergy) MaxTrans = 0;
-    if (Estage[3] < cut3 || Estage[2] < cut2 || Estage[1] < cut1 || Estage[0] < cut0) Threshold = 0; 
-    if (config.item_int["dEEFilter"]) { // dEEFilter
-      if (Estage[3] < (dEElow[4][0]  * pow(Estage[4],2) + dEElow[4][1] * Estage[4] + dEElow[4][2]) ||
-          Estage[3] > (dEEhigh[4][0] * pow(Estage[4],2) + dEEhigh[4][1] * Estage[4] + dEEhigh[4][2])) dEE=0;
-    }
+    if (Estage[3] < cut3 || Estage[2] < cut2 || Estage[1] < cut1 || Estage[0] < cut0) Threshold = 0;
+    if (config.item_int["dEEFilter"] && !theCuts->dEEFilter(Estage[3], Estage[4], dEElow[4], dEEhigh[4])) dEE = 0;
     return WET; // polystyrene to water equivalent // everything passed
   }
   // if particle stop in Stage 3
   else if (Estage[3] > thr[3]) {
-    
+
     WET = Test->Eval(E_tot);
+    dEEhist_root[3]->Fill(Estage[2], Estage[3]);
     //WET = calWEPL[3]->Eval(Estage[3]);
     if( WET < 0 ) return -1000; // Unit Test
     if (Estage[3] > maxEnergy || Estage[3] < minEnergy) MaxTrans = 0;
     if (Estage[2] < cut2 || Estage[1] < cut1 || Estage[0] < cut0) Threshold = 0; 
-    if (config.item_int["dEEFilter"]) { // dEEFilter
-      if (Estage[2] < (dEElow[3][0]  * pow(Estage[3],2) + dEElow[3][1] * Estage[3] + dEElow[3][2]) ||
-          Estage[2] > (dEEhigh[3][0] * pow(Estage[3],2) + dEEhigh[3][1] * Estage[3] + dEEhigh[3][2])){
-	dEEhist_root[3]->Fill(Estage[2], Estage[3]);
-	dEE = 0;
-      }
-    }
+    if (config.item_int["dEEFilter"] && !theCuts->dEEFilter(Estage[2], Estage[3], dEElow[3], dEEhigh[3])) dEE = 0;
     return WET; // polystyrene to water equivalent
   }
   // if particle stop in Stage 2
@@ -152,10 +148,7 @@ inline float Wepl::EtoWEPL(float Estage[5], Int_t &MaxTrans, Int_t &Threshold, I
     //WET = calWEPL[2]->Eval(Estage[2]);
     if (Estage[2] > maxEnergy || Estage[2] < minEnergy) MaxTrans = 0;
     if (Estage[1] < cut1 || Estage[0] < cut0) Threshold = 0;
-    if (config.item_int["dEEFilter"]) { // dEEFilter
-      if (Estage[1] < (dEElow[2][0]  * pow(Estage[2],2) + dEElow[1][1]  * Estage[2] + dEElow[2][2]) ||
-          Estage[1] > (dEEhigh[2][0] * pow(Estage[2],2) + dEEhigh[1][1] * Estage[2] + dEEhigh[2][2])) dEE = 0;
-    }
+    if (config.item_int["dEEFilter"] && !theCuts->dEEFilter(Estage[1], Estage[2], dEElow[2], dEEhigh[2])) dEE = 0;
     return WET; // polystyrene to water equivalent
   }
   // if particle stop in Stage 1
@@ -166,10 +159,7 @@ inline float Wepl::EtoWEPL(float Estage[5], Int_t &MaxTrans, Int_t &Threshold, I
     if( WET < 0 ) return -1000;  // Unit Test
     if (Estage[1] > maxEnergy || Estage[1] < minEnergy) MaxTrans = 0;
     if (Estage[0] < cut0) Threshold = 0;
-    if (config.item_int["dEEFilter"]) { // dEEFilter
-      if (Estage[0] < (dEElow[1][0]  * pow(Estage[1],2) + dEElow[1][1]  * Estage[1] + dEElow[1][2]) ||
-          Estage[0] > (dEEhigh[1][0] * pow(Estage[1],2) + dEEhigh[1][1] * Estage[1] + dEEhigh[1][2])) dEE = 0;        
-    }
+    if (config.item_int["dEEFilter"] && !theCuts->dEEFilter(Estage[0], Estage[1], dEElow[1], dEEhigh[1])) dEE = 0;
     return WET; // polystyrene to water equivalent
   }
   // if particle stop in Stage 0

@@ -3,7 +3,7 @@
 #Spaces are optional, but the = sign is required
 #key = value lines can also include comments after the value(space required)
 #Blank lines are not allowed, at least for now(will cause a crash)
-max_events = 4000000 # Set nonzero if you don't want to analyze all of the events
+max_events = 3000000 # Set nonzero if you don't want to analyze all of the events
 dEEFilter = 1	   # dEE FILTER to be used always (will result in bad events returned with 5000+WEPL)
 energy    = 200    # Beam Energy used in this experiment. Should always be 200 for now.
 normalize = 0      # HAS TO STAY 0 FOR NOW (an addition from Robert that results in massive deterioriation of the calib curves, it is not fully understood why) 
