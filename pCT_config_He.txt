@@ -22,6 +22,7 @@ thr1 = 1.0        # For calibration runs, these set the threshold values used an
 thr2 = 1.0        # For preprocessing runs these will get overwritten by values obtained from the WEPL calibration file, if they are present there
 thr3 = 1.0	  
 thr4 = 1.0
+maxFluence = 280 #5 Miilion particles for calibration
 pedrng0 =  -500    # Lower limit of the pedestal range.  The pedestal must be within this value up to the value plus 2000 ADC counts
 pedrng1 =  -500
 pedrng2 = -1000

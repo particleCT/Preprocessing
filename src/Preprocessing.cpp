@@ -81,6 +81,10 @@ void Preprocessing::pCTevents(pCTconfig config, pCTgeo* Geometry, pCTraw rawEvt,
   // pCTraw class
   /////////////////////////////////////////////////////////////////////////////////////////
 
+  //Fluence de-modulation for strongly fluctuating data (at HIT), could in principle be extended to get any fluence field desired
+  TH2D *fluence = new TH2D("fluence", "Maximum fluence field", 200, -150,150, 90,-45,45);
+
+
   int nErrDmp = 0;
   while (!rawEvt.stop_reading) { // event loop
     try {
@@ -178,6 +182,10 @@ void Preprocessing::pCTevents(pCTconfig config, pCTgeo* Geometry, pCTraw rawEvt,
             Thit[3] = ThitD[3];
           }
         }
+
+	//Fluence De-Modulation to save on time performed here
+//	if(fluence->GetBinContent(fluence->FindBin(Thit[1],Vhit[1]))>=config.item_int["maxFluence"]) continue; 
+//	else fluence->Fill(Thit[1],Vhit[1],1); 
 
         unsigned char mask[5] = { 0x01, 0x02, 0x04, 0x08, 0x10 };
         unsigned char OTR = 0;
