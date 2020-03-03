@@ -53,7 +53,7 @@ class pCTcalib {
   void writeCalibfile();
   bool getLineIntersection(double, double, double, double, double, double, double, double, double &, double &);
   bool EnrgCut(float [5], float, float, float, float);
-  void FinddEEFilterParameters(TH2D* dEEhist[nStage][5]);
+  void FilldEE(TH2D* dEEhist[nStage]);
   // Other classes
   EvtRecon *theEvtRecon;
   pCTgeo *theGeometry;

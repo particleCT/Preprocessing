@@ -186,8 +186,8 @@ int pCTcalib::TVmapper() {
       double Tcorr = theGeometry->extrap2D(Ut, T, theGeometry->energyDetectorU(stage));
       double Vcorr = theGeometry->extrap2D(Uv, V, theGeometry->energyDetectorU(stage));
       // Outside of the detector
-      if (fabs(Tcorr) > 189.0) continue;
-      if (fabs(Vcorr) > 49.0)  continue;
+      if (fabs(Tcorr) > 150.0) continue;
+      if (fabs(Vcorr) > 40.0)  continue;
       int global = theTVcorr->TVcorrHist[0]->FindBin(Tcorr,Vcorr);
       pxHistADC[stage][global]->Fill(thisEvent.ADC[stage] - theEvtRecon->Peds[stage]);
     }
@@ -705,15 +705,13 @@ int pCTcalib::Wcalib(){
     return -1;
   }
   for (int bricks = 0; bricks < nBricks; bricks++) cout << "The raw data file for " << bricks << " bricks is " << calFileNames[bricks] << endl;
-  TH2D* dEEhist[nBricks][nStage];
+  TH2D* dEEhist[nStage];
   TH2D* REhist[nBricks][nStage];
 
-  for (int bricks = 0; bricks < nBricks; ++bricks) {
-    for (int stage = 0; stage < nStage; ++stage) {
-
-      dEEhist[bricks][stage] = new TH2D(Form("dE-EStage_%d_bricks_%d",stage,bricks), Form("dE-E spectra for stage %d and %d bricks ", stage, bricks), // Title
-					      nEnrg, 0., nEnrg * EnergyBinWidth, nEnrg, 0., nEnrg * EnergyBinWidth);
-					      
+  for (int stage = 0; stage < nStage; ++stage) {
+    dEEhist[stage] = new TH2D(Form("dE-EStage_%d",stage), Form("dE-E spectra for stage %d", stage), // Title
+			      nEnrg, 0., nEnrg * EnergyBinWidth, nEnrg, 0., nEnrg * EnergyBinWidth);
+    for (int bricks = 0; bricks < nBricks; ++bricks) {
       float enrgB0 = 0.; // The analysis of energy slices further down assumes that the first energy bin starts at zero
       string Title = "WEPL calibration array for stage " + to_string((long long int)stage) + " and nBricks=" + to_string((long long int)bricks);
       REhist[bricks][stage] = new TH2D(Form("WEPLcalib_stage%d_bricks%d",stage,bricks), Form("WEPLcalib_stage%d_bricks%d",stage,bricks),
@@ -723,19 +721,23 @@ int pCTcalib::Wcalib(){
     }
   }
 
-  TH2D* REhist_Tot = new TH2D("RE_Tot","Range-Energy Full calibraiton",1000,0,260, 1000, 0,260*4);  
-  // Submit the event processing  -- fill the histograms
-  for (int bricks = 1; bricks < nBricks; bricks++) {
-    //config.item_str["inputFileName"] = calFileNames[bricks + 5];
+  TH2D* REhist_Tot = new TH2D("RE_Tot","Range-Energy Full calibration",1000,0,260, 1000, 0,260*4);  
+
+  for (int bricks = 0; bricks < nBricks; bricks++) {
+    //config.item_str["inputFileName"] = calFileNames[bricks + 5]; -- With flat bricks
     config.item_str["inputFileName"] = calFileNames[bricks+1];
     config.item_int["Nbricks"] = bricks;
-    procWEPLcal(REhist[bricks] , dEEhist[bricks], REhist_Tot);
+    FilldEE(dEEhist);
   }
-  //config.item_str["inputFileName"] = calFileNames[5];
-  config.item_str["inputFileName"] = calFileNames[1];
-  config.item_int["Nbricks"] = 0;
-  procWEPLcal(REhist[0], dEEhist[0], REhist_Tot);
+  for (int stage = 0; stage < nStage; stage++) theCuts->dEEFilterParameters(dEEhist[stage],dEElow[stage],dEEhigh[stage],stage);
 
+  // Submit the event processing  -- fill the histograms
+  for (int bricks = 0; bricks < nBricks; bricks++) {
+    //config.item_str["inputFileName"] = calFileNames[bricks + 5]; -- With flat bricks
+    config.item_str["inputFileName"] = calFileNames[bricks+1];
+    config.item_int["Nbricks"] = bricks;
+    procWEPLcal(REhist[bricks] , dEEhist, REhist_Tot);
+  }
 
   cout << "pCTcalib::Wcalib, begin adding together the range-energy tables from the runs with different numbers of bricks." << endl;
   // Combine the resulting maps into one map for each stage by adding them for all bricks
@@ -744,20 +746,18 @@ int pCTcalib::Wcalib(){
   for (int stage = 0; stage < nStage; ++stage) {
     // Save the individual histograms
     pCTcalibRootFile->cd("dEE");
-    for (int bricks = 0; bricks < nBricks; ++bricks) dEEhist[bricks][stage]->Write("",TObject::kOverwrite);
+    dEEhist[stage]->Write("",TObject::kOverwrite);
     pCTcalibRootFile->cd("REhist");
     for (int bricks = 0; bricks < nBricks; ++bricks) REhist[bricks][stage]->Write("",TObject::kOverwrite);
     REhist_Tot->Write("",TObject::kOverwrite);
+
     //Add them up together
     for (int bricks = 1; bricks < nBricks; ++bricks) {
       string Title = "Summed WEPL calibration array for stage " + to_string((long long int)stage);
-      dEEhist[0][stage]->Add(dEEhist[bricks][stage]);
       REhist[0][stage]->Add(REhist[bricks][stage]);
-      theCuts->dEEFilterParameters(dEEhist[0][stage],dEElow[stage],dEEhigh[stage],stage);
+      
     }
     // Save the added histograms
-    pCTcalibRootFile->cd("dEE");
-    dEEhist[0][stage]->Write(Form("dEE_Tot_stage%d",stage),TObject::kOverwrite);
     pCTcalibRootFile->cd("REhist");
     REhist[0][stage]->Write(Form("RE_Tot_stage%d",stage),TObject::kOverwrite);
   }
@@ -866,7 +866,9 @@ int pCTcalib::Wcalib(){
       if(rngB[nrg] > xmin && rngB[nrg] < xmax) {
 	rngB[nrg] += 0.5*RangeBinWidth;
 	int N =  rngEnrg[stage]->GetN();
+	rngEnrg_XY[stage]->SetPoint(N, double(rngB[nrg]),double(Rst[stage][nrg]));	
 	rngEnrg_XY[stage]->SetPointError(N, 0.,double(Sst[stage][nrg]));
+	rngEnrg[stage]->SetPoint(N, double(Rst[stage][nrg]), double(rngB[nrg]));
 	rngEnrg[stage]->SetPointError(N, double(Sst[stage][nrg]), 0.);
       }
     }
@@ -913,7 +915,9 @@ int pCTcalib::Wcalib(){
     double Sst  = (xHigh - xLow) / 2.2;
     
     int N =  RE_Tot_XY->GetN();
+    RE_Tot_XY->SetPoint(N, rngB, Sadc);    
     RE_Tot_XY->SetPointError(N, 0.,Sst);
+    RE_Tot_YX->SetPoint(N, Sadc,rngB);    
     RE_Tot_YX->SetPointError(N, Sst, 0.);
   }
   // Plot the final calibration results before corrections
@@ -958,6 +962,47 @@ void pCTcalib::writeCalibfile() {
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
+void pCTcalib::FilldEE(TH2D* dEEhist[nStage]) {
+  cout<<"Fill dEE"<<endl;
+  float wedgeLimit = theGeometry->getTWedgeBreaks(4) + 25.0; // NO BRICK OFFSET //+5.
+  float openRange = 20.0;
+  float pedestals[nStage];
+  int pedMin[nStage];
+  for (int stage = 0; stage < nStage; stage++) pedestals[stage] = 0.;
+  for (int stage = 0; stage < nStage; stage++){
+    pedMin[stage] = config.item_int[Form("pedrng%d",stage)];
+  }  
+  theEvtRecon->config.item_int["doGains"] = true;
+  theEvtRecon->config.item_int["Nbricks"] = config.item_int["Nbricks"];
+  pedGainCalib* theCalibration = new pedGainCalib(pCTcalibRootFile, pedMin, pedestals,-150., -151., wedgeLimit, wedgeLimit + openRange, config);
+  theEvtRecon->ReadInputFile(theGeometry, theTVcorr, config.item_str["inputFileName"], theCalibration);
+  for (int EvtNum = 0; EvtNum < theEvtRecon->nEvents; ++EvtNum) {
+    Event thisEvent;
+    thisEvent = theEvtRecon->evtList[EvtNum];
+    Tf[0] = thisEvent.Thit[0]; Tf[1] = thisEvent.Thit[1];// Front tracker coordinates
+    Vf[0] = thisEvent.Vhit[0]; Vf[1] = thisEvent.Vhit[1];
+    T[0]  = thisEvent.Thit[2];  T[1] = thisEvent.Thit[3];// Rear tracker coordinates
+    V[0]  = thisEvent.Vhit[2];  V[1] = thisEvent.Vhit[3];
+    float eStage[nStage];
+
+    for (int stage = 0; stage < nStage; ++stage) {
+      // Extrapolate the rear track vector to the energy detector stage
+      double Tcorr = theGeometry->extrap2D(Ut, T, theGeometry->energyDetectorU(stage));
+      double Vcorr = theGeometry->extrap2D(Uv, V, theGeometry->energyDetectorU(stage));
+      // Apply the pedestals and TV correction to the stage ADC values
+      bool inBounds;
+      eStage[stage] = theEvtRecon->GainFac[stage] * theTVcorr->corrFactor(stage, Tcorr, Vcorr, inBounds) * (thisEvent.ADC[stage] - theEvtRecon->Peds[stage]);
+    }
+
+    if (eStage[4] > config.item_float["thr4"])       dEEhist[4]->Fill(eStage[3], eStage[4]);
+    else if (eStage[3] > config.item_float["thr3"])  dEEhist[3]->Fill(eStage[2], eStage[3]);
+    else if (eStage[2] > config.item_float["thr2"] ) dEEhist[2]->Fill(eStage[1], eStage[2]);
+    else if (eStage[1] > config.item_float["thr1"])  dEEhist[1]->Fill(eStage[0], eStage[1]);
+    else if (eStage[0] > config.item_float["thr0"])  continue;
+  }
+}  
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* REhist_Tot) {
   // Routine passed to process the WEPL calibration.
   cout << "Entering procWEPLcal for Nbricks=" << config.item_int["Nbricks"] << ".  The list of histograms to fill is" << endl;
@@ -969,7 +1014,7 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
   float wedgeLimit = theGeometry->getTWedgeBreaks(4) + 25.0; // NO BRICK OFFSET //+5.
   float openRange = 20.0;
   float pedestals[nStage];
-  int pedMin[5];
+  int pedMin[nStage];
   for (int stage = 0; stage < nStage; stage++) pedestals[stage] = 0.;
   for (int stage = 0; stage < nStage; stage++){
     pedMin[stage] = config.item_int[Form("pedrng%d",stage)];
@@ -1139,7 +1184,7 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
     float RSP = 1.030; // Transformation to WET
     hLengthProf->Fill(TinB,Length*RSP);
 
-    //if(emptyEvt) continue;
+    if(emptyEvt) continue;
     //For each stage where the proton stops, increment the corresponding range-energy table cell content.
     //Energy cuts
     if (config.item_str["partType"] == "He") {  
@@ -1149,36 +1194,19 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
       cut0 = 19.; cut1 = 21.; cut2 = 25.;
       cut3 = 35.; cut4 = 75.; cut5 = 77.;
     }
-    if (eStage[4] > config.item_float["thr4"]) { // Particles end in stage 4
-      //if (eStage[4] > cut4) continue; // Max Trans
-      //if (eStage[3] < cut3 || eStage[2] < cut2 || eStage[1] < cut1 || eStage[0] < cut0) continue; // Threshold
-      REhist[4]->Fill(Length*RSP, eStage[4]);
-      dEEhist[4]->Fill(eStage[3], eStage[4]);
-    }
-    
-    else if (eStage[3] > config.item_float["thr3"]) { // Particles end in stage 3
-      //if (eStage[3] > cut5) continue; // Max Trans
-      //if (eStage[2] < cut2 || eStage[1] < cut1 || eStage[0] < cut0) continue; // Threshold
-      REhist[3]->Fill(Length*RSP, eStage[3]);
-      dEEhist[3]->Fill(eStage[2], eStage[3]);
-    }
-
-    else if (eStage[2] > config.item_float["thr2"] ) { // Particles end in stage 2
-      //if (eStage[2] > cut5) continue; // Max Trans
-      //if (eStage[1] < cut1 || eStage[0] < cut0) continue; //Threshold
-      REhist[2]->Fill(Length*RSP, eStage[2]);
-      dEEhist[2]->Fill(eStage[1], eStage[2]);
-    }
-    else if (eStage[1] > config.item_float["thr1"]) { // Particles end in stage 1
-      //if (eStage[1] > cut5) continue; // Max Trans
-      //if (eStage[0] < cut0) continue ; //Threshold 
-      REhist[1]->Fill(Length*RSP, eStage[1]);
-      dEEhist[1]->Fill(eStage[0], eStage[1]);
-    }
-    else if (eStage[0] > config.item_float["thr0"]) { // Particles end in stage 0
-      //if (eStage[0] > cut5) continue; // Max Trans
-      REhist[0]->Fill(Length*RSP, eStage[0]);
-    }
+    /*
+    if (eStage[4]>0 &&theCuts->dEEFilter(eStage[3], eStage[4], dEElow[4], dEEhigh[4])) REhist[4]->Fill(Length*RSP, eStage[4]);
+    else if (eStage[3]>0 && theCuts->dEEFilter(eStage[2], eStage[3], dEElow[3], dEEhigh[3])) REhist[3]->Fill(Length*RSP, eStage[3]);
+    else if (eStage[2]>0 &&theCuts->dEEFilter(eStage[1], eStage[2], dEElow[2], dEEhigh[2])) REhist[2]->Fill(Length*RSP, eStage[2]);
+    else if (eStage[1]>0 &&theCuts->dEEFilter(eStage[0], eStage[1], dEElow[1], dEEhigh[1])) REhist[1]->Fill(Length*RSP, eStage[1]);
+    else if (eStage[1] < config.item_float["thr1"] && eStage[0] < config.item_float["thr0"] )  REhist[0]->Fill(Length*RSP, eStage[0]); // Particles end in stage 0
+    else continue;
+    */
+    if (eStage[4] > config.item_float["thr4"])       REhist[4]->Fill(Length*RSP, eStage[4]);
+    else if (eStage[3] > config.item_float["thr3"])  REhist[3]->Fill(Length*RSP, eStage[3]);
+    else if (eStage[2] > config.item_float["thr2"] ) REhist[2]->Fill(Length*RSP, eStage[2]);
+    else if (eStage[1] > config.item_float["thr1"])  REhist[1]->Fill(Length*RSP, eStage[1]); 
+    else if (eStage[0] > config.item_float["thr0"])  REhist[0]->Fill(Length*RSP, eStage[0]); // Particles end in stage 0*/
     double E_tot = eStage[0] +eStage[1] +eStage[2] +eStage[3] + eStage[4];
     REhist_Tot->Fill(Length*RSP,E_tot);
 

@@ -65,7 +65,7 @@ inline Wepl::~Wepl(){
   projectionROOT->mkdir("calWEPL");
   projectionROOT->cd("calWEPL");
   Test->Write("",TObject::kOverwrite);
-  Test2->Write("",TObject::kOverwrite);
+  //Test2->Write("",TObject::kOverwrite);
   for(int i =0;i<5;i++) calWEPL[i]->Write("",TObject::kOverwrite);
   
 }  
@@ -101,7 +101,7 @@ inline Wepl::Wepl(pCTconfig cfg, TFile* calibFile, TFile* outputFile): config(cf
     header->SetBranchAddress(Form("thr_%d", stage),&thr[stage]); // Load the threshold
   }
   //Test  = (TGraphErrors*)calibFile->Get("NewRange_YX");
-  Test2 = (TGraphErrors*)calibFile->Get("NewRange_XY");
+  //Test2 = (TGraphErrors*)calibFile->Get("NewRange_XY");
   Test = (TGraphErrors*)calibFile->Get("RangeVsEnergy/RangeVsEnergy_YX");
   for(int stage =0;stage<5;stage++){ // 1 stage less due to the fact that the 1st-stage can't do dEE
     for(int i =0; i<3; i++){
