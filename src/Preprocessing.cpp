@@ -184,8 +184,8 @@ void Preprocessing::pCTevents(pCTconfig config, pCTgeo* Geometry, pCTraw rawEvt,
         }
 
 	//Fluence De-Modulation to save on time performed here
-//	if(fluence->GetBinContent(fluence->FindBin(Thit[1],Vhit[1]))>=config.item_int["maxFluence"]) continue; 
-//	else fluence->Fill(Thit[1],Vhit[1],1); 
+	if(fluence->GetBinContent(fluence->FindBin(Thit[1],Vhit[1]))>=config.item_int["maxFluence"]) continue; 
+	else fluence->Fill(Thit[1],Vhit[1],1); 
 
         unsigned char mask[5] = { 0x01, 0x02, 0x04, 0x08, 0x10 };
         unsigned char OTR = 0;

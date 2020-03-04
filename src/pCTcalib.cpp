@@ -1108,7 +1108,7 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
  
 
     //First check if compatible with fluence de-mod (important for largely fluctuating fluences)
-    if(fluence->GetBinContent(fluence->FindBin(Tf[1],Vf[1]))>=280) continue;
+    if(fluence->GetBinContent(fluence->FindBin(Tf[1],Vf[1]))>=config.item_int["maxFluence"]) continue;
     else fluence->Fill(Tf[1],Vf[1],1);
 
     float eStage[nStage]; // energy in this stage
