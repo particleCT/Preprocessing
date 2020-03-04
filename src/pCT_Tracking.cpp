@@ -1,6 +1,7 @@
 // Tracker pattern recognition routines
 // R.P. Johnson 5/22/2016
 
+#include "pCTcut.h"
 #include "pCT_Tracking.h"
 
 // This is the pattern recognition, which works only in 2D, separately for the V-U and T-U views.
@@ -21,9 +22,9 @@ std::vector<Tkr2D> pCT_Tracking::Tracking2D(int Idx, TkrHits &pCThits, pCTgeo *G
     Cut on the displacement at u=0 between front and back vectors
   */
 
-  const double mxSlopeFront[2] = { 0.03, 0.09 }; // Cut on the slope of the front tracker vector, separately for V and T
-  const double mxSlopeBack[2] = { 0.1, 0.15 };   // Cut on the slope of the rear tracker vector, separately for V and T
-  const double deltaMx = 6.0;                    // Cut on how far the two vectors miss each other at u=0, in mm
+  double mxSlopeFront[2]; std::copy(std::begin(theCuts->mxSlopeFront), std::end(theCuts->mxSlopeFront), std::begin(mxSlopeFront)); // Cut on the slope of the front tracker vector, separately for V and T
+  double mxSlopeBack[2]; std::copy(std::begin(theCuts->mxSlopeBack), std::end(theCuts->mxSlopeBack), std::begin(mxSlopeBack));   // Cut on the slope of the rear tracker vector, separately for V and T
+  const double deltaMx = theCuts->deltaMx;                    // Cut on how far the two vectors miss each other at u=0, in mm
 
   // Create lists of all vectors in the front and back trackers, within the specified slope cuts
   std::vector<Tkr2D> tmp;
@@ -360,7 +361,10 @@ std::vector<Tkr2D> pCT_Tracking::Tracking2D(int Idx, TkrHits &pCThits, pCTgeo *G
   return tmp;
 } // End of Tracking2D
 
-pCT_Tracking::pCT_Tracking(TkrHits &pCThits, pCTgeo* Geometry) { // This class constructor finds all the tracks
+pCT_Tracking::pCT_Tracking(TkrHits &pCThits, pCTgeo* Geometry) { // This class constructor finds all the tracks 
+
+  //initialize cuts
+  theCuts = pCTcut::GetInstance();
 
   nTracks = 0;
 

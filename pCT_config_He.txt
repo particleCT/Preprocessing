@@ -3,7 +3,7 @@
 #Spaces are optional, but the = sign is required
 #key = value lines can also include comments after the value(space required)
 #Blank lines are not allowed, at least for now(will cause a crash)
-max_events = 3000000 # Set nonzero if you don't want to analyze all of the events
+max_events = 0 # 3000000 # Set nonzero if you don't want to analyze all of the events
 dEEFilter = 1	   # dEE FILTER to be used always (will result in bad events returned with 5000+WEPL)
 energy    = 200    # Beam Energy used in this experiment. Should always be 200 for now.
 normalize = 0      # HAS TO STAY 0 FOR NOW (an addition from Robert that results in massive deterioriation of the calib curves, it is not fully understood why) 
@@ -22,7 +22,6 @@ thr1 = 1.0        # For calibration runs, these set the threshold values used an
 thr2 = 1.0        # For preprocessing runs these will get overwritten by values obtained from the WEPL calibration file, if they are present there
 thr3 = 1.0	  
 thr4 = 1.0
-maxFluence = 280 #5 Miilion particles for calibration
 pedrng0 =  -500    # Lower limit of the pedestal range.  The pedestal must be within this value up to the value plus 2000 ADC counts
 pedrng1 =  -500
 pedrng2 = -1000
@@ -31,7 +30,7 @@ pedrng4 = -1000
 partType = He     # Hydrogen or Helium ions
 calibrate = 1     # Set to 1 to analyze the calibration phantom run files to generate the Wcalib.txt and TVcorr.txt calibration files
 recalibrate = 1   # Normally 1 to make the program recalibrate gains by using protons that miss the phantom. 
-size = 80         # Maximum radius of the phantom, needed in order to select undegraded protons for recalibration of gains
+size = 90         # Maximum radius of the phantom, needed in order to select undegraded protons for recalibration of gains
 wedgeoffset = -50.8   # Offset of the phantom from center , in the T direction, in mm (introduced for the HIT runs where it was -50.8)
 study = NULL      # Can be used to override automatic generation of the study name from the filename
 #Last line of the file

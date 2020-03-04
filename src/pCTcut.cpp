@@ -1,5 +1,7 @@
 #include "pCTcut.h"
 
+pCTcut* pCTcut::theCuts=NULL;
+
 pCTcut::pCTcut(pCTconfig cfg): config(cfg)
 { // Class constructor called prior to the event loop
   n1track = 0; // Various counters for summarizing the number of events killed by cuts
@@ -17,7 +19,9 @@ pCTcut::pCTcut(pCTconfig cfg): config(cfg)
 
   minTkrs = 1; // Mininum number of good tracks
   maxTkrs = 1; // Maximum number of good tracks
+  theCuts = this;
 }
+
 
 //////////////////////////////////////////////////////////////////////
 // dEE Parameters
