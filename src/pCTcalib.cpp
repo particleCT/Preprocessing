@@ -1,7 +1,6 @@
 // Code to process raw calibration data to derive the TV and WEPL calibration constants.
 #include "pCTcalib.h"
 pCTcalib::~pCTcalib() {pCTcalibRootFile->Close(); }
-
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 pCTcalib::pCTcalib(pCTconfig cfg, string inputFileName): config(cfg)
@@ -34,8 +33,8 @@ pCTcalib::pCTcalib(pCTconfig cfg, string inputFileName): config(cfg)
     TVnormalizeFactor = 50;
   } else {
     EG4stage[0] = 100.; EG4stage[1] = 111.; EG4stage[2] = 129.;// MC derived stage energies, used to calibrate to MeV for He
-      EG4stage[3] = 166.; EG4stage[4] = 279.;
-      //EG4stage[3] = 166.; EG4stage[4] = 215.;
+    //EG4stage[3] = 166.; EG4stage[4] = 279.;
+      EG4stage[3] = 166.; EG4stage[4] = 215.;
     TVnormalizeFactor = 200;
   }
   cout << "pCTcalib: reading the list of raw data file names from " << CalFile << endl;
@@ -155,15 +154,19 @@ int pCTcalib::TVmapper() {
   cout << "pCTcalib: U values for T coordinates = " << Ut[0] << " and " << Ut[1] << endl;
   cout << "pCTcalib: U values for V coordinates = " << Uv[0] << " and " << Uv[1] << endl;  
   for (int stage = 0; stage <nStage; stage++) cout << "Pedestal measured for stage " << stage << " is " << theEvtRecon->Peds[stage] << " ADC counts " << endl;
-  
-    // Define a signal histogram for each pixel
+  Int_t binx,biny,binz;
+  // Define a signal histogram for each pixel
   for (int stage = 0; stage < nStage; stage++) {
     for (int pix = 0; pix < nPix ; pix++) { // 480 with the underflow overflow
-      string Title = "Stage " + to_string((long long int)stage) + ", Pixel " + to_string((long long int)pix);
-      if(config.item_str["partType"] == "H") pxHistADC[stage][pix] = new TH1D(Title.c_str(), Title.c_str(), 2000, bin0[stage], bin0[stage] +4.*2000);
+      theTVcorr->TVcorrHist[stage]->GetBinXYZ(pix, binx, biny, binz);
+      string Title = "Stage " + to_string((long long int)stage) + " Global " + to_string((long long int)pix) +
+	" BinX " +  to_string((long long int)binx) +  "BinY" + to_string((long long int)biny);
+      if(config.item_str["partType"] == "H") pxHistADC[stage][pix] = new TH1D(Title.c_str(),Title.c_str(), 2000, bin0[stage], bin0[stage] +4.*2000);
       else pxHistADC[stage][pix] = new TH1D(Title.c_str(), Title.c_str(), 2000, bin0[stage], bin0[stage] +8.*2000);
     }
   }
+  
+  cout<<__LINE__<<endl;
   TH2D* hTVmap = new TH2D("Profile of tracks at energy detector","",150, -150, 150 , 80, -40, 40);
   cout << "TVmapper: starting event loop" << endl;
   for (int EvtNum = 0; EvtNum < theEvtRecon->nEvents; EvtNum++) {
@@ -597,8 +600,6 @@ void pCTcalib::enrgDep() { // Calculate energy depositions in each stage and the
     string Title = "pCTcalib::enrgDep Energy of stage " + to_string((long long int)stage);
     if (config.item_str["partType"] == "H") stgHistE[stage]  = new TH1D(Title.c_str(), Title.c_str(),  800, 15, 15 + 800*0.175); 
     else stgHistE[stage]  = new TH1D(Title.c_str(), Title.c_str(),  800, 15, 15 + 800*0.9); 
-    Title = "pCTcalib::enrgDep Energy of stage " + to_string((long long int)stage);
-    stgE[stage] = new TProfile2D(Form("Profile Energy of stage %d",stage), "", 100, -150, -150+3.0*100, 100, -50., -50 + 1.0*100);
   }
   // Sum of stage energies
   if (config.item_str["partType"] == "H") EsumH = new TH1D("pCTcalib::enrgDep Sum of stage energies","pCTcalib::enrgDep Sum of stage energies", 900, 0, 0.25*900);
@@ -644,7 +645,6 @@ void pCTcalib::enrgDep() { // Calculate energy depositions in each stage and the
       }
       pxHistE[stage][iPix]->Fill(Ecorr);
       stgHistE[stage]->Fill(Ecorr);
-      if (fabs(Vcorr) < 35.0 && fabs(Tcorr) < 140.0)  stgE[stage]->Fill(Tcorr, Vcorr, Ecorr);
       Esum += Ecorr;
     }
     EsumH->Fill(Esum);
@@ -655,11 +655,6 @@ void pCTcalib::enrgDep() { // Calculate energy depositions in each stage and the
   EsumH->Write("TotalEnergy",TObject::kOverwrite);
   pCTcalibRootFile->cd();
 
-  pCTcalibRootFile->mkdir("EnergyProfile");  
-  pCTcalibRootFile->cd("EnergyProfile");
-  for(int i =0; i<5; i++) stgE[i]->Write("", TObject::kOverwrite);
-  pCTcalibRootFile->cd();  
-  //
   for (int stage = 0; stage < nStage; ++stage) {
     float Sadc, xmax, max;
     if(stgHistE[stage]->GetEntries()>10){
@@ -679,9 +674,7 @@ void pCTcalib::enrgDep() { // Calculate energy depositions in each stage and the
 
     cout << "pCTcalib::enrgDep, Energy in stage " << stage << " = " << Est[stage] << "; dE=" << Est[stage] - EG4stage[stage] << " MeV" << endl;
     delete stgHistE[stage];
-    delete stgE[stage];
   }
-
   // Using the last empty run to calculate gain recalibration and pedestals
   for (int stage = 0; stage < nStage; ++stage) {
     theTVcorr->ped[stage]   = theEvtRecon->Peds[stage];
@@ -721,24 +714,22 @@ int pCTcalib::Wcalib(){
     }
   }
 
-  TH2D* REhist_Tot = new TH2D("RE_Tot","Range-Energy Full calibration",1000,0,260, 1000, 0,260*4);  
-
-  for (int bricks = 0; bricks < nBricks; bricks++) {
-    //config.item_str["inputFileName"] = calFileNames[bricks + 5]; -- With flat bricks
+  TH2D* REhist_Tot = new TH2D("RE_Tot","Range-Energy Full calibration",nRange,0,RangeBinWidth*nRange, nEnrg*5, 0, nEnrg * 5*EnergyBinWidth);  
+  /*for (int bricks = 0; bricks < nBricks; bricks++) {
+    //config.item_str["inputFileName"] = calFileNames[bricks + 5]; //-- With flat bricks
     config.item_str["inputFileName"] = calFileNames[bricks+1];
     config.item_int["Nbricks"] = bricks;
     FilldEE(dEEhist);
-  }
-  for (int stage = 0; stage < nStage; stage++) theCuts->dEEFilterParameters(dEEhist[stage],dEElow[stage],dEEhigh[stage],stage);
-
+    }*/
+  
+  //for (int stage = 0; stage < nStage; stage++) theCuts->dEEFilterParameters(dEEhist[stage],dEElow[stage],dEEhigh[stage],stage);
   // Submit the event processing  -- fill the histograms
   for (int bricks = 0; bricks < nBricks; bricks++) {
-    //config.item_str["inputFileName"] = calFileNames[bricks + 5]; -- With flat bricks
+    //config.item_str["inputFileName"] = calFileNames[bricks + 5]; //-- With flat bricks
     config.item_str["inputFileName"] = calFileNames[bricks+1];
     config.item_int["Nbricks"] = bricks;
     procWEPLcal(REhist[bricks] , dEEhist, REhist_Tot);
   }
-
   cout << "pCTcalib::Wcalib, begin adding together the range-energy tables from the runs with different numbers of bricks." << endl;
   // Combine the resulting maps into one map for each stage by adding them for all bricks
   pCTcalibRootFile->mkdir("dEE");
@@ -823,9 +814,7 @@ int pCTcalib::Wcalib(){
       Rst[stage][nrg] = Sadc;
       Sst[stage][nrg] = (xHigh - xLow) / 2.2;      
     }
-  }
-
-  
+  }  
   float rngB[nEnrg];
   TGraphErrors* rngEnrg[nStage];
   TGraphErrors* rngEnrg_XY[nStage];
@@ -888,7 +877,7 @@ int pCTcalib::Wcalib(){
   RE_Tot_XY->SetName("RangeVsEnergy_XY");
   RE_Tot_YX->SetName("RangeVsEnergy_YX");
   
-  for (int nrg = 0; nrg < 1000; nrg++) {
+  for (int nrg = 0; nrg < nRange; nrg++) {
     float xLow, xHigh, Sadc,xmax, max;
     TH1D* RESlice =  REhist_Tot->ProjectionY("ProjY_Stage",nrg,nrg+1);
     int bin_cut = RESlice->FindBin(5); // MeV
@@ -1146,12 +1135,17 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
     if(TinB < Tw1) continue;
 
     // Negative Slope
-    //else if (TinB >= Tw1 && Tin <= Tw2) {
-    // if(!getLineIntersection(theEvtRecon->uhitT[0], thisEvent.Thit[0], theEvtRecon->uhitT[1], thisEvent.Thit[1],
-    //Uin + BrickThickness, Tw1, Uin, Tw2, Uin, Tin)) continue;
-    //}
+    else if (TinB >= Tw1 && Tin <= Tw2) {
+      //if(!getLineIntersection(theEvtRecon->uhitT[0], thisEvent.Thit[0], theEvtRecon->uhitT[1], thisEvent.Thit[1],
+      //Uin + BrickThickness, Tw1, Uin, Tw2, Uin, Tin)) continue;
+      continue;
+    }
     // Flat part of the wedge
-    else if(Tin > Tw2 && Tin < Tw3) continue;
+    else if(Tin > Tw2 && Tin < Tw3){
+      continue;
+    //  Uin = Ust[0];
+    }
+    
     
     // Positive Slope
     else if (Tin >= Tw3 && TinB <= Tw4) {  // Verify the particle hasn't weirdly scattered
@@ -1159,28 +1153,29 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
 			      Uin, Tw3 ,Uin + BrickThickness, Tw4, Uin, Tin)) continue;
     }
     // Past the positive slope 
-    //else if(TinB > Tw4 && TinB < tBrickEnd){
-    //  Uin = Ust[1];
-    // Tin = TinB;
-    //}
+    else if(TinB > Tw4 && TinB < tBrickEnd){
+      continue;
+      //Uin = Ust[1];
+      //Tin = TinB;
+    }
 
     // Past the end of the brick
-    else if(TinB > tBrickEnd) emptyEvt = true;   // Empty event
+    else if(TinB > tBrickEnd){
+      continue;
+      //Uout = Uin;
+      emptyEvt = true;   // Empty event
+    }
     else continue;
-    
-    double Length;
+
+    Vin = theGeometry->extrap2D(Ufv, Vf, Uin);
+    double Length = sqrt( pow((Tin - Tout),2) + pow((Vin - Vout),2) + pow((Uin - Uout),2) ); // Length  crossed (converted to WET in Wepl.h)
     if (emptyEvt) {
-      Length = 0;
       hTotEcorr->Fill(eTot);
       for (int stage = 0; stage < nStage; ++stage){
 	hStgEcorr[stage]->Fill(eStage[stage]);
       }
     }
-    else {
-      Vin = theGeometry->extrap2D(Ufv, Vf, Uin);
-      Length = sqrt( pow((Tin - Tout),2) + pow((Vin - Vout),2) + pow((Uin - Uout),2) ); // Length  crossed (converted to WET in Wepl.h)
-      
-    }
+
     float RSP = 1.030; // Transformation to WET
     hLengthProf->Fill(TinB,Length*RSP);
 
@@ -1202,13 +1197,27 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
     else if (eStage[1] < config.item_float["thr1"] && eStage[0] < config.item_float["thr0"] )  REhist[0]->Fill(Length*RSP, eStage[0]); // Particles end in stage 0
     else continue;
     */
-    if (eStage[4] > config.item_float["thr4"])       REhist[4]->Fill(Length*RSP, eStage[4]);
-    else if (eStage[3] > config.item_float["thr3"])  REhist[3]->Fill(Length*RSP, eStage[3]);
-    else if (eStage[2] > config.item_float["thr2"] ) REhist[2]->Fill(Length*RSP, eStage[2]);
-    else if (eStage[1] > config.item_float["thr1"])  REhist[1]->Fill(Length*RSP, eStage[1]); 
-    else if (eStage[0] > config.item_float["thr0"])  REhist[0]->Fill(Length*RSP, eStage[0]); // Particles end in stage 0*/
-    double E_tot = eStage[0] +eStage[1] +eStage[2] +eStage[3] + eStage[4];
-    REhist_Tot->Fill(Length*RSP,E_tot);
+
+    if (eStage[4] > config.item_float["thr4"]){
+      double E_tot = eStage[0]+eStage[1]+eStage[2]+eStage[3]+ eStage[4];
+      REhist[4]->Fill(Length*RSP, eStage[4]);
+      REhist_Tot->Fill(Length*RSP,E_tot);}
+    else if (eStage[3] > config.item_float["thr3"]){
+      double E_tot = eStage[0] +eStage[1] +eStage[2] +eStage[3];
+      REhist[3]->Fill(Length*RSP, eStage[3]);
+      REhist_Tot->Fill(Length*RSP,E_tot);}
+    else if (eStage[2] > config.item_float["thr2"]){
+      double E_tot = eStage[0]+eStage[1]+eStage[2];
+      REhist[2]->Fill(Length*RSP, eStage[2]);
+      REhist_Tot->Fill(Length*RSP,E_tot);}
+    else if (eStage[1] > config.item_float["thr1"]){
+      double E_tot = eStage[0]+eStage[1];
+      REhist[1]->Fill(Length*RSP, eStage[1]);
+      REhist_Tot->Fill(Length*RSP,E_tot);}
+    else if (eStage[0] > config.item_float["thr0"]){
+      double E_tot = eStage[0];
+      REhist[0]->Fill(Length*RSP, eStage[0]); // Particles end in stage 0*/
+      REhist_Tot->Fill(Length*RSP,E_tot);}    
 
   } // End of the event loop
 

@@ -275,11 +275,8 @@ bool pCTraw::findEvtHdr(bool debug) {
 // ******************************* ******************************* *******************************
 // end of the pCTraw findEvtHeader
 // ******************************* ******************************* *******************************
-void pCTraw::readOneEvent(bool debug) { // This is called once for each event
-                                        // after the event header has been
-                                        // located.
+void pCTraw::readOneEvent(bool debug) { // This is called once for each event after the event header has been located.
   // reading the  event time tag: 36 bits
-
   if (TimeTags) {
     required_bits  = 36;
     extracted_bits = just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);

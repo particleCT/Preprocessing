@@ -28,6 +28,9 @@ using namespace std;
 #define nBricks 5
 #define nRange 260
 #define nEnrg 340
+
+//#define nRange 520
+//#define nEnrg 680
 class pCTcut;
 class EvtRecon;
 class pCTcalib {
@@ -84,7 +87,7 @@ class pCTcalib {
   TH1D *pxHistADC[nStage][nPix];
   TH1D *stgHistE[nStage];
   TH1D *EsumH;
-  TH2D* TVcorrHist[5]; // TVcorr histogram for each stage
+  //TH2D* TVcorrHist[5]; // TVcorr histogram for each stage
   TProfile2D *stgE[nStage];
 
   time_t currentTime;

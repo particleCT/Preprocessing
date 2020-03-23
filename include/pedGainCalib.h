@@ -27,6 +27,8 @@ class pedGainCalib {
   pCTconfig config;
   double Ped[5];
   TH1D* hPed[5];
+  TH1D* hPed_In[5];
+  TH1D* hPed_Out[5];
   TH1D* hTotFil[5];
   TH1D* hTotUnFil[5];
   TH1D* hEnrg[5];
@@ -44,7 +46,7 @@ class pedGainCalib {
   void GetPeds();
   void FillADC(int ADC[5]);
   void WriteADC();
-  void FillGains(float Vedet, float Tedet, float Ene[5]);
+  void FillGains(float Vedet, float Tedet, float Ene[5], int phSum[5]);
   void GetGains(TVcorrection *TVcorr);
 
 }; // end of class pedGainCalib

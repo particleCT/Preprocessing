@@ -294,6 +294,7 @@ int main(int argc, char *argv[]) {
     
     pCTcalib calibProcessor(cfg, CalFile);
     if (calibProcessor.TVmapper() == 0) { // First the TVmapper
+      //if (calibProcessor.TVmapper_FlatBricks() == 0) { // First the TVmapper
       calibProcessor.enrgDep(); // Verify the energy dependence      
       calibProcessor.Wcalib();
       calibProcessor.writeCalibfile();

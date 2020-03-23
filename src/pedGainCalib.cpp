@@ -36,7 +36,12 @@ pedGainCalib::pedGainCalib(TFile* root, int pedMin[5], float oldPed[5], float t1
   // Define histograms for pedestal calculation
   for (int i =0; i<5; i++) hPed[i] = new TH1D(Form("PedestalStage_%i",i), Form("Pedestal region for stage %i",i), 400, pedMin[i], pedMin[i] +400*5);
   for (int i =0; i<5; i++) hTotFil[i] = new TH1D(Form("FullADCStage_Filtered_%i",i), Form("Full ADC for stage %i",i), 400, pedMin[i], pedMin[i] +400*50);
-  for (int i =0; i<5; i++) hTotUnFil[i] = new TH1D(Form("FullADCStage_Unfiltered_%i",i), Form("Full ADC for stage %i",i), 400, pedMin[i], pedMin[i] +400*50); 
+  for (int i =0; i<5; i++) hTotUnFil[i] = new TH1D(Form("FullADCStage_Unfiltered_%i",i), Form("Full ADC for stage %i",i), 400, pedMin[i], pedMin[i] +400*50);
+
+
+  // Define histograms for pedestal calculation
+  for (int i =0; i<5; i++) hPed_In[i] = new TH1D(Form("PedestalStage_%i_In",i), Form("Pedestal region for stage %i",i), 400, pedMin[i], pedMin[i] +400*5);
+  for (int i =0; i<5; i++) hPed_Out[i] = new TH1D(Form("PedestalStage_%i_Out",i), Form("Pedestal region for stage %i",i), 400, pedMin[i], pedMin[i] +400*5);
 
   // Define histograms for gain calibration
   if (config.item_str["partType"] == "H") {
@@ -67,8 +72,9 @@ void pedGainCalib::FillPeds(pCTraw &rawEvt) { // Called for each raw event read 
   hTotUnFil[1]->Fill(rawEvt.enrg_fpga[0].pulse_sum[1]);
   hTotUnFil[2]->Fill(rawEvt.enrg_fpga[0].pulse_sum[2]);
   hTotUnFil[3]->Fill(rawEvt.enrg_fpga[1].pulse_sum[0]);
-  hTotUnFil[4]->Fill(rawEvt.enrg_fpga[1].pulse_sum[1]);  
+  hTotUnFil[4]->Fill(rawEvt.enrg_fpga[1].pulse_sum[1]);
 }
+  
 
 void pedGainCalib::FillADC(int ADC[5]){ // For analysis
   hTotFil[0]->Fill(ADC[0]);
@@ -114,7 +120,7 @@ void pedGainCalib::GetPeds() {
   }
 }
 
-void pedGainCalib::FillGains(float Vedet, float Tedet, float Ene[5]) { // Called for each event in the temporary file of proton histories -- gain recalibration
+void pedGainCalib::FillGains(float Vedet, float Tedet, float Ene[5], int phSum[5]) {// Called for each event in the temporary file of proton histories -- gain recalibration
   float Esum = 0.;
   //between t1 and t2 or between t3 and t4
   if ((Tedet > emtrng1 && Tedet < emtrng2) || (Tedet > emtrng3 && Tedet < emtrng4)) { // Analyze full-energy protons
@@ -124,11 +130,22 @@ void pedGainCalib::FillGains(float Vedet, float Tedet, float Ene[5]) { // Called
         float stgEne = Ene[stage];
         hEnrg[stage]->Fill(stgEne);
         Esum += Ene[stage];
+	hPed_Out[stage]->Fill(phSum[stage]);
+	
       }
       hEnrgTot->Fill(Esum);
       hTedet->Fill(Tedet);
     }
   }
+
+  else{ // Analyze full energy particles inside the phantom region
+
+    if (fabs(Vedet) < 40.){
+        for(int stage =0; stage<5; stage++)hPed_In[stage]->Fill(phSum[stage]);
+    }
+  }
+     
+  
   if (Ene[0] > 10.) hProfT->Fill(Tedet, Vedet, Ene[0]);
 }
 void pedGainCalib::GetGains(TVcorrection *TVcorr) {
@@ -137,8 +154,13 @@ void pedGainCalib::GetGains(TVcorrection *TVcorr) {
   // Save plots of the histograms so that the gains can be visualized
   // Create a folder with the filename
   RootFile->cd(Form("Pedestals/%s",inFileName_s.c_str()));
-  for(int i =0; i<5; i++) hEnrg[i]->Write("", TObject::kOverwrite);
+  for(int i =0; i<5; i++){
+    hPed_In[i]->Write("", TObject::kOverwrite);
+    hPed_Out[i]->Write("", TObject::kOverwrite);
+    hEnrg[i]->Write("", TObject::kOverwrite);
+  }
   hEnrgTot->Write("",TObject::kOverwrite);
+
   hTedet->Write("", TObject::kOverwrite);
   hProfT->Write("", TObject::kOverwrite);  
 

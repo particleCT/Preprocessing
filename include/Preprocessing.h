@@ -26,7 +26,7 @@
 #include "TkrHits.h"
 #include "pCT_Tracking.h"
 #include "pCTraw.h"
-
+#include "pCTcut.h"
 #include "TFile.h"
 class Preprocessing { // Top level program from the pCT preprocessing task.
  public:
@@ -48,8 +48,9 @@ class Preprocessing { // Top level program from the pCT preprocessing task.
   FILE *in_file;
   char inFileName[256];
   time_t start_time;
+  pCTcut* theCuts;
   struct tm *now;
   static int findEvt(FILE *fp);
-  void pCTevents(pCTconfig config, pCTgeo* Geometry, pCTraw rawEvt, pedGainCalib *Calibrate, int &nKeep, double Uhit[]);
+  void pCTevents(pCTconfig config, pCTgeo* Geometry, pCTraw rawEvt, pedGainCalib *Calibrate, double Uhit[]);
 };
 #endif

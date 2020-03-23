@@ -65,7 +65,7 @@ inline Wepl::~Wepl(){
   projectionROOT->mkdir("calWEPL");
   projectionROOT->cd("calWEPL");
   Test->Write("",TObject::kOverwrite);
-  //Test2->Write("",TObject::kOverwrite);
+  Test2->Write("",TObject::kOverwrite);
   for(int i =0;i<5;i++) calWEPL[i]->Write("",TObject::kOverwrite);
   
 }  
@@ -103,6 +103,7 @@ inline Wepl::Wepl(pCTconfig cfg, TFile* calibFile, TFile* outputFile): config(cf
   //Test  = (TGraphErrors*)calibFile->Get("NewRange_YX");
   //Test2 = (TGraphErrors*)calibFile->Get("NewRange_XY");
   Test = (TGraphErrors*)calibFile->Get("RangeVsEnergy/RangeVsEnergy_YX");
+  Test2 = (TGraphErrors*)calibFile->Get("RangeVsEnergy/RangeVsEnergy_XY");
   for(int stage =0;stage<5;stage++){ // 1 stage less due to the fact that the 1st-stage can't do dEE
     for(int i =0; i<3; i++){
       header->SetBranchAddress(Form("dEElow_Stage%d_%d", stage,i),&dEElow[stage][i]); // Load the dEE parameters
@@ -120,46 +121,57 @@ inline float Wepl::EtoWEPL(float Estage[5], Int_t &MaxTrans, Int_t &Threshold, I
   E_tot = Estage[0] + Estage[1] + Estage[2] + Estage[3] + Estage[4];
   // dE-E parameterization and energy check to cut out fragments for helium if particle stop in Stage 4
   if (Estage[4] > thr[4]) { // 1 MeV
-    dEEhist_root[4]->Fill(Estage[3], Estage[4]);
+
     WET = Test->Eval(E_tot);
     //WET = calWEPL[4]->Eval(Estage[4]);    
     if( WET < 0 ) return -1000;  // Unit Test
     if (Estage[4] > maxEnergy || Estage[4] < minEnergy) MaxTrans = 0;
     if (Estage[3] < cut3 || Estage[2] < cut2 || Estage[1] < cut1 || Estage[0] < cut0) Threshold = 0;
-    if (config.item_int["dEEFilter"] && !theCuts->dEEFilter(Estage[3], Estage[4], dEElow[4], dEEhigh[4])) dEE = 0;
+    if (config.item_int["dEEFilter"] && !theCuts->dEEFilter(Estage[3], Estage[4], dEElow[4], dEEhigh[4])){
+      dEEhist_root[4]->Fill(Estage[3], Estage[4]);
+      dEE = 0;
+    }
     return WET; // polystyrene to water equivalent // everything passed
   }
   // if particle stop in Stage 3
   else if (Estage[3] > thr[3]) {
 
     WET = Test->Eval(E_tot);
-    dEEhist_root[3]->Fill(Estage[2], Estage[3]);
     //WET = calWEPL[3]->Eval(Estage[3]);
     if( WET < 0 ) return -1000; // Unit Test
     if (Estage[3] > maxEnergy || Estage[3] < minEnergy) MaxTrans = 0;
     if (Estage[2] < cut2 || Estage[1] < cut1 || Estage[0] < cut0) Threshold = 0; 
-    if (config.item_int["dEEFilter"] && !theCuts->dEEFilter(Estage[2], Estage[3], dEElow[3], dEEhigh[3])) dEE = 0;
+    if (config.item_int["dEEFilter"] && !theCuts->dEEFilter(Estage[2], Estage[3], dEElow[3], dEEhigh[3])){
+      dEEhist_root[3]->Fill(Estage[2], Estage[3]);
+      dEE = 0;
+    }
     return WET; // polystyrene to water equivalent
   }
   // if particle stop in Stage 2
   else if (Estage[2] > thr[2]) { // 1 MeV
-    dEEhist_root[2]->Fill(Estage[1], Estage[2]);
+    
     WET = Test->Eval(E_tot);
     //WET = calWEPL[2]->Eval(Estage[2]);
     if (Estage[2] > maxEnergy || Estage[2] < minEnergy) MaxTrans = 0;
     if (Estage[1] < cut1 || Estage[0] < cut0) Threshold = 0;
-    if (config.item_int["dEEFilter"] && !theCuts->dEEFilter(Estage[1], Estage[2], dEElow[2], dEEhigh[2])) dEE = 0;
+    if (config.item_int["dEEFilter"] && !theCuts->dEEFilter(Estage[1], Estage[2], dEElow[2], dEEhigh[2])){
+      dEEhist_root[2]->Fill(Estage[1], Estage[2]);
+      dEE = 0;
+    }
     return WET; // polystyrene to water equivalent
   }
   // if particle stop in Stage 1
   else if (Estage[1] > thr[1]) {
-    dEEhist_root[1]->Fill(Estage[0], Estage[1]);
+    
     WET = Test->Eval(E_tot);
     // WET = calWEPL[1]->Eval(Estage[1]);
     if( WET < 0 ) return -1000;  // Unit Test
     if (Estage[1] > maxEnergy || Estage[1] < minEnergy) MaxTrans = 0;
     if (Estage[0] < cut0) Threshold = 0;
-    if (config.item_int["dEEFilter"] && !theCuts->dEEFilter(Estage[0], Estage[1], dEElow[1], dEEhigh[1])) dEE = 0;
+    if (config.item_int["dEEFilter"] && !theCuts->dEEFilter(Estage[0], Estage[1], dEElow[1], dEEhigh[1])){
+      dEE = 0;
+      dEEhist_root[1]->Fill(Estage[0], Estage[1]);
+    }
     return WET; // polystyrene to water equivalent
   }
   // if particle stop in Stage 0

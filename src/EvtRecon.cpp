@@ -48,7 +48,6 @@ void EvtRecon::ReadInputFile(pCTgeo* Geometry, TVcorrection *const TVcorr , stri
   // Set the range in T that should be occupied by unobstructed protons. Only the +T side!
   // September 12, 2018 we started moving the edge of the bricks 2 cm past the wedge,
   // so this range had to be moved.  It should be okay also for earlier runs with the wedge phantom.
-  //cout << "EvtRecon_ " << config.item_int["Nbricks"] << ": range in T used for recalibration is " << wedgeLimit << " to " << wedgeLimit + openRange << " mm\n";
 
   // Here is the start of the event loop
   while (!rawEvt.stop_reading) {
@@ -61,12 +60,12 @@ void EvtRecon::ReadInputFile(pCTgeo* Geometry, TVcorrection *const TVcorr , stri
       if (rawEvt.event_counter % 1000000 == 0) cout << "EvtRecon_" << config.item_int["Nbricks"] << ": Processing raw event " << rawEvt.event_counter << endl;
         
       rawEvt.readOneEvent(false);
-      
       Calibrate->FillPeds(rawEvt); // Accumulate pedestal histograms
 
       TkrHits pCThits(rawEvt, Geometry, false); // Reconstruct the tracker hits from the raw strip data
 
       pCT_Tracking pCTtracks(pCThits, Geometry); // Track pattern recognition
+
       //Store the reconstructed track and raw energy information into the output list
       if (cuts.cutEvt(pCTtracks, pCThits)) {
         for (int lyr = 0; lyr < 4; lyr++) {
@@ -129,7 +128,7 @@ void EvtRecon::ReadInputFile(pCTgeo* Geometry, TVcorrection *const TVcorr , stri
       // set it at the entrance brick position
       float vPh = Geometry->extrap2D(UV, V, -76.2); 
       float tPh = Geometry->extrap2D(UT, T, -76.2);
-      if (nGood == 5) Calibrate->FillGains(vPh, tPh, Ene);
+      if (nGood == 5) Calibrate->FillGains(vPh, tPh, Ene, thisEvent.ADC);
     } // end of the event loop
 
     if (config.item_int["recalibrate"]) {
