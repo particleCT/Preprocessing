@@ -37,10 +37,10 @@ class pCTcalib {
  public:
   
   // Functions
-  pCTcalib(pCTconfig cfg, string inputFileNameIn);
+  pCTcalib(string inputFileNameIn);
   ~pCTcalib();
 
-  pCTconfig config;
+  //pCTconfig config;
   int Wcalib();
   void procWEPLcal(TH2D*[nStage], TH2D*[nStage], TH2D*);
 
@@ -62,6 +62,8 @@ class pCTcalib {
   pCTgeo *theGeometry;
   TVcorrection *theTVcorr;
   pCTcut *theCuts;
+  pedGainCalib* theCalibration;
+
   //pedGainCalib *theCalibration;
   // Variables
   vector<string> calFileNames;
@@ -101,5 +103,8 @@ class pCTcalib {
   int k1[nStage];         // Lots of interpolation parameters for cleaning up calibration curves
   int j1[nStage], j2[nStage], j3[nStage], j4[nStage];
   int i1[nStage], i2[nStage], i3;
+ private:
+  pCTconfig* theConfig;
+  
 };
 #endif

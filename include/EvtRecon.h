@@ -22,11 +22,11 @@ struct Event{
 };
 
 class pCTcalib;
+class pCTcut;
 class EvtRecon {
  public:
-  EvtRecon(pCTconfig conf);
+  EvtRecon();
   ~EvtRecon();
-  pCTconfig config;  
   //Functions
   void dumpEvt(Event);
   void ReadInputFile(pCTgeo* Geometry, TVcorrection *const TVcorr, string, pedGainCalib* Calibrate);
@@ -58,6 +58,9 @@ class EvtRecon {
   int program_version;
   float Peds[5];    // Energy detector pedestals measured from the processed data set
   float GainFac[5]; // Gain correction factors
+ private:
+  pCTconfig* theConfig;
+  
 };
 
 #endif

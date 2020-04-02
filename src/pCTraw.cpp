@@ -479,8 +479,7 @@ void pCTraw::readOneEvent(bool debug) { // This is called once for each event af
           } else {
             if (smp < 9 && phsmp > enrg_fpga[i].sample[ch][imax[ch]]) {
               imax[ch] = smp; // Locate the peak
-              enrg_fpga[i].pulse_sum[ch] =
-                  enrg_fpga[i].sample[ch][smp - 1] + phsmp; // Add the peak pulse plus the previous one
+              enrg_fpga[i].pulse_sum[ch] = enrg_fpga[i].sample[ch][smp - 1] + phsmp; // Add the peak pulse plus the previous one
             }
           }
         }
@@ -507,7 +506,6 @@ void pCTraw::readOneEvent(bool debug) { // This is called once for each event af
 // ******************************* ******************************* *******************************
 // end of the pCTraw readOneEvent
 // ******************************* ******************************* *******************************
-
 void pCTraw::doWeStop(int max_events, int max_time) { // Check whether we are done or need to
                                                       // read another event
   if (stream_position > file_size) {

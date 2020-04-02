@@ -30,9 +30,8 @@
 #include "TFile.h"
 class Preprocessing { // Top level program from the pCT preprocessing task.
  public:
-  Preprocessing(pCTconfig cfg);
+  Preprocessing();
   TFile* projectionROOT;
-  pCTconfig config;
   TFile* pCTcalibRootFile;
   int ProcessFile(float, int, int);
   int ret;
@@ -49,8 +48,12 @@ class Preprocessing { // Top level program from the pCT preprocessing task.
   char inFileName[256];
   time_t start_time;
   pCTcut* theCuts;
+  int ADC[5];
   struct tm *now;
   static int findEvt(FILE *fp);
-  void pCTevents(pCTconfig config, pCTgeo* Geometry, pCTraw rawEvt, pedGainCalib *Calibrate, double Uhit[]);
+  void pCTevents(pCTgeo* Geometry, pCTraw rawEvt, pedGainCalib *Calibrate, double Uhit[]);
+ private:
+  pCTconfig* theConfig;
+  
 };
 #endif

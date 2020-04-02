@@ -3,7 +3,14 @@
 
 #include <cstdio>
 #include <cstdlib>
-#include <fstream> 
+#include <fstream>
+#include <iostream>
+#include <vector>
+#include <cmath>
+#include <string>
+#include <map>
+
+using namespace std;
 using namespace std;
 
 class Util { // Just of list of useful functions packaged together in this

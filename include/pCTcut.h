@@ -25,14 +25,15 @@ class pCTcut {
  public:
   int nKeep;
   // constructor
-  pCTcut( pCTconfig cfg); // Class constructor called prior to the event loop
-  pCTconfig config;
+  pCTcut(); // Class constructor called prior to the event loop
   // classes
   bool cutEvt(pCT_Tracking&, TkrHits&);
   bool EnrgCut(float [5], float, float, float, float );
   bool dEEFilter(float, float, float*, float*);
-  void dEEFilterParameters(TH2D* dEEhist, float dEElow[3], float dEEhigh[3], int stage);
-    
+  void dEEFilterParameters(TH2D* dEEhist, float dEElow[3], float dEEhigh[3], int stage);    
   void summary();
+ private:
+  pCTconfig* theConfig;
+  
 };
 #endif

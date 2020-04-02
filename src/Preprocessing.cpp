@@ -19,8 +19,10 @@
 #include "Preprocessing.h"
 #include "BadEvent.h"
 using namespace std;
-Preprocessing::Preprocessing(pCTconfig cfg): config(cfg){
-  
+Preprocessing::Preprocessing(){
+
+
+  theConfig = pCTconfig::GetInstance();
   cout << "*********** Entering the driver program for pCT preprocessing **************" << endl;
   energyOutput = 0;
   timeStampOutput = 0;
@@ -29,38 +31,38 @@ Preprocessing::Preprocessing(pCTconfig cfg): config(cfg){
   now = localtime(&start_time);
   printf("Current local time and date: %s", asctime(now));
 
-  if (config.item_int["continuous"]) {
+  if (theConfig->item_int["continuous"]) {
     cout << "A continuous scan will be analyzed\n";
     cout << "The initial stage angle, at time 0, is " << initialAngle << " degrees." << endl;
   } else {
     cout << "A fixed angle scan will be analyzed\n";
-    if (config.item_float["projection"] > -360.0)
-      cout << "The assumed projection angle of " << config.item_float["projection"] << " will override what comes from the data file " << endl;
+    if (theConfig->item_float["projection"] > -360.0)
+      cout << "The assumed projection angle of " << theConfig->item_float["projection"] << " will override what comes from the data file " << endl;
   }
-  cout << "The file will be split into  " << config.item_int["bins"] << " sub-files " << endl;
+  cout << "The file will be split into  " << theConfig->item_int["bins"] << " sub-files " << endl;
 
-  if (config.item_int["max_events"] > 0) cout << "The preprocessing will halt after processing " << config.item_int["max_events"] << " events\n";
+  if (theConfig->item_int["max_events"] > 0) cout << "The preprocessing will halt after processing " << theConfig->item_int["max_events"] << " events\n";
 
 
-  pCTcalibRootFile = new TFile(config.item_str["calib"].c_str());
+  pCTcalibRootFile = new TFile(theConfig->item_str["calib"].c_str());
   TString filename = Form("%s/%s.root",
-			  config.item_str["outputDir"].c_str(),
-			  config.item_str["inputFileName"].substr(7, config.item_str["inputFileName"].size()-4).c_str());
+			  theConfig->item_str["outputDir"].c_str(),
+			  theConfig->item_str["inputFileName"].substr(7, theConfig->item_str["inputFileName"].size()-4).c_str());
 			  
   projectionROOT = new TFile(filename,"recreate");
-  theCuts = new pCTcut(config);// Initialize the code for event selection  
+  theCuts = new pCTcut();// Initialize the code for event selection  
 };
 // ******************************* ******************************* *******************************
 // end of the Preprocessing constructor
 // ******************************* ******************************* *******************************
 // Routine called to read the raw data, analyze it, write results to a temporary file, and analyze the WEPL calibration pedestals and gains.  
-void Preprocessing::pCTevents(pCTconfig config, pCTgeo* Geometry, pCTraw rawEvt, pedGainCalib *Calibrate, double Uhit[]) {
+void Preprocessing::pCTevents(pCTgeo* Geometry, pCTraw rawEvt, pedGainCalib *Calibrate, double Uhit[]) {
   cout << "****************** Executing pCTevents *******************************" << endl;
   char outBuff[93]; // Buffer for writing or reading the temporary file
   int nBuffBytes = 8 * sizeof(float) + 7 * sizeof(int) + sizeof(unsigned char);
   cout << "PCTevents buffer size for file writing is " << nBuffBytes << " bytes." << endl;
   memset(outBuff, 0, nBuffBytes);
-  string tempfile = config.item_str["outputDir"] + "/extracted_data_0d.tmp";
+  string tempfile = theConfig->item_str["outputDir"] + "/extracted_data_0d.tmp";
   FILE *fptmp;
   cout << "Opening the temporary file " << tempfile << endl;
     fptmp = fopen(tempfile.c_str(), "wb");
@@ -79,7 +81,7 @@ void Preprocessing::pCTevents(pCTconfig config, pCTgeo* Geometry, pCTraw rawEvt,
   int nErrDmp = 0;
   while (!rawEvt.stop_reading) { // event loop
     try {
-      bool debug = rawEvt.event_counter < config.item_int["n_debug"];
+      bool debug = rawEvt.event_counter < theConfig->item_int["n_debug"];
       bool Eureka = rawEvt.findEvtHdr(debug); // Search for the bits that indicate the beginning of an event
       if (!Eureka) {
         cout << "pCTevents event header not found after " << rawEvt.event_counter << " events.\n";
@@ -103,7 +105,7 @@ void Preprocessing::pCTevents(pCTconfig config, pCTgeo* Geometry, pCTraw rawEvt,
       if (rawEvt.DAQ_error) { // Don't try to reconstruct error events
         // Decide whether to read another event
         cout << "Preprocessing skipping reconstruction at event count " << rawEvt.event_counter << " due to DAQ error\n";
-        rawEvt.doWeStop(config.item_int["max_events"], config.item_int["max_time"]); // This will set the stop_reading flag inside the rawEvt instance
+        rawEvt.doWeStop(theConfig->item_int["max_events"], theConfig->item_int["max_time"]); // This will set the stop_reading flag inside the rawEvt instance
         if (rawEvt.stop_reading) cout << "Preprocessing stopping after " << rawEvt.event_counter << " events.\n";
         continue;
       }
@@ -165,24 +167,23 @@ void Preprocessing::pCTevents(pCTconfig config, pCTgeo* Geometry, pCTraw rawEvt,
       if (rawEvt.enrg_fpga[1].OTR[0]) OTR = OTR | mask[3];
       if (rawEvt.enrg_fpga[1].OTR[1]) OTR = OTR | mask[4];
       
-      int phSum[5];
-      phSum[0] = rawEvt.enrg_fpga[0].pulse_sum[0];
-      phSum[1] = rawEvt.enrg_fpga[0].pulse_sum[1];
-      phSum[2] = rawEvt.enrg_fpga[0].pulse_sum[2];
-      phSum[3] = rawEvt.enrg_fpga[1].pulse_sum[0];
-      phSum[4] = rawEvt.enrg_fpga[1].pulse_sum[1];
+      ADC[0] = rawEvt.enrg_fpga[0].pulse_sum[0];
+      ADC[1] = rawEvt.enrg_fpga[0].pulse_sum[1];
+      ADC[2] = rawEvt.enrg_fpga[0].pulse_sum[2];
+      ADC[3] = rawEvt.enrg_fpga[1].pulse_sum[0];
+      ADC[4] = rawEvt.enrg_fpga[1].pulse_sum[1];
       
       memcpy(&outBuff[0], &timeStampOut, sizeof(int));
       memcpy(&outBuff[sizeof(int)], &eventIdOut, sizeof(int));
       memcpy(&outBuff[2 * sizeof(int)], Thit, 4 * sizeof(float));
       memcpy(&outBuff[2 * sizeof(int) + 4 * sizeof(float)], Vhit, 4 * sizeof(float));
-      memcpy(&outBuff[2 * sizeof(int) + 8 * sizeof(float)], phSum, 5 * sizeof(int));
+      memcpy(&outBuff[2 * sizeof(int) + 8 * sizeof(float)], ADC, 5 * sizeof(int));
       memcpy(&outBuff[8 * sizeof(float) + 7 * sizeof(int)], &OTR, sizeof(unsigned char));
       fwrite(outBuff, sizeof(char), nBuffBytes, fptmp); // Writing the processed event data to a temporary file
 	}
 
       // Decide whether to read another event
-      rawEvt.doWeStop(config.item_int["max_events"], config.item_int["max_time"]); // This will set the
+      rawEvt.doWeStop(theConfig->item_int["max_events"], theConfig->item_int["max_time"]); // This will set the
       // stop_reading flag inside the rawEvt instance
       if (rawEvt.stop_reading) cout << "Preprocessing stopping after " << rawEvt.event_counter << " events.\n";
     }
@@ -214,7 +215,7 @@ void Preprocessing::pCTevents(pCTconfig config, pCTgeo* Geometry, pCTraw rawEvt,
   /////////////////////////////////////////////////////////
   // Read PROCESSED DATA BACK FROM THE TEMPORARY FILE TO CALCULATE GAIN CORRECTION FACTORS
   /////////////////////////////////////////////////////////
-  if (config.item_int["recalibrate"]) {
+  if (theConfig->item_int["recalibrate"]) {
     fptmp = fopen(tempfile.c_str(), "rb");
     if (fptmp == NULL) {
       cout <<"Failed to reopen the temporary file\n";
@@ -232,16 +233,16 @@ void Preprocessing::pCTevents(pCTconfig config, pCTgeo* Geometry, pCTraw rawEvt,
       }
       int ret = fread(outBuff, sizeof(char), nBuffBytes, fptmp);
       float Vhit[4], Thit[4];
-      int phSum[5];
+      //int ADC[5];
       memcpy(Thit, &outBuff[2 * sizeof(int)], 4 * sizeof(float));
       memcpy(Vhit, &outBuff[2 * sizeof(int) + 4 * sizeof(float)], 4 * sizeof(float));
-      memcpy(phSum, &outBuff[2 * sizeof(int) + 8 * sizeof(float)], 5 * sizeof(int));
-      if (EvtNum <= config.item_int["n_debug"]) {
+      memcpy(ADC,  &outBuff[2 * sizeof(int) + 8 * sizeof(float)], 5 * sizeof(int));
+      if (EvtNum <= theConfig->item_int["n_debug"]) {
         cout << "pCTevents reading back the temporary file for calibrations. . .\n";
         cout << "  Vhit     Uhit    Thit\n";
         for (int lyr = 0; lyr < 4; lyr++)  cout << "  " << Vhit[lyr] << "  " << Uhit[lyr] << "  " << Thit[lyr] << endl;
         cout << "  Stage pulse sums= ";
-        for (int stage = 0; stage < 5; stage++) cout << phSum[stage] << "  ";
+        for (int stage = 0; stage < 5; stage++) cout << ADC[stage] << "  ";
         cout << endl;
       }
       // Calculate the calibrated WEPL
@@ -264,10 +265,10 @@ void Preprocessing::pCTevents(pCTconfig config, pCTgeo* Geometry, pCTraw rawEvt,
         Vedet[stage] = Geometry->extrap2D(&Uhit[2], Vback, Geometry->energyDetectorU(stage));
         Tedet[stage] = Geometry->extrap2D(&Uhit[2], Tback, Geometry->energyDetectorU(stage));
         bool inBounds;
-        Ene[stage] = ((float)phSum[stage] - Calibrate->Ped[stage]) * theTVcorr->corrFactor(stage, Tedet[stage], Vedet[stage], inBounds);
+        Ene[stage] = ((float)ADC[stage] - Calibrate->Ped[stage]) * theTVcorr->corrFactor(stage, Tedet[stage], Vedet[stage], inBounds);
 	if (inBounds) nGood++;
       }
-      if(nGood==5) Calibrate->FillGains(Vedet[0], Tphantom, Ene, phSum); // Accumulate histograms for gain recalibration 
+      if(nGood==5) Calibrate->FillGains(Vedet[0], Tphantom, Ene, ADC); // Accumulate histograms for gain recalibration 
     }
     Calibrate->GetGains(theTVcorr);
     fclose(fptmp);
@@ -284,16 +285,16 @@ void Preprocessing::pCTevents(pCTconfig config, pCTgeo* Geometry, pCTraw rawEvt,
 //*********** Driving program for pCT preprocessing **************
 int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdetFPGA) {
   cout << "Preprocessing.cpp: Entering the driver routine for pCT preprocessing. . ." << endl;
-  cout << "The phantom is assumed to be less than " << config.item_float["size"] << " in radius, for recalibration of gains." << endl;
-  cout << "The wedge phantom offset is assumed to be " << config.item_float["wedgeoffset"] << endl;
+  cout << "The phantom is assumed to be less than " << theConfig->item_float["size"] << " in radius, for recalibration of gains." << endl;
+  cout << "The wedge phantom offset is assumed to be " << theConfig->item_float["wedgeoffset"] << endl;
   cout << "There are " << numbTkrFPGA << " tracker FPGAs and " << numbEdetFPGA << " energy detector FPGAs" << endl;
   cout << "The file fraction to use is " << fileFraction << endl;
 
   //////////////////////////////////////////////////////////
   // Opening the input file
   //////////////////////////////////////////////////////////
-  cout << "Reading the input raw data file " << config.item_str["inputFileName"] << endl;
-  in_file = fopen(config.item_str["inputFileName"].c_str(), "rb");
+  cout << "Reading the input raw data file " << theConfig->item_str["inputFileName"] << endl;
+  in_file = fopen(theConfig->item_str["inputFileName"].c_str(), "rb");
   
   if (in_file == NULL) {
     perror("Error opening the input raw data file.");
@@ -315,24 +316,24 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
 
   // Create an instance of the class for parsing and storing the raw data from the input file
   pCTraw rawEvt(in_file, fileSize, 0, numbTkrFPGA, numbEdetFPGA); 
-  rawEvt.readRunHeader(config.item_str["inputFileName"].c_str()); // Look for the run header bits and parse them
+  rawEvt.readRunHeader(theConfig->item_str["inputFileName"].c_str()); // Look for the run header bits and parse them
   pCTgeo* Geometry = new pCTgeo(0.);   // Create a class instance with all of the geometry information
 
-  cout << "Preprocessing.cpp: The output directory is " << config.item_str["outputDir"] << endl;
+  cout << "Preprocessing.cpp: The output directory is " << theConfig->item_str["outputDir"] << endl;
   // Check whether the specified stage angle agrees with what is in the data file
-  if (!config.item_int["continuous"]) {
-    if (config.item_float["projection"] > -360.0) {
-      if (abs(config.item_float["projection"] - rawEvt.stage_angle) / config.item_float["projection"] > 0.001) {
+  if (!theConfig->item_int["continuous"]) {
+    if (theConfig->item_float["projection"] > -360.0) {
+      if (abs(theConfig->item_float["projection"] - rawEvt.stage_angle) / theConfig->item_float["projection"] > 0.001) {
         cout << "Preprocessing.cpp: The provided projection angle does not "
 	  "match the input file run header!\n";
-        cout << "The provided projection angle = " << config.item_float["projection"] << endl;
+        cout << "The provided projection angle = " << theConfig->item_float["projection"] << endl;
         cout << "The stage angle from the file = " << rawEvt.stage_angle << endl;
         cout << "We are overriding the value from the input file run header.\n";
       }
     } else {
-      config.item_float["projection"] = rawEvt.stage_angle;
+      theConfig->item_float["projection"] = rawEvt.stage_angle;
       cout << "Preprocessing.cpp: We are setting the projection angle "
-              "according to the input file value of " << config.item_float["projection"] << endl;
+              "according to the input file value of " << theConfig->item_float["projection"] << endl;
       cout << "The input file in general should contain the true reading from "
               "the stage for non-continuous-scan runs.\n";
     }
@@ -350,25 +351,25 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
   // GET EXISTING WEPL CALIBRATION CONSTANTS  [CEO Aug 2016]
   /////////////////////////////////////////////////////////
 
-  for(int i =0; i<5; i++)StgThr[i] = config.item_float[Form("thr%d",i)];
-  Wepl *WEPL = new Wepl(config, pCTcalibRootFile, projectionROOT);
+  for(int i =0; i<5; i++)StgThr[i] = theConfig->item_float[Form("thr%d",i)];
+  Wepl *WEPL = new Wepl(pCTcalibRootFile, projectionROOT);
   theTVcorr = new TVcorrection(pCTcalibRootFile, 0);
   WEPL->SetEthresholds(StgThr[0], StgThr[1], StgThr[2], StgThr[3], StgThr[4]);  
   // Create a vector of pointers to instances of the pedestal and gain calibration class
   float t1 = -100.; // These define two ranges for finding protons passing through zero phantom material, for gain calibration
   float t2 = -100.; // ****** Let's keep this to one side only, for now, to accommodate the wedge calibration runs with bricks
-  float t3 = config.item_float["size"];// + config.item_float["wedgeoffset"];
+  float t3 = theConfig->item_float["size"];// + theConfig->item_float["wedgeoffset"];
   float t4 = 100.;
   float pedestals[5];
   for (int stage = 0; stage < 5; stage++) pedestals[stage] = theTVcorr->ped[stage];
   int pdstlr[5];
-  for (int stage = 0; stage < nStage; stage++) pdstlr[stage] = config.item_int[Form("pedrng%d",stage)];
-  pedGainCalib* Calibrate = new pedGainCalib(projectionROOT, pdstlr, pedestals, t1, t2, t3, t4, config);
+  for (int stage = 0; stage < nStage; stage++) pdstlr[stage] = theConfig->item_int[Form("pedrng%d",stage)];
+  pedGainCalib* Calibrate = new pedGainCalib(projectionROOT, pdstlr, pedestals, t1, t2, t3, t4);
   /////////////////////////////////////////////////////////////////
   // Call the routine that reads the data and does the analysis.
   /////////////////////////////////////////////////////////////////
   // Uhit is filled and returned for use below, just to save space in the temporary file.
-  pCTevents(config, Geometry, rawEvt, Calibrate, Uhit);
+  pCTevents(Geometry, rawEvt, Calibrate, Uhit);
 
   // Prepare the ROOT File header
   projectionROOT->cd();
@@ -385,14 +386,14 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
   if (timeStampOutput) version_id += 100;
   if (eventIDOutput) version_id += 1000;
 
-  string data_source_string = config.item_str["inputFileName"];
-  string study_name_string = config.item_str["study"];
+  string data_source_string = theConfig->item_str["inputFileName"];
+  string study_name_string = theConfig->item_str["study"];
   string prepared_by_string = string(PREPARED_BY);
   
   int current_time      = time(NULL);
-  int recalibrate       = config.item_int["recalibrate"];
-  int study_name_size = config.item_str["study"].size(); 
-  int data_source_size  = config.item_str["inputFileName"].size();
+  int recalibrate       = theConfig->item_int["recalibrate"];
+  int study_name_size = theConfig->item_str["study"].size(); 
+  int data_source_size  = theConfig->item_str["inputFileName"].size();
   int prepared_by_size  = strlen(PREPARED_BY);
   
   header = new TTree("header", "meta-data");
@@ -418,10 +419,13 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
   float px0,py0,pz0;
   float px1,py1,pz1;
   Int_t MaxEnergyTransFilter, ThresholdFilter, dEEFilter;
+  unsigned int timeStamp;
   phase = new TTree("phase", "bin tree");
   phase->Branch("t", &Thit, "t[4]/F");  
   phase->Branch("v", &Vhit, "v[4]/F");
   phase->Branch("u", &Uhit, "u[4]/F");
+  phase->Branch("ADC", &ADC, "ADC[5]/I");
+  phase->Branch("timeStamp", &timeStamp, "timeStamp/I");
   phase->Branch("E", &Ene, "E[5]/F");
   phase->Branch("wepl", &Wet, "wepl/F");
   phase->Branch("theta", &theta, "theta/F");
@@ -457,7 +461,7 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
   unsigned int timeStampOld = 0;
   long long timeStampOffset = 0;
   
-  tempfile = config.item_str["outputDir"] + "/extracted_data_0d.tmp";
+  tempfile = theConfig->item_str["outputDir"] + "/extracted_data_0d.tmp";
   fptmp = fopen(tempfile.c_str(), "rb");
   if (fptmp == NULL) {
     perror("Preprocessing.cpp: Failed to open the temporary file");
@@ -469,15 +473,14 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
     MaxEnergyTransFilter = 1;
     ThresholdFilter = 1;
 
-    int phSum[5];
-    unsigned int timeStamp;
+
     unsigned int event_id;
     unsigned char OTR;
     memcpy(&timeStamp, &outBuff[0], sizeof(int));
     memcpy(&event_id, &outBuff[sizeof(int)], sizeof(int));
     memcpy(Thit, &outBuff[2 * sizeof(int)], 4 * sizeof(float));
     memcpy(Vhit, &outBuff[2 * sizeof(int) + 4 * sizeof(float)], 4 * sizeof(float));
-    memcpy(phSum, &outBuff[2 * sizeof(int) + 8 * sizeof(float)], 5 * sizeof(int));
+    memcpy(ADC, &outBuff[2 * sizeof(int) + 8 * sizeof(float)], 5 * sizeof(int));
     memcpy(&OTR, &outBuff[8 * sizeof(float) + 7 * sizeof(int)], sizeof(unsigned char));
     // Check for a flaky time stamp, and watch out for roll-over of the time stamp counter (after about 10 minutes)!
     // Before V65 of the event builder firmware there were frequent overflows
@@ -492,7 +495,7 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
     }
 
     timeStampOld = timeStamp;
-    if (config.item_int["continuous"]) {
+    if (theConfig->item_int["continuous"]) {
       long long longTimeStamp = 16 * ((long long)timeStamp);
       theta = ((double)(longTimeStamp + timeStampOffset)) * Geometry->timeRes() * Geometry->stageSpeed() + initialAngle;
     } 
@@ -512,7 +515,7 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
       float Vedet = Geometry->extrap2D(&Uhit[2], Vback, Geometry->energyDetectorU(stage));
       float Tedet = Geometry->extrap2D(&Uhit[2], Tback, Geometry->energyDetectorU(stage));
       float TVCorrFactor = theTVcorr->corrFactor(stage, Tedet, Vedet, inBounds);
-      Ene[stage] = Calibrate->GainFac[stage] * ((float)phSum[stage] - Calibrate->Ped[stage]) * TVCorrFactor;
+      Ene[stage] = Calibrate->GainFac[stage] * ((float)ADC[stage] - Calibrate->Ped[stage]) * TVCorrFactor;
       if(inBounds) nGood++;
 
     }
@@ -522,7 +525,7 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
     if(!ThresholdFilter) ++nThreshold;
     if(!MaxEnergyTransFilter) ++nMaxTrans;
     if (Wet < 0. || Wet > 999.) ++nBadWEPL;
-    if(Wet > 0 && Wet < 260  && MaxEnergyTransFilter && ThresholdFilter && dEEFilter) Calibrate->FillADC(phSum);
+    if(Wet > 0 && Wet < 260  && MaxEnergyTransFilter && ThresholdFilter && dEEFilter) Calibrate->FillADC(ADC);
     else ++nTot;
     
     x0   = Uhit[1]; y0 = Thit[1]; z0 = Vhit[1];
@@ -542,7 +545,7 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
     if (EvtNum % 100000 == 0) cout << " Processing event " << EvtNum << " from the temp file, time stamp=" << timeStamp <<" angle=" << theta << endl;
     ++nEvtot;
   }
-  Calibrate->WriteADC();
+  Calibrate->WriteHist();
   delete WEPL; // the class
   fclose(fptmp);
   string cmd  = "rm -f " + tempfile;

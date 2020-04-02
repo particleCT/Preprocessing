@@ -292,9 +292,9 @@ int main(int argc, char *argv[]) {
     int doGains = 1; 
     cfg.addItem('g', "doGains", doGains);
     
-    pCTcalib calibProcessor(cfg, CalFile);
-    if (calibProcessor.TVmapper() == 0) { // First the TVmapper
-      //if (calibProcessor.TVmapper_FlatBricks() == 0) { // First the TVmapper
+    pCTcalib calibProcessor(CalFile);
+    //if (calibProcessor.TVmapper() == 0) { // First the TVmapper
+    if (calibProcessor.TVmapper_FlatBricks() == 0) { // First the TVmapper
       calibProcessor.enrgDep(); // Verify the energy dependence      
       calibProcessor.Wcalib();
       calibProcessor.writeCalibfile();
@@ -311,7 +311,7 @@ int main(int argc, char *argv[]) {
     cfg.addItem('i', "inputFileName", inputFileName);
     cout << "Executing a pCT data pre-processing run" << endl;
     // Here we call the complete preprocessing program
-    Preprocessing pCTpreprocessor(cfg);
+    Preprocessing pCTpreprocessor;
     int errorCode = pCTpreprocessor.ProcessFile(fileFraction, numbTkrFPGA, numbEdetFPGA);
     return errorCode;
   }

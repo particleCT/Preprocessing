@@ -15,8 +15,8 @@
 #include "TFile.h"
 using namespace std;
 #define nStage 5
-#define nPixX 70
-#define nPixY 20  // under and overflow
+#define nPixX 34
+#define nPixY 10  // under and overflow
 #define nPix (nPixX+2)*(nPixY+2)
 
 class TVcorrection {
