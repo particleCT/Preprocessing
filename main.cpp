@@ -293,8 +293,8 @@ int main(int argc, char *argv[]) {
     cfg.addItem('g', "doGains", doGains);
     
     pCTcalib calibProcessor(CalFile);
-    //if (calibProcessor.TVmapper() == 0) { // First the TVmapper
-    if (calibProcessor.TVmapper_FlatBricks() == 0) { // First the TVmapper
+    if (calibProcessor.TVmapper() == 0) { // First the TVmapper
+    //if (calibProcessor.TVmapper_FlatBricks() == 0) { // First the TVmapper
       calibProcessor.enrgDep(); // Verify the energy dependence      
       calibProcessor.Wcalib();
       calibProcessor.writeCalibfile();

@@ -110,7 +110,6 @@ inline Wepl::Wepl(TFile* calibFile, TFile* outputFile){
     for(int i =0; i<3; i++){
       header->SetBranchAddress(Form("dEElow_Stage%d_%d", stage,i),&dEElow[stage][i]); // Load the dEE parameters
       header->SetBranchAddress(Form("dEEhigh_Stage%d_%d", stage,i),&dEEhigh[stage][i]);
-
     }
   }
   header->GetEntry(0);
@@ -120,17 +119,51 @@ inline float Wepl::EtoWEPL(float Estage[5], Int_t &MaxTrans, Int_t &Threshold, I
 {
   double WET;
   double E_tot;
-  E_tot = Estage[0] + Estage[1] + Estage[2] + Estage[3] + Estage[4];
+  if(WET<0) return -1000;
+  dEE = 0;
+   if(theCuts->dEEFilter(Estage[3], Estage[4], dEElow[4], dEEhigh[4])){// Stage 4
+    E_tot = Estage[0] + Estage[1] + Estage[2] + Estage[3] + Estage[4];
+    WET   = Test->Eval(E_tot);
+    dEEhist_root[4]->Fill(Estage[3], Estage[4]);
+    dEE = 1;
+    return WET;
+  }
+
+  else if(theCuts->dEEFilter(Estage[2], Estage[3], dEElow[3], dEEhigh[3])){// Stage 3
+    E_tot = Estage[0] + Estage[1] + Estage[2] + Estage[3];
+    WET   = Test->Eval(E_tot);
+    dEEhist_root[3]->Fill(Estage[2], Estage[3]);
+    dEE = 1;
+    return WET;
+  }
+  
+  else if(theCuts->dEEFilter(Estage[1], Estage[2], dEElow[2], dEEhigh[2])){// Stage 2
+    E_tot = Estage[0] + Estage[1] + Estage[2];
+    WET   = Test->Eval(E_tot);
+    dEEhist_root[2]->Fill(Estage[1], Estage[2]);
+    dEE = 1;
+    return WET;
+  }
+
+  else if(theCuts->dEEFilter(Estage[0], Estage[1], dEElow[1], dEEhigh[1])){// Stage 1
+    E_tot = Estage[0] + Estage[1];
+    WET   = Test->Eval(E_tot);
+    dEEhist_root[1]->Fill(Estage[0], Estage[1]);
+    dEE = 1;
+    return WET;
+  }
+  else return 0;
+
+  /*
   // dE-E parameterization and energy check to cut out fragments for helium if particle stop in Stage 4
   if (Estage[4] > thr[4]) { // 1 MeV
-
-    WET = Test->Eval(E_tot);
+    
     //WET = calWEPL[4]->Eval(Estage[4]);    
     if( WET < 0 ) return -1000;  // Unit Test
     if (Estage[4] > maxEnergy || Estage[4] < minEnergy) MaxTrans = 0;
     if (Estage[3] < cut3 || Estage[2] < cut2 || Estage[1] < cut1 || Estage[0] < cut0) Threshold = 0;
     if (theConfig->item_int["dEEFilter"] && !theCuts->dEEFilter(Estage[3], Estage[4], dEElow[4], dEEhigh[4])){
-      dEEhist_root[4]->Fill(Estage[3], Estage[4]);
+    dEEhist_root[4]->Fill(Estage[3], Estage[4]);
       dEE = 0;
     }
     return WET; // polystyrene to water equivalent // everything passed
@@ -185,6 +218,7 @@ inline float Wepl::EtoWEPL(float Estage[5], Int_t &MaxTrans, Int_t &Threshold, I
     return WET; // polystyrene to water equivalent
   }
   else return 2000;    // No Energy found in any stage above the thresold, returning big WEPL
+  */
 }
 inline void Wepl::SetEthresholds(float t0, float t1, float t2, float t3, float t4) {
   thr[0] = t0; thr[1] = t1; thr[2] = t2; thr[3] = t3; thr[4] = t4;

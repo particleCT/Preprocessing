@@ -122,7 +122,8 @@ void EvtRecon::ReadInputFile(pCTgeo* Geometry, TVcorrection *const TVcorr , stri
         Tedet[stage] = Geometry->extrap2D(&UT[2], &T[2], Geometry->energyDetectorU(stage));
 
         bool inBounds;
-        Ene[stage] = ((float)thisEvent.ADC[stage] - Calibrate->Ped[stage]) * TVcorr->corrFactor(stage, Tedet[stage], Vedet[stage], inBounds);
+        //Ene[stage] = ((float)thisEvent.ADC[stage] - Calibrate->Ped[stage]) * TVcorr->corrFactor(stage, Tedet[stage], Vedet[stage], inBounds);
+	Ene[stage] = ((float)thisEvent.ADC[stage]) * TVcorr->corrFactor(stage, Tedet[stage], Vedet[stage], inBounds);
         if (inBounds) nGood++;
 
       }

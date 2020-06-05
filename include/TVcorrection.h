@@ -26,7 +26,7 @@ public:
   TH2D* TVcorrHist[5]; // TVcorr histogram for each stage
 
   // Constructor -- read from the TV calibration file
-  TVcorrection(TFile* calibFile, int calib) { // pass 0 for all of year, month, day, run to avoid checks on those values
+  TVcorrection(TFile* calibFile, int calib) { 
 
     if(calib){// Calibration we initialize the data be empty
       for(int stage =0; stage<nStage; stage++) TVcorrHist[stage] = new TH2D(Form("TVcorrMap_%d", stage), "", nPixX, -190, 190, nPixY, -50, 50);

@@ -131,13 +131,11 @@ void pedGainCalib::FillGains(float Vedet, float Tedet, float Ene[5], int phSum[5
         hEnrg[stage]->Fill(stgEne);
         Esum += Ene[stage];
 	hPed_Out[stage]->Fill(phSum[stage]);
-	
       }
       hEnrgTot->Fill(Esum);
       hTedet->Fill(Tedet);
     }
   }
-
   else if(Tedet<-50){ // Analyze full energy particles inside the phantom region
     if (fabs(Vedet) < 40.) for(int stage =0; stage<5; stage++)hPed_In[stage]->Fill(phSum[stage]);
   }    
@@ -146,8 +144,6 @@ void pedGainCalib::FillGains(float Vedet, float Tedet, float Ene[5], int phSum[5
 }
 void pedGainCalib::GetGains(TVcorrection *TVcorr) {
                             
-  // Called prior to the final loop over protons histories to calculate WEPL
-
   // Calculate the gain
   double Peak[5];
   double std[5];

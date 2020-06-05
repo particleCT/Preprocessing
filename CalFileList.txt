@@ -1,6 +1,0 @@
-/home/cacof1/software/HIT/empty_0010.dat
-/home/cacof1/software/HIT/calibw_0b_0011.dat
-/home/cacof1/software/HIT/calibw_1b_0012.dat
-/home/cacof1/software/HIT/calibw_2b_0013.dat
-/home/cacof1/software/HIT/calibw_3b_0014.dat
-/home/cacof1/software/HIT/calibw_4b_0015.dat

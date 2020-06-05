@@ -30,30 +30,30 @@ void pCTcut::dEEFilterParameters(TH2D* dEEhist, float dEElow[3], float dEEhigh[3
   else EnergyBinWidth = 1.0;
 
   /// Lennart Volz, November 2018 dE-E parameter evaluation:
-  /*  int Estep[5][3];
+   int Estep[5][3];
   if(theConfig->item_str["partType"] == "H"){
-    Estep[0][0] = 40; Estep[0][1] = 0;   Estep[0][2] = 0;
-    Estep[1][0] = 40; Estep[1][1] = 120; Estep[1][2] = 200;
-    Estep[2][0] = 40; Estep[2][1] = 100; Estep[2][2] = 160;
-    Estep[3][0] = 40; Estep[3][1] = 80;  Estep[3][2] = 120;
-    Estep[4][0] = 20; Estep[4][1] = 50;  Estep[4][2] = 70;
+    Estep[0][0] = 240; Estep[0][1] = 120;   Estep[0][2] = 12;
+    Estep[1][0] = 100; Estep[1][1] = 60;   Estep[1][2] = 12;
+    Estep[2][0] = 240; Estep[2][1] = 120;   Estep[2][2] = 12;
+    Estep[3][0] = 240; Estep[3][1] = 120;   Estep[3][2] = 12;
+    Estep[4][0] = 200; Estep[4][1] = 100;   Estep[4][2] = 12;
   }
   else{
-    Estep[0][0] = 40; Estep[0][1] = 0;   Estep[0][2] = 0;
-    Estep[1][0] = 40; Estep[1][1] = 120; Estep[1][2] = 230;
-    Estep[2][0] = 40; Estep[2][1] = 100; Estep[2][2] = 230;
-    Estep[3][0] = 40; Estep[3][1] = 100; Estep[3][2] = 230;
-    Estep[4][0] = 40; Estep[4][1] = 100; Estep[4][2] = 180;
-    }*/
-  int Estep[3] = { 240, 120, 12 }; 
+    Estep[0][0] = 240; Estep[0][1] = 100;   Estep[0][2] = 40;
+    Estep[1][0] = 240; Estep[1][1] = 100;   Estep[1][2] = 40;
+    Estep[2][0] = 240; Estep[2][1] = 100;   Estep[2][2] = 40;
+    Estep[3][0] = 240; Estep[3][1] = 100;   Estep[3][2] = 40;
+    Estep[4][0] = 200; Estep[4][1] = 100;   Estep[4][2] = 40;    
+  } //Without ped
+  //int Estep[3] = { 240, 120, 12 };
   int bin_cut  = 0;
-  float E[3] = {Estep[0]*EnergyBinWidth, Estep[1]*EnergyBinWidth, Estep[2]*EnergyBinWidth};
+  float E[3] = {Estep[stage][0]*EnergyBinWidth, Estep[stage][1]*EnergyBinWidth, Estep[stage][2]*EnergyBinWidth};
   float xlow[3], xhigh[3], xmax, max;
   for (int j = 0; j < 3; j++) {
-    TH1D* dEESlice = dEEhist->ProjectionX(Form("ProjX_Stage%d_Bin%d",stage,Estep[j]),Estep[j] ,Estep[j]+1);
+    TH1D* dEESlice = dEEhist->ProjectionX(Form("ProjX_Stage%d_Bin%d",stage,Estep[stage][j]),Estep[stage][j] ,Estep[stage][j]+1);
     // Cheesy fix to remove the low energy spike
     if(theConfig->item_str["partType"] == "H") bin_cut = dEESlice->FindBin(40);
-    else bin_cut = dEESlice->FindBin(60);
+    else bin_cut = dEESlice->FindBin(100);
     dEESlice->GetXaxis()->SetRange(bin_cut,dEESlice->GetNbinsX());
     max   =  dEESlice->GetMaximum();
     xmax  =  dEESlice->GetBinCenter(dEESlice->GetMaximumBin());
@@ -89,8 +89,8 @@ void pCTcut::dEEFilterParameters(TH2D* dEEhist, float dEElow[3], float dEEhigh[3
 // dEE cuts
 ////////////////////////////////////////////////////////////////////
 bool pCTcut::dEEFilter(float Elow, float Ehigh, float dEElow[3], float dEEhigh[3]){
-  if (Elow < (dEElow[0]  * pow(Ehigh,2) + dEElow[1] * Ehigh + dEElow[2]) ||
-      Elow > (dEEhigh[0] * pow(Ehigh,2) + dEEhigh[1] * Ehigh + dEEhigh[2])){
+  if (Elow  < (dEElow[0]  * pow(Ehigh,2) + dEElow[1] * Ehigh + dEElow[2]) ||
+      Ehigh > (dEEhigh[0] * pow(Ehigh,2) + dEEhigh[1] * Ehigh + dEEhigh[2])){
     return false;}
   else return true;
 }
