@@ -90,11 +90,11 @@ class pCTcalib {
   TH1D *stgHistE[nStage];
   TH1D *EsumH;
   //TH2D* TVcorrHist[5]; // TVcorr histogram for each stage
-  TProfile2D *stgE[nStage];
+  //TH2D *stgE[nStage];
 
   time_t currentTime;
   struct tm *now;
-  TH2D* ProfileE;
+  TProfile* ProfileE[nStage];
   double V[2], T[2], Ut[2], Uv[2], Uft[2], Ufv[2], Tf[2], Vf[2]; 
   // Here are a bunch of parameters used to extract the calibration
   float EG4stage[nStage]; // MC derived stage energies, used to calibrate to MeV (CDH setup)
