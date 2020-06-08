@@ -34,9 +34,9 @@ class pCTcut {
   void dEEFilterParameters(TH2D* dEEhist, float dEElow[3], float dEEhigh[3], int stage);
   void summary();
 
-  //const double mxSlopeFront[2] = { 0.03, 0.09 }; // Cut on the slope of the front tracker vector, separately for V and T
-  //const double mxSlopeBack[2] = { 0.1, 0.15 };   // Cut on the slope of the rear tracker vector, separately for V and T
-  //const double deltaMx = 6.0;                    // Cut on how far the two vectors miss each other at u=0, in mm
+  const double mxSlopeFront[2] = { 0.03, 0.09 }; // Cut on the slope of the front tracker vector, separately for V and T
+  const double mxSlopeBack[2] = { 0.1, 0.15 };   // Cut on the slope of the rear tracker vector, separately for V and T
+  const double deltaMx = 6.0;                    // Cut on how far the two vectors miss each other at u=0, in mm
 
  private: 
   static pCTcut *theCuts; 

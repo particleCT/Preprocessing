@@ -1005,25 +1005,6 @@ void pCTcalib::FilldEE(TH2D* dEEhist[nStage]) {
 //////////////////////////////////////////////////////////////////////
 void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* REhist_Tot) {
   // Routine passed to process the WEPL calibration.
-<<<<<<< HEAD
-  cout << "Entering procWEPLcal for Nbricks=" << config.item_int["Nbricks"] << ".  The list of histograms to fill is" << endl;
-  for(int stage = 0; stage < nStage; ++stage) cout << config.item_int["Nbricks"] << " bricks, stage " << stage << ", title=  " << REhist[stage]->GetTitle() << endl;
-  theEvtRecon->config.item_int["doGains"] = true;
-  theEvtRecon->config.item_int["Nbricks"] = config.item_int["Nbricks"];
-
-  // Calibration
-  float wedgeLimit = theGeometry->getTWedgeBreaks(4) + 25.0; // BRICK OFFSET +5.
-  float openRange = 20.0;
-  float pedestals[nStage];
-  int pedMin[nStage];
-  for (int stage = 0; stage < nStage; stage++) pedestals[stage] = 0.;
-  for (int stage = 0; stage < nStage; stage++){
-    pedMin[stage] = config.item_int[Form("pedrng%d",stage)];
-  }
-  pedGainCalib* theCalibration = new pedGainCalib(pCTcalibRootFile, pedMin, pedestals,-150., -151., wedgeLimit, wedgeLimit + openRange, config);
-  theEvtRecon->ReadInputFile(theGeometry, theTVcorr, config.item_str["inputFileName"], theCalibration);
-
-=======
   cout << "Entering procWEPLcal for Nbricks=" << theConfig->item_int["Nbricks"] << ".  The list of histograms to fill is" << endl;
   for(int stage = 0; stage < nStage; ++stage) cout << theConfig->item_int["Nbricks"] << " bricks, stage " << stage << ", title=  " << REhist[stage]->GetTitle() << endl;
   theConfig->item_int["doGains"] = true;
@@ -1033,7 +1014,6 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
   theEvtRecon->ReadInputFile(theGeometry, theTVcorr, theConfig->item_str["inputFileName"], theCalibration);
   theCalibration->WriteHist(); // For analysis
   
->>>>>>> upstream/master
   Uft[0] = theEvtRecon->uhitT[0]; Uft[1] = theEvtRecon->uhitT[1];
   Ufv[0] = theEvtRecon->uhitV[0]; Ufv[1] = theEvtRecon->uhitV[1];
   Ut[0]  = theEvtRecon->uhitT[2]; Ut[1]  = theEvtRecon->uhitT[3];
@@ -1064,10 +1044,6 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
   Title = "nBricks " + to_string((long long int)theConfig->item_int["Nbricks"]) + " calibration phantom thickness";
   TProfile* hLengthProf = new TProfile(Title.c_str(), Title.c_str(), 300, -150, -150 +3.0*100);
   
-  //Define fluence field de-modulation
-  TH2D *fluence = new TH2D("fluence","Fluence field", 300, -150.,150.,90,-45,45); //Defined to have homogeneous fluence /mm^2 
-
-  // Define energy sanity cuts
   float cut0, cut1, cut2, cut3, cut4, cut5;
     
   // Wedge phantom geometry and locations in the T axis,
@@ -1116,11 +1092,6 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
     Vf[0] = thisEvent.Vhit[0]; Vf[1] = thisEvent.Vhit[1];
     T[0]  = thisEvent.Thit[2];  T[1] = thisEvent.Thit[3];// Rear tracker coordinates
     V[0]  = thisEvent.Vhit[2];  V[1] = thisEvent.Vhit[3];
- 
-
-    //First check if compatible with fluence de-mod (important for largely fluctuating fluences)
-    if(fluence->GetBinContent(fluence->FindBin(Tf[1],Vf[1]))>=config.item_int["maxFluence"]) continue;
-    else fluence->Fill(Tf[1],Vf[1],1);
 
     float eStage[nStage]; // energy in this stage
     float eTot = 0;

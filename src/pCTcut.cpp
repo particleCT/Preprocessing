@@ -1,12 +1,6 @@
 #include "pCTcut.h"
 
-<<<<<<< HEAD
-pCTcut* pCTcut::theCuts=NULL;
-
-pCTcut::pCTcut(pCTconfig cfg): config(cfg)
-=======
 pCTcut::pCTcut()
->>>>>>> upstream/master
 { // Class constructor called prior to the event loop
 
   theConfig = pCTconfig::GetInstance();
@@ -25,9 +19,7 @@ pCTcut::pCTcut()
 
   minTkrs = 1; // Mininum number of good tracks
   maxTkrs = 1; // Maximum number of good tracks
-  theCuts = this;
 }
-
 
 //////////////////////////////////////////////////////////////////////
 // dEE Parameters

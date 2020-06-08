@@ -1,4 +1,3 @@
-
 // Top-level driving routines for the pCT preprocessing task
 // R.P. Johnson   September 15, 2016
 #include <iostream>
@@ -78,10 +77,6 @@ void Preprocessing::pCTevents(pCTgeo* Geometry, pCTraw rawEvt, pedGainCalib *Cal
   // pCTraw class
   /////////////////////////////////////////////////////////////////////////////////////////
 
-  //Fluence de-modulation for strongly fluctuating data (at HIT), could in principle be extended to get any fluence field desired
-  TH2D *fluence = new TH2D("fluence", "Maximum fluence field", 200, -150,150, 90,-45,45);
-
-
   int nErrDmp = 0;
   while (!rawEvt.stop_reading) { // event loop
     try {
@@ -122,78 +117,6 @@ void Preprocessing::pCTevents(pCTgeo* Geometry, pCTraw rawEvt, pedGainCalib *Cal
       // PERFORM THE TRACKER PATTERN RECOGNITION
       pCT_Tracking pCTtracks(pCThits, Geometry);
       // WRITE OUT ONLY EVENTS THAT ARE SUITABLE FOR IMAGE RECONSTRUCTION
-<<<<<<< HEAD
-      ////////////////////////////////////////////////////////////////////
-
-      if (cuts.cutEvt(pCTtracks, pCThits)) {
-        if (rawEvt.event_counter % 100000 == 0)
-          cout << "Event " << rawEvt.event_number << ", GoodEvtCount " << cuts.nKeep << " timeTag " << rawEvt.time_tag << ", theta  " << theta << endl;	
-        // Write the good events out to a temporary file
-        float Vhit[4], Thit[4];
-        if (pCTtracks.nTracks == 1) {
-          for (int lyr = 0; lyr < 4; lyr++) {
-            Vhit[lyr] = pCTtracks.VTracks[pCTtracks.itkV].X[lyr];
-            Uhit[lyr] = pCTtracks.VTracks[pCTtracks.itkV].U[lyr];
-            if (lyr < 2) Thit[lyr] = pCTtracks.frontPredT(pCTtracks.itkT, Uhit[lyr]); // Extrapolate the T tracks to the U planes occupied by the V layers
-            else Thit[lyr] = pCTtracks.backPredT(pCTtracks.itkT, Uhit[lyr]);
-          }
-        } else { // Use just the first hit in each layer if there is no track
-          double UhitT[4], ThitD[4];
-          for (int lyr = 0; lyr < 4; lyr++) {
-            if (pCThits.Lyr[lyr].N[0] > 0) {
-              Vhit[lyr] = pCThits.Lyr[lyr].Y[0].at(0);
-              Uhit[lyr] = pCThits.Lyr[lyr].U[0].at(0);
-            } else {
-              Vhit[lyr] = 0.;
-              Uhit[lyr] = -999.;
-            }
-            if (pCThits.Lyr[lyr].N[1] > 0) {
-              ThitD[lyr] = pCThits.Lyr[lyr].Y[1].at(0);
-              UhitT[lyr] = pCThits.Lyr[lyr].U[1].at(0);
-            } else {
-              ThitD[lyr] = 0.;
-              UhitT[lyr] = -999.;
-            }
-          }
-          Thit[0] = ThitD[0];
-          Thit[1] = ThitD[1];
-          if (Uhit[2] > -900. && Uhit[3] > -900. && UhitT[2] > -900. &&
-              UhitT[3] > -900.) {                                        // Complete rear tracker vector
-            Thit[2] = Geometry->extrap2D(&UhitT[2], &ThitD[2], Uhit[2]); // Displace the T measurements
-            Thit[3] = Geometry->extrap2D(&UhitT[2], &ThitD[2], Uhit[3]); // to same U as V measurements
-          } else {
-            Thit[2] = ThitD[2];
-            Thit[3] = ThitD[3];
-          }
-        }
-
-	//Fluence De-Modulation to save on time performed here
-	if(fluence->GetBinContent(fluence->FindBin(Thit[1],Vhit[1]))>=config.item_int["maxFluence"]) continue; 
-	else fluence->Fill(Thit[1],Vhit[1],1); 
-
-        unsigned char mask[5] = { 0x01, 0x02, 0x04, 0x08, 0x10 };
-        unsigned char OTR = 0;
-        if (rawEvt.enrg_fpga[0].OTR[0]) OTR = OTR | mask[0];
-        if (rawEvt.enrg_fpga[0].OTR[1]) OTR = OTR | mask[1];
-        if (rawEvt.enrg_fpga[0].OTR[2]) OTR = OTR | mask[2];
-        if (rawEvt.enrg_fpga[1].OTR[0]) OTR = OTR | mask[3];
-        if (rawEvt.enrg_fpga[1].OTR[1]) OTR = OTR | mask[4];
-
-        int phSum[5];
-        phSum[0] = rawEvt.enrg_fpga[0].pulse_sum[0];
-        phSum[1] = rawEvt.enrg_fpga[0].pulse_sum[1];
-        phSum[2] = rawEvt.enrg_fpga[0].pulse_sum[2];
-        phSum[3] = rawEvt.enrg_fpga[1].pulse_sum[0];
-        phSum[4] = rawEvt.enrg_fpga[1].pulse_sum[1];
-
-        memcpy(&outBuff[0], &timeStampOut, sizeof(int));
-        memcpy(&outBuff[sizeof(int)], &eventIdOut, sizeof(int));
-        memcpy(&outBuff[2 * sizeof(int)], Thit, 4 * sizeof(float));
-        memcpy(&outBuff[2 * sizeof(int) + 4 * sizeof(float)], Vhit, 4 * sizeof(float));
-        memcpy(&outBuff[2 * sizeof(int) + 8 * sizeof(float)], phSum, 5 * sizeof(int));
-        memcpy(&outBuff[8 * sizeof(float) + 7 * sizeof(int)], &OTR, sizeof(unsigned char));
-        fwrite(outBuff, sizeof(char), nBuffBytes, fptmp); // Writing the processed event data to a temporary file
-=======
       if (theCuts->cutEvt(pCTtracks, pCThits)){
 	  if (rawEvt.event_counter % 100000 == 0)
 	    cout << "Event " << rawEvt.event_number << ", GoodEvtCount " << theCuts->nKeep << " timeTag " << rawEvt.time_tag << endl;
@@ -233,7 +156,6 @@ void Preprocessing::pCTevents(pCTgeo* Geometry, pCTraw rawEvt, pedGainCalib *Cal
 	  Thit[2] = ThitD[2];
 	  Thit[3] = ThitD[3];
 	}
->>>>>>> upstream/master
       }
       
       unsigned char mask[5] = { 0x01, 0x02, 0x04, 0x08, 0x10 };
