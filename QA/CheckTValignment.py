@@ -34,8 +34,9 @@ for histid in range(0,4):
     label= "T%d Mean:%.3f"%tuple([histid,mean])
     ax.annotate(label, (0.01, 0.9), xycoords='axes fraction', va='center')
     ax.plot(Xaxis,hist)
-    ax.plot([0,0],[np.min(hist),np.max(hist)],'r-')
-    ax.plot([Xaxis[meanid],Xaxis[meanid]],[np.min(hist),np.max(hist)],'k-')
+    ax.plot([0,0],[np.min(hist),np.max(hist)],'r-', label='Center')
+    ax.plot([Xaxis[meanid],Xaxis[meanid]],[np.min(hist),np.max(hist)],'k-',label='Mean')
+plt.legend(frameon=False)
 plt.show()
 
 ### T Direction
@@ -54,8 +55,9 @@ for histid in range(0,2):
     label= T1+"-"+T0+" Mean:%.3f"%tuple([mean])
     ax.annotate(label, (0.01, 0.9), xycoords='axes fraction', va='center')
     ax.plot(Xaxis,hist)
-    ax.plot([0,0],[np.min(hist),np.max(hist)],'r-')
-    ax.plot([Xaxis[meanid],Xaxis[meanid]],[np.min(hist),np.max(hist)],'k-')
+    ax.plot([0,0],[np.min(hist),np.max(hist)],'r-',label='Center')
+    ax.plot([Xaxis[meanid],Xaxis[meanid]],[np.min(hist),np.max(hist)],'k-',label='Mean')
+plt.legend(frameon=False)
 plt.show()
 
 
@@ -73,8 +75,9 @@ for histid in range(0,4):
     label= "V%d Mean:%.3f"%tuple([histid,mean])
     ax.annotate(label, (0.1, 0.5), xycoords='axes fraction', va='center')
     ax.plot(Xaxis,hist)
-    ax.plot([0,0],[np.min(hist),np.max(hist)],'r-')
-    ax.plot([Xaxis[meanid],Xaxis[meanid]],[np.min(hist),np.max(hist)],'k-')
+    ax.plot([0,0],[np.min(hist),np.max(hist)],'r-',label='Center')
+    ax.plot([Xaxis[meanid],Xaxis[meanid]],[np.min(hist),np.max(hist)],'k-',label='Mean')
+plt.legend(frameon=False)
 plt.show()
 
 ### T Direction
@@ -93,7 +96,8 @@ for histid in range(0,2):
     label= V1+"-"+V0+" Mean:%.3f"%tuple([mean])
     ax.annotate(label, (0.01, 0.9), xycoords='axes fraction', va='center')
     ax.plot(Xaxis,hist)
-    ax.plot([0,0],[np.min(hist),np.max(hist)],'r-')
-    ax.plot([Xaxis[meanid],Xaxis[meanid]],[np.min(hist),np.max(hist)],'k-')
+    ax.plot([0,0],[np.min(hist),np.max(hist)],'r-',label='Center')
+    ax.plot([Xaxis[meanid],Xaxis[meanid]],[np.min(hist),np.max(hist)],'k-',label='Mean')
+plt.legend(frameon=False)
 plt.show()
 

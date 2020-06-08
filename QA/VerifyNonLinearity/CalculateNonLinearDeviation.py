@@ -60,13 +60,11 @@ def GetCalibrationCurve(hist,Yaxis):
         
 
 ## Load the various data
-f          = TFile(sys.argv[1],"update")
-
-
+f  = TFile(sys.argv[1],"update")
 
 for stage in range(0,5):
         ## Non-linear Function from my file
-        calibGraph = f.Get("calWEPL/RangeVsEnergy_"+str(stage)) 
+        calibGraph = f.Get("RangeVsEnergy/RangeVsEnergy_"+str(stage)) 
         calibY     = np.array(calibGraph.GetY())
         calibX     = np.array(calibGraph.GetX())
         NLF        = interp1d(calibX,calibY, fill_value = "extrapolate")
@@ -81,7 +79,6 @@ for stage in range(0,5):
         #calibList = np.loadtxt("WcalibHe.txt").reshape(5,340)
         #XRange    = np.arange(0,len(calibList[0]),1)
         #NLF        = interp1d(XRange,calibList[stage], fill_value = "extrapolate")
-
         
         ## Standard deviation
         calibhist  = f.Get("ProfileE")

@@ -28,16 +28,19 @@ using namespace std;
 #define nBricks 5
 #define nRange 260
 #define nEnrg 340
+
+//#define nRange 520
+//#define nEnrg 680
 class pCTcut;
 class EvtRecon;
 class pCTcalib {
  public:
   
   // Functions
-  pCTcalib(pCTconfig cfg, string inputFileNameIn);
+  pCTcalib(string inputFileNameIn);
   ~pCTcalib();
 
-  pCTconfig config;
+  //pCTconfig config;
   int Wcalib();
   void procWEPLcal(TH2D*[nStage], TH2D*[nStage], TH2D*);
 
@@ -59,6 +62,8 @@ class pCTcalib {
   pCTgeo *theGeometry;
   TVcorrection *theTVcorr;
   pCTcut *theCuts;
+  pedGainCalib* theCalibration;
+
   //pedGainCalib *theCalibration;
   // Variables
   vector<string> calFileNames;
@@ -84,12 +89,12 @@ class pCTcalib {
   TH1D *pxHistADC[nStage][nPix];
   TH1D *stgHistE[nStage];
   TH1D *EsumH;
-  TH2D* TVcorrHist[5]; // TVcorr histogram for each stage
+  //TH2D* TVcorrHist[5]; // TVcorr histogram for each stage
   TProfile2D *stgE[nStage];
 
   time_t currentTime;
   struct tm *now;
-
+  TH2D* ProfileE;
   double V[2], T[2], Ut[2], Uv[2], Uft[2], Ufv[2], Tf[2], Vf[2]; 
   // Here are a bunch of parameters used to extract the calibration
   float EG4stage[nStage]; // MC derived stage energies, used to calibrate to MeV (CDH setup)
@@ -98,5 +103,8 @@ class pCTcalib {
   int k1[nStage];         // Lots of interpolation parameters for cleaning up calibration curves
   int j1[nStage], j2[nStage], j3[nStage], j4[nStage];
   int i1[nStage], i2[nStage], i3;
+ private:
+  pCTconfig* theConfig;
+  
 };
 #endif

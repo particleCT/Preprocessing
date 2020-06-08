@@ -15,8 +15,8 @@
 #include "TFile.h"
 using namespace std;
 #define nStage 5
-#define nPixX 70
-#define nPixY 20  // under and overflow
+#define nPixX 34
+#define nPixY 10  // under and overflow
 #define nPix (nPixX+2)*(nPixY+2)
 
 class TVcorrection {
@@ -26,7 +26,7 @@ public:
   TH2D* TVcorrHist[5]; // TVcorr histogram for each stage
 
   // Constructor -- read from the TV calibration file
-  TVcorrection(TFile* calibFile, int calib) { // pass 0 for all of year, month, day, run to avoid checks on those values
+  TVcorrection(TFile* calibFile, int calib) { 
 
     if(calib){// Calibration we initialize the data be empty
       for(int stage =0; stage<nStage; stage++) TVcorrHist[stage] = new TH2D(Form("TVcorrMap_%d", stage), "", nPixX, -190, 190, nPixY, -50, 50);

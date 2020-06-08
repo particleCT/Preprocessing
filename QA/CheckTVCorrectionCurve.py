@@ -58,10 +58,39 @@ def GetProfileArray2D(hist):
 
 f = TFile(sys.argv[1])
 
+## First Check the continuity of the TVcorrection
+## X
 for stage in range(0,5):
-    hist  = f.Get("E_map_front_TS_"+str(stage))
+    hist  = f.Get("TVcorrProfile/TVcorrMap_"+str(stage))
+    hist,Xaxis,Yaxis = GetHistArray2D(hist)
+    idsX = np.where((Xaxis>-100) & (Xaxis<100))
+    idsY = np.where((Yaxis>-30) & (Yaxis<30))
+    for i in idsY[0]: plt.plot(Xaxis[idsX],hist[i][idsX],'k--',alpha=0.5)        
+    plt.plot(Xaxis[idsX],np.mean(hist[idsY[0]][:,idsX[0]],axis=0),'-o',label="Stage "+str(stage))
+plt.title("T direction")
+plt.legend()
+plt.show()
+
+## Y direction
+for stage in range(0,5):
+    hist  = f.Get("TVcorrProfile/TVcorrMap_"+str(stage))
+    hist,Xaxis,Yaxis = GetHistArray2D(hist)
+    idsX = np.where((Xaxis>-100) & (Xaxis<100))
+    idsY = np.where((Yaxis>-30) & (Yaxis<30))
+    for i in idsX[0]: plt.plot(Yaxis[idsY[0]],hist[idsY[0],i],'k--',alpha=0.5)
+    plt.plot(Yaxis[idsY[0]],np.mean(hist[idsY[0]][:,idsX[0]],axis=1),'-o',label="Stage "+str(stage))
+plt.title("V direction")
+plt.legend()
+plt.show()
+
+
+"""
+## Then check profile along the Energy distribution of the empty run
+
+
+for stage in range(0,5):
+    hist  = f.Get("EnergyProfile/Profile Energy of stage "+str(stage))
     hist,Xaxis,Yaxis = GetProfileArray2D(hist)
-    print Xaxis
     idsX = np.where((Xaxis>-100) & (Xaxis<100))
     idsY = np.where((Yaxis>-30) & (Yaxis<30))
     
@@ -85,3 +114,5 @@ for stage in range(0,5):
     plt.legend()
     plt.show()
 
+
+"""

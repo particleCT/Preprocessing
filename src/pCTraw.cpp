@@ -275,11 +275,8 @@ bool pCTraw::findEvtHdr(bool debug) {
 // ******************************* ******************************* *******************************
 // end of the pCTraw findEvtHeader
 // ******************************* ******************************* *******************************
-void pCTraw::readOneEvent(bool debug) { // This is called once for each event
-                                        // after the event header has been
-                                        // located.
+void pCTraw::readOneEvent(bool debug) { // This is called once for each event after the event header has been located.
   // reading the  event time tag: 36 bits
-
   if (TimeTags) {
     required_bits  = 36;
     extracted_bits = just_read(in_file, file_size, stop_reading, current_bits, queued_bits, required_bits, stream_position);
@@ -482,8 +479,7 @@ void pCTraw::readOneEvent(bool debug) { // This is called once for each event
           } else {
             if (smp < 9 && phsmp > enrg_fpga[i].sample[ch][imax[ch]]) {
               imax[ch] = smp; // Locate the peak
-              enrg_fpga[i].pulse_sum[ch] =
-                  enrg_fpga[i].sample[ch][smp - 1] + phsmp; // Add the peak pulse plus the previous one
+              enrg_fpga[i].pulse_sum[ch] = enrg_fpga[i].sample[ch][smp - 1] + phsmp; // Add the peak pulse plus the previous one
             }
           }
         }
@@ -510,7 +506,6 @@ void pCTraw::readOneEvent(bool debug) { // This is called once for each event
 // ******************************* ******************************* *******************************
 // end of the pCTraw readOneEvent
 // ******************************* ******************************* *******************************
-
 void pCTraw::doWeStop(int max_events, int max_time) { // Check whether we are done or need to
                                                       // read another event
   if (stream_position > file_size) {

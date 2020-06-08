@@ -29,7 +29,7 @@ def GetHistArray2D(hist):
 f = TFile(sys.argv[1])
 
 for i in range(1,5):
-    hist1  = f.Get("dEE/dEE_Tot_stage"+str(i))
+    hist1  = f.Get("dEE/dE-EStage_"+str(i))
     header = f.Get("header")
     dEE = tree2array(header,branches=["dEElow_Stage"+str(i)+"_0", "dEElow_Stage"+str(i)+"_1", "dEElow_Stage"+str(i)+"_2",
                                       "dEEhigh_Stage"+str(i)+"_0", "dEEhigh_Stage"+str(i)+"_1", "dEEhigh_Stage"+str(i)+"_2"])
@@ -40,8 +40,8 @@ for i in range(1,5):
     Ylow, Yhigh = PlotFilter(X,dEE)
     plt.imshow(hist1, origin='lower', norm=LogNorm(),extent=[Xaxis[0], Xaxis[-1], Xaxis[0], Xaxis[-1]])
     plt.title("Stage "+str(i))
-    plt.plot(Ylow, X ,'r-',lw=1)
-    plt.plot(Yhigh, X ,'r-',lw=1)
+    plt.plot(Ylow, X ,'k--',lw=2)
+    plt.plot(Yhigh, X ,'r-',lw=2)
     plt.show()
 
 

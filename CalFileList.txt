@@ -1,6 +1,0 @@
-/media/lennart/E041-HeCT/DataBackupAllShifts/DKFZ4_He/EmptyRun_0020_000.dat
-/media/lennart/E041-HeCT/DataBackupAllShifts/DKFZ4_He/CalibW_0B_0021_000.dat
-/media/lennart/E041-HeCT/DataBackupAllShifts/DKFZ4_He/CalibW_1B_0024_000.dat
-/media/lennart/E041-HeCT/DataBackupAllShifts/DKFZ4_He/CalibW_2B_0025_000.dat
-/media/lennart/E041-HeCT/DataBackupAllShifts/DKFZ4_He/CalibW_3B_0028_000.dat
-/media/lennart/E041-HeCT/DataBackupAllShifts/DKFZ4_He/CalibW_4B_0029_000.dat
