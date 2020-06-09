@@ -9,10 +9,8 @@
 #include <cstdio>
 #include <cmath>
 
-#include "pCTcut.h"
 #include "TkrHits.h"
 #include "pCTgeo.h"
-
 
 struct Tkr2D {
   double X[4], U[4]; // the lateral (X) and longitudinal (U) coordinates of the track
@@ -30,7 +28,6 @@ struct vct {
   double Y[2], U[2], I[2], intercept, slope;
 };
 
-class pCTcut;
 class pCT_Tracking {
 
   inline double quadExtrap(double x1, double x2, double x3, double x4, double y1, double y2, double y3) {
@@ -99,10 +96,6 @@ public:
 
   // Method to display all good tracks in an event, using Gnuplot.
   void displayEvent(int eventNumber, TkrHits &pCThits, std::string outputDir);
-
-  //instance of pCT cuts class
-  pCTcut *theCuts; 
-
 
 }; // End of the pCT_Tracking class
 #endif
