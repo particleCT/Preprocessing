@@ -2,7 +2,6 @@
 // R.P. Johnson 5/22/2016
 
 #include "pCT_Tracking.h"
-
 // This is the pattern recognition, which works only in 2D, separately for the V-U and T-U views.
 std::vector<Tkr2D> pCT_Tracking::Tracking2D(int Idx, TkrHits &pCThits, pCTgeo *Geometry) {
 
@@ -236,7 +235,7 @@ std::vector<Tkr2D> pCT_Tracking::Tracking2D(int Idx, TkrHits &pCThits, pCTgeo *G
       ;
     }
   }
-
+  /*
   // Now consider track candidates missing one hit in the front tracker.  Make a vector from the hit that
   // is present that points back to the putative beam origin (this works a bit better at LLUMC, using the
   // lead foil, than at the Chicago Proton Center).
@@ -356,7 +355,7 @@ std::vector<Tkr2D> pCT_Tracking::Tracking2D(int Idx, TkrHits &pCThits, pCTgeo *G
       }
     }
   }
-
+  */
   return tmp;
 } // End of Tracking2D
 

@@ -119,6 +119,7 @@ inline float Wepl::EtoWEPL(float Estage[5], Int_t &MaxTrans, Int_t &Threshold, I
 {
   double WET;
   double E_tot;
+  /*
   if(WET<0) return -1000;
   dEE = 0;
    if(theCuts->dEEFilter(Estage[3], Estage[4], dEElow[4], dEEhigh[4])){// Stage 4
@@ -153,8 +154,8 @@ inline float Wepl::EtoWEPL(float Estage[5], Int_t &MaxTrans, Int_t &Threshold, I
     return WET;
   }
   else return 0;
+  */
 
-  /*
   // dE-E parameterization and energy check to cut out fragments for helium if particle stop in Stage 4
   if (Estage[4] > thr[4]) { // 1 MeV
     
@@ -218,7 +219,7 @@ inline float Wepl::EtoWEPL(float Estage[5], Int_t &MaxTrans, Int_t &Threshold, I
     return WET; // polystyrene to water equivalent
   }
   else return 2000;    // No Energy found in any stage above the thresold, returning big WEPL
-  */
+
 }
 inline void Wepl::SetEthresholds(float t0, float t1, float t2, float t3, float t4) {
   thr[0] = t0; thr[1] = t1; thr[2] = t2; thr[3] = t3; thr[4] = t4;
