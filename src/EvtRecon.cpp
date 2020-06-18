@@ -65,7 +65,6 @@ void EvtRecon::ReadInputFile(pCTgeo* Geometry, TVcorrection *const TVcorr , stri
       Calibrate->FillPeds(rawEvt); // Accumulate pedestal histograms
 
       TkrHits pCThits(rawEvt, Geometry, false); // Reconstruct the tracker hits from the raw strip data
-
       pCT_Tracking pCTtracks(pCThits, Geometry); // Track pattern recognition
 
       //Store the reconstructed track and raw energy information into the output list

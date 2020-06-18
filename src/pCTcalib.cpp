@@ -101,7 +101,9 @@ pCTcalib::pCTcalib(string inputFileName)
     pedMin[stage]   = theConfig->item_int[Form("pedrng%d",stage)];
     ProfileE[stage] = new TProfile(Form("ProfileE_Bricks%d",stage),"",300,-100,150);//
   }
-  theCalibration = new pedGainCalib(pCTcalibRootFile, pedMin, pedestals,-150., -151., wedgeLimit, wedgeLimit + openRange);  
+  ProfileE_Tot      = new TH2D("ProfileE_Tot","",300,-100,150, 1000, 0, 1000);//
+  ProfileE_Tot_f    = new TH2D("ProfileE_Tot_f","",600,-100,150, 1000, 0, 1000);//
+  theCalibration    = new pedGainCalib(pCTcalibRootFile, pedMin, pedestals,-150., -151., wedgeLimit, wedgeLimit + openRange);  
 
 }
 //////////////////////////////////////////////////////////////////////
@@ -121,33 +123,33 @@ int pCTcalib::TVmapper() {
   
   float bin0[nStage] = { 1000., 1000., 1000., 1000., 1000. };
   //Forward Project
-  TH1D* TalignementPos12 = new TH1D("TalignementPosT1->T2","",300, -15, -15 +300*0.1);
-  TH1D* ValignementPos12 = new TH1D("ValignementPosV1->V2","",300, -15, -15 +300*0.1);
-  TH1D* TalignementPos13 = new TH1D("TalignementPosT1->T3","",300, -15, -15 +300*0.1);
-  TH1D* ValignementPos13 = new TH1D("ValignementPosV1->V3","",300, -15, -15 +300*0.1);
+  TH1D* TalignementPos12 = new TH1D("TalignementPosT1->T2","",300, -20, -20 +300*0.1);
+  TH1D* ValignementPos12 = new TH1D("ValignementPosV1->V2","",300, -20, -20 +300*0.1);
+  TH1D* TalignementPos13 = new TH1D("TalignementPosT1->T3","",300, -20, -20 +300*0.1);
+  TH1D* ValignementPos13 = new TH1D("ValignementPosV1->V3","",300, -20, -20 +300*0.1);
   
   // Backward project
-  TH1D* TalignementPos20 = new TH1D("TalignementPosT2->T0","",300, -15, -15 +300*0.1);
-  TH1D* ValignementPos20 = new TH1D("ValignementPosV2->V0","",300, -15, -15 +300*0.1);
-  TH1D* TalignementPos21 = new TH1D("TalignementPosT2->T1","",300, -15, -15 +300*0.1);
-  TH1D* ValignementPos21 = new TH1D("ValignementPosV2->V1","",300, -15, -15 +300*0.1);
+  TH1D* TalignementPos20 = new TH1D("TalignementPosT2->T0","",300, -20, -20 +300*0.1);
+  TH1D* ValignementPos20 = new TH1D("ValignementPosV2->V0","",300, -20, -20 +300*0.1);
+  TH1D* TalignementPos21 = new TH1D("TalignementPosT2->T1","",300, -20, -20 +300*0.1);
+  TH1D* ValignementPos21 = new TH1D("ValignementPosV2->V1","",300, -20, -20 +300*0.1);
 
   // Direction
-  TH1D* TalignementDir01 = new TH1D("TalignementDirT0T1","",300, -15, -15 +300*0.1);
-  TH1D* TalignementDir23 = new TH1D("TalignementDirT2T3","",300, -15, -15 +300*0.1);
-  TH1D* ValignementDir01 = new TH1D("ValignementDirV0V1","",300, -15, -15 +300*0.1);
-  TH1D* ValignementDir23 = new TH1D("ValignementDirV2V3","",300, -15, -15 +300*0.1);
+  TH1D* TalignementDir01 = new TH1D("TalignementDirT0T1","",300, -20, -20 +300*0.1);
+  TH1D* TalignementDir23 = new TH1D("TalignementDirT2T3","",300, -20, -20 +300*0.1);
+  TH1D* ValignementDir01 = new TH1D("ValignementDirV0V1","",300, -20, -20 +300*0.1);
+  TH1D* ValignementDir23 = new TH1D("ValignementDirV2V3","",300, -20, -20 +300*0.1);
   
   // On trackers
-  TH1D* TalignementPos0 = new TH1D("TalignementPosT0","",300, -150, -150 +300*1.0);
-  TH1D* TalignementPos1 = new TH1D("TalignementPosT1","",300, -150, -150 +300*1.0);
-  TH1D* TalignementPos2 = new TH1D("TalignementPosT2","",300, -150, -150 +300*1.0);
-  TH1D* TalignementPos3 = new TH1D("TalignementPosT3","",300, -150, -150 +300*1.0);
+  TH1D* TalignementPos0 = new TH1D("TalignementPosT0","",300, -200, -200 +300*1.0);
+  TH1D* TalignementPos1 = new TH1D("TalignementPosT1","",300, -200, -200 +300*1.0);
+  TH1D* TalignementPos2 = new TH1D("TalignementPosT2","",300, -200, -200 +300*1.0);
+  TH1D* TalignementPos3 = new TH1D("TalignementPosT3","",300, -200, -200 +300*1.0);
 
-  TH1D* ValignementPos0 = new TH1D("ValignementPosV0","",300, -150, -150 +300*1.0);
-  TH1D* ValignementPos1 = new TH1D("ValignementPosV1","",300, -150, -150 +300*1.0);
-  TH1D* ValignementPos2 = new TH1D("ValignementPosV2","",300, -150, -150 +300*1.0);
-  TH1D* ValignementPos3 = new TH1D("ValignementPosV3","",300, -150, -150 +300*1.0);
+  TH1D* ValignementPos0 = new TH1D("ValignementPosV0","",300, -200, -200 +300*1.0);
+  TH1D* ValignementPos1 = new TH1D("ValignementPosV1","",300, -200, -200 +300*1.0);
+  TH1D* ValignementPos2 = new TH1D("ValignementPosV2","",300, -200, -200 +300*1.0);
+  TH1D* ValignementPos3 = new TH1D("ValignementPosV3","",300, -200, -200 +300*1.0);
 
   cout<<"File:"<<calFileNames[0]<<endl;
   theConfig->item_str["inputFileName"] = calFileNames[0];
@@ -442,11 +444,10 @@ int pCTcalib::Wcalib(){
 
   TH2D* REhist_Tot = new TH2D("RE_Tot","Range-Energy Full calibration",nRange,0,RangeBinWidth*nRange, nEnrg*5, 0, nEnrg * 5*EnergyBinWidth);  
   /*for (int bricks = 0; bricks < nBricks; bricks++) {
-    //theConfig->item_str["inputFileName"] = calFileNames[bricks+1];
+    theConfig->item_str["inputFileName"] = calFileNames[bricks+1];
     theConfig->item_int["Nbricks"] = bricks;
     FilldEE(dEEhist);
   }
-  
   for (int stage = 0; stage < nStage; stage++) theCuts->dEEFilterParameters(dEEhist[stage],dEElow[stage],dEEhigh[stage],stage);
   */
   
@@ -479,7 +480,8 @@ int pCTcalib::Wcalib(){
     REhist[0][stage]->Write(Form("RE_Tot_stage%d",stage),TObject::kOverwrite);
     ProfileE[stage]->Write("",TObject::kOverwrite);
   }
-
+  ProfileE_Tot->Write("",TObject::kOverwrite);
+  ProfileE_Tot_f->Write("",TObject::kOverwrite);
   
   // Analyze energy slices of the summed maps, and plot the slices  stage by stage --Most likely range for an energy
   /*for (int stage = 0; stage < nStage; ++stage) {
@@ -665,6 +667,15 @@ void pCTcalib::writeCalibfile() {
   header->Branch("Day",&now->tm_mday , "Day/I");
   header->Branch("Hour",&now->tm_hour , "Hour/I");
   header->Branch("Min",&now->tm_min , "Min/I");
+
+  float MiddleWedge;
+  header->Branch("MidlleWedge",&MiddleWedge , "MiddleWedge/F");
+  double Tw2 = theGeometry->getTWedgeBreaks(2);
+  double Tw3 = theGeometry->getTWedgeBreaks(3);
+  
+  MiddleWedge =  (Tw3 + Tw2)/2;
+
+    
   for (int stage = 0; stage < nStage; ++stage) header->Branch(Form("thr_%d",stage),&theConfig->item_float[Form("thr%d",stage)]);
   for (int stage = 0; stage < nStage; ++stage){
     for (int i= 0;  i < 3; ++i) header->Branch(Form("dEElow_Stage%d_%d",stage,i),&dEElow[stage][i]);
@@ -783,7 +794,7 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
        << 1.03*(Ust[1] - Ust[0])<<endl;
   cout << "procWEPLcal: The " << theConfig->item_int["Nbricks"] << " bricks go from u=" << Ust[1] << " to u=" << Uout << " for a thickness of "<< Uout - Ust[1]<<
     " or in WET "<< 1.03*(Uout - Ust[1])<<endl;
-  cout << "The total thickness is "<<Uout - Ust[0]<<" or in WET"<< 1.03*(Uout -Ust[0]) <<endl;
+  cout << "The total thickness is "<<Uout - Ust[0]<<" or in WET "<< 1.03*(Uout -Ust[0]) <<endl;
   cout << "procWEPLcal: Stage thresholds are " << theConfig->item_float["thr0"] << " " << theConfig->item_float["thr1"] << " " << theConfig->item_float["thr2"] << " "
        << theConfig->item_float["thr3"] << " " << theConfig->item_float["thr4"] << endl;
   cout << "procWEPLcal: The wedge phantom break points are, in mm: " << Tw1 << ", " << Tw2 << ", " << Tw3 << ", " << Tw4 << endl;
@@ -792,18 +803,14 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
 
   double maxV       = 45.;    // limit of range in V for calibration
   double maxT       = 170.;   // limit of range in T for calibration
-  double deltaInt   = 20.;    // intercept and slope to calculate maximum difference in V or T vs stage number
-  double deltaSlope = 30.;
-  //float mxEstage;
-
-  //int N = 0;
-  
   // Start of the event loop
+
   for (int EvtNum = 0; EvtNum < theEvtRecon->nEvents; ++EvtNum) {
     Event thisEvent;
     thisEvent = theEvtRecon->evtList[EvtNum];
 
-    Tf[0] = thisEvent.Thit[0]; Tf[1] = thisEvent.Thit[1];// Front tracker coordinates
+    Tf[0] = thisEvent.Thit[0] - 1; Tf[1] = thisEvent.Thit[1] - 1;// Front tracker coordinates 1 mm shift
+    //Tf[0] = thisEvent.Thit[0]; Tf[1] = thisEvent.Thit[1];// Front tracker coordinates    
     Vf[0] = thisEvent.Vhit[0]; Vf[1] = thisEvent.Vhit[1];
     T[0]  = thisEvent.Thit[2];  T[1] = thisEvent.Thit[3];// Rear tracker coordinates
     V[0]  = thisEvent.Vhit[2];  V[1] = thisEvent.Vhit[3];
@@ -839,17 +846,17 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
     // First brick past the wedge
     double TinB = theGeometry->extrap2D(Uft, Tf, Ust[1]); 
     double VinB = theGeometry->extrap2D(Ufv, Vf, Ust[1]);
-    
     if (fabs(Vin) > maxV || fabs(Tin) > maxT) continue; // if track is outside of detector in T/V - skip it
 
     //Back of bricks
-    double Tout = theGeometry->extrap2D(Ut, T, Uout); 
-    double Vout = theGeometry->extrap2D(Uv, V, Uout);
+    double Tout = theGeometry->extrap2D(Uft, Tf, Uout); // theGeometry->extrap2D(Ut, T, Uout); 
+    double Vout = theGeometry->extrap2D(Ufv, Vf, Uout); // theGeometry->extrap2D(Uv, V, Uout);
     if (fabs(Vout) > maxV || fabs(Tout) > maxT) continue;  // if track is outside of detector in T/V- skip it
 
     double Uin  = Ust[0];
     bool emptyEvt = false;
     // Before the negative slope
+
     if(TinB < Tw1) continue;
 
     // Negative Slope
@@ -870,9 +877,10 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
     }
     // Past the positive slope 
     else if(TinB > Tw4 && TinB < tBrickEnd){
-      continue;
-      //Uin = Ust[1];
-      //Tin = TinB;
+      //continue;
+      Uin = Ust[1];
+      Tin = TinB;
+      Vin = theGeometry->extrap2D(Ufv, Vf, Uin);
     }
 
     // Past the end of the brick
@@ -905,13 +913,9 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
     }
     double E_tot = eStage[0]+eStage[1]+eStage[2]+eStage[3]+ eStage[4];
     ProfileE[theConfig->item_int["Nbricks"]]->Fill(T[0], E_tot);
+    ProfileE_Tot->Fill(T[0], E_tot);
+    ProfileE_Tot_f->Fill(Tf[0], E_tot);
     REhist_Tot->Fill(Length*RSP,E_tot);
-    //if(theConfig->item_int["Nbricks"]==4){
-      //cout<<theConfig->item_int["Nbricks"]<<" "<<Length<<" "<<eStage[4]<<" "<<eStage[3]<<" "<<eStage[2]<<" "<<eStage[1]<<" "<<eStage[0]<<endl;
-      // cout<<theConfig->item_int["Nbricks"]<<" "<<Length<<" "<<eStage[4]<<" "<<eStage[3]<<" "<<eStage[2]<<" "<<eStage[1]<<" "<<eStage[0]<<endl;      
-    //}	  
-    
-    
     /*
     if (theCuts->dEEFilter(eStage[3], eStage[4], dEElow[4], dEEhigh[4])){
       //theCalibration->FillADC(thisEvent.ADC);
@@ -952,35 +956,29 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
     if (eStage[4] > theConfig->item_float["thr4"]){
       double E_tot = eStage[0]+eStage[1]+eStage[2]+eStage[3]+ eStage[4];
       REhist[4]->Fill(Length*RSP, eStage[4]);
-
       //REhist_Tot->Fill(Length*RSP,E_tot);
     }
     else if (eStage[3] > theConfig->item_float["thr3"]){
       double E_tot = eStage[0] +eStage[1] +eStage[2] +eStage[3];
       REhist[3]->Fill(Length*RSP, eStage[3]);
-      //ProfileE[3]->Fill(T[0], E_tot);
       //REhist_Tot->Fill(Length*RSP,E_tot);
     }
     else if (eStage[2] > theConfig->item_float["thr2"]){
       double E_tot = eStage[0]+eStage[1]+eStage[2];
       REhist[2]->Fill(Length*RSP, eStage[2]);
-      //ProfileE[2]->Fill(T[0], E_tot);
       //REhist_Tot->Fill(Length*RSP,E_tot);
     }
     else if (eStage[1] > theConfig->item_float["thr1"]){
       double E_tot = eStage[0]+eStage[1];
       REhist[1]->Fill(Length*RSP, eStage[1]);
-      //ProfileE[1]->Fill(T[0], E_tot);
       //REhist_Tot->Fill(Length*RSP,E_tot);
     }
     else if (eStage[0] > theConfig->item_float["thr0"]){
       double E_tot = eStage[0];
       REhist[0]->Fill(Length*RSP, eStage[0]); // Particles end in stage 0
-      //ProfileE[0]->Fill(T[0], E_tot);
       //REhist_Tot->Fill(Length*RSP,E_tot);
     }    
   } // End of the event loop
-
   pCTcalibRootFile->mkdir("runCorrEnrgs");
   pCTcalibRootFile->cd("runCorrEnrgs");
   for (int stage = 0; stage < nStage; ++stage) hStgEcorr[stage]->Write("",TObject::kOverwrite);
