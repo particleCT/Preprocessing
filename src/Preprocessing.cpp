@@ -43,12 +43,22 @@ Preprocessing::Preprocessing(){
   if (theConfig->item_int["max_events"] > 0) cout << "The preprocessing will halt after processing " << theConfig->item_int["max_events"] << " events\n";
 
 
+  //Setting the Filename and creating the output file
+  size_t found1 = theConfig->item_str["inputFileName"].find_last_of("/\\"); // for removing absolute path in file
+  size_t found2 = theConfig->item_str["inputFileName"].find('.');
+  cout << found1 << " " << found2 << endl;
+  string outputFile;
+  if(found1!=string::npos) outputFile = theConfig->item_str["outputDir"] + theConfig->item_str["inputFileName"].substr(found1,found2-found1)+".root";
+  else outputFile = theConfig->item_str["outputDir"] + "/" + theConfig->item_str["inputFileName"].substr(0,theConfig->item_str["intputFileName"].size()-4) + ".root";
+
+  cout << "----------------------------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>" << outputFile << endl;
+   
   pCTcalibRootFile = new TFile(theConfig->item_str["calib"].c_str());
-  TString filename = Form("%s/%s.root",
-			  theConfig->item_str["outputDir"].c_str(),
-			  theConfig->item_str["inputFileName"].substr(7, theConfig->item_str["inputFileName"].size()-4).c_str());
-			  
-  projectionROOT = new TFile(filename,"recreate");
+  //TString filename = printf("%s/%s.root",
+//			  theConfig->item_str["outputDir"].c_str(), outputFile.c_str());
+			  //theConfig->item_str["inputFileName"].substr(found+1, theConfig->item_str["inputFileName"].size()-4).c_str());
+ // cout << "*****************>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << filename << endl;			  
+  projectionROOT = new TFile(outputFile.c_str(),"recreate");
   theCuts = new pCTcut();// Initialize the code for event selection  
 };
 // ******************************* ******************************* *******************************
@@ -571,7 +581,7 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
   printf("Preprocessing.cpp: Local time and date at end of execution: %s", asctime(now));
   double seconds = difftime(end_time, start_time);
   cout << "Preprocessing.cpp: The total time lapse during execution was " << seconds << " seconds.\n";
-  cout << "Preprocessing.cpp: pCT_Preprocessing is all done, including output " "of the projection data." << endl;
+  cout << "Preprocessing.cpp: pCT_Preprocessing is all done, including output of the projection data." << endl;
   delete Calibrate;
   return 0;
 }
