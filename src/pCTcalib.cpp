@@ -122,6 +122,10 @@ int pCTcalib::TVmapper() {
 
   
   float bin0[nStage] = { 1000., 1000., 1000., 1000., 1000. };
+
+  //---------------------------------------------------------------------------
+  // Alignement
+  //--------------------------------------------------------------------------- 
   //Forward Project
   TH1D* TalignementPos12 = new TH1D("TalignementPosT1->T2","",300, -20, -20 +300*0.1);
   TH1D* ValignementPos12 = new TH1D("ValignementPosV1->V2","",300, -20, -20 +300*0.1);
@@ -150,6 +154,16 @@ int pCTcalib::TVmapper() {
   TH1D* ValignementPos1 = new TH1D("ValignementPosV1","",300, -200, -200 +300*1.0);
   TH1D* ValignementPos2 = new TH1D("ValignementPosV2","",300, -200, -200 +300*1.0);
   TH1D* ValignementPos3 = new TH1D("ValignementPosV3","",300, -200, -200 +300*1.0);
+
+  //---------------------------------------------------------------------------
+  // Source Position in U
+  //---------------------------------------------------------------------------
+  // V source position
+  TH1D* Vsource = new TH1D("Vsource","", 900, -10000.,-1000.); //Between 1 and 10 m in 1cm precision
+ 
+  // T source position
+  TH1D* Tsource = new TH1D("Tsource","", 900, -10000.,-1000.);
+
 
   cout<<"File:"<<calFileNames[0]<<endl;
   theConfig->item_str["inputFileName"] = calFileNames[0];
@@ -237,7 +251,14 @@ int pCTcalib::TVmapper() {
     TalignementPos0->Fill(Tf[0]); TalignementPos1->Fill(Tf[1]);      
     TalignementPos2->Fill(T[0]);  TalignementPos3->Fill(T[1]);
     ValignementPos0->Fill(Vf[0]); ValignementPos1->Fill(Vf[1]);      
-    ValignementPos2->Fill(V[0]);  ValignementPos3->Fill(V[1]);            
+    ValignementPos2->Fill(V[0]);  ValignementPos3->Fill(V[1]);      
+
+    //Source position alignment V
+    double dirV = (Vf[1] - Vf[0])/(50.); //50mm is the distance between tracker planes
+    double dirT = (Tf[1] - Tf[0])/(50.); 
+    Vsource->Fill(-(Vf[0]/dirV));
+    Tsource->Fill(-(Tf[0]/dirT));
+          
   }
   pCTcalibRootFile->cd("");
   pCTcalibRootFile->mkdir("tracksProfile");
@@ -272,7 +293,11 @@ int pCTcalib::TVmapper() {
   ValignementPos2->Write("",TObject::kOverwrite);
   ValignementPos3->Write("",TObject::kOverwrite);
   
-  
+  Vsource->Write("",TObject::kOverwrite);
+  Tsource->Write("",TObject::kOverwrite);
+
+
+
   // Save plots of the histograms
   pCTcalibRootFile->mkdir("ADC_Stage");
   pCTcalibRootFile->cd("ADC_Stage");
