@@ -805,7 +805,7 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
   double Tw2 = theGeometry->getTWedgeBreaks(2);
   double Tw3 = theGeometry->getTWedgeBreaks(3);
   double Tw4 = theGeometry->getTWedgeBreaks(4);
-  double tBrickEnd = theGeometry->getTWedgeBreaks(4) + 10.0; // Bricks shifted but we take only the first ten cm
+  double tBrickEnd = theGeometry->getTWedgeBreaks(4) + 10.0; // Bricks shifted but we take only the first ten cm//???
 
   // Define the U Position of the bricks now
   double BrickThickness = theGeometry->getBrickThickness(); // Brick thickness; also the wedge thickness

@@ -61,6 +61,7 @@ Preprocessing::Preprocessing(){
   projectionROOT = new TFile(outputFile.c_str(),"recreate");
   theCuts = new pCTcut();// Initialize the code for event selection  
 };
+
 // ******************************* ******************************* *******************************
 // end of the Preprocessing constructor
 // ******************************* ******************************* *******************************
@@ -538,7 +539,7 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
     if(!MaxEnergyTransFilter) ++nMaxTrans;
     if (Wet < 0. || Wet > 999.) ++nBadWEPL;
     if(Wet > 0 && Wet < 260  && MaxEnergyTransFilter && ThresholdFilter && dEEFilter) Calibrate->FillADC(ADC);
-    else ++nTot;
+    //else ++nTot; // What does this do different to nEvtot?
     
     x0   = Uhit[1]; y0 = Thit[1]; z0 = Vhit[1];
     x1   = Uhit[2]; y1 = Thit[2]; z1 = Vhit[2];
@@ -564,7 +565,7 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
   cout << "Preprocessing.cpp: Try to delete the temporary file " << tempfile << "with command "<<cmd<<endl;
   ret = system(cmd.c_str());
   cout << "Preprocessing.cpp: The total number of events saved for output was " << nEvtot << endl;
-  cout << "                   The total number of events rejected with was " << nTot << endl;
+  // cout << "                   The total number of events rejected with was " << nTot << endl;
   cout << "                   The number of events rejected with bad WEPL was " << nBadWEPL << endl;
   cout << "                   The number of events rejected by the Max Transfer Filter "<<nMaxTrans<<endl;
   cout << "                   The number of events rejected by the Threshold Filter "<<nThreshold<<endl;
