@@ -71,8 +71,8 @@ public:
     geoLogFile << "pCTgeo.h: stage rotation speed is assumed to equal " << rotationSpeed << " degrees/s" << endl;
     geoLogFile << "pCTgeo.h: time-stamp resolution is assumed to equal " << timeStampRes << " seconds" << endl;
 
-    double beamZV = -4069; //-1850.;   // From Data analysis //FIXME: make me a config item, same as wedge offset and Pinoffsets (for alignment)
-    double beamZT = -4576; //-1850.;  
+    double beamZV = -3000; //-1850.;   // Average value for CPC, from Mark Pankuch, Sept 2018
+    double beamZT = -3000; //-1850.;   // NEW MEASURED DISTANCE GIVES WORSE RESULTS FOR WHATEVER REASON
 
     double beamX = 0.;
     double beamY = 0.;
@@ -132,10 +132,10 @@ public:
           { -43.686, -43.687 } };
 
     // T board alignment pin locations, including corrections derived from data analysis
-    Tpin[0] =  215.168;
-    Tpin[1] =  211.373;
-    Tpin[2] = -203.373;
-    Tpin[3] = -207.168;
+    Tpin[0] =  215.168;//  +0.1125 - 1.45;  // First direction then position
+    Tpin[1] =  211.373;//  - 1.45; // Position 
+    Tpin[2] = -203.373;//
+    Tpin[3] = -207.168;// +0.04109; // First direction
 
     Tdir[0] = -1.; // T board orientations (front and back trackers are reflected in u)
     Tdir[1] = -1.;

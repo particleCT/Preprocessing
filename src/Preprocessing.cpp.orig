@@ -1,3 +1,4 @@
+
 // Top-level driving routines for the pCT preprocessing task
 // R.P. Johnson   September 15, 2016
 #include <iostream>
@@ -43,18 +44,14 @@ Preprocessing::Preprocessing(){
   if (theConfig->item_int["max_events"] > 0) cout << "The preprocessing will halt after processing " << theConfig->item_int["max_events"] << " events\n";
 
 
-  //Setting the Filename and creating the output file
-  size_t found1 = theConfig->item_str["inputFileName"].find_last_of("/\\"); // for removing absolute path in file (works for both windows and linux)
-  size_t found2 = theConfig->item_str["inputFileName"].find('.');
-  string outputFile;
-  if(found1!=string::npos) outputFile = theConfig->item_str["outputDir"] + theConfig->item_str["inputFileName"].substr(found1,found2-found1)+".root";
-  else outputFile = theConfig->item_str["outputDir"] + "/" + theConfig->item_str["inputFileName"].substr(0,theConfig->item_str["intputFileName"].size()-4) + ".root";
-   
   pCTcalibRootFile = new TFile(theConfig->item_str["calib"].c_str());
-  projectionROOT = new TFile(outputFile.c_str(),"recreate");
+  TString filename = Form("%s/%s.root",
+			  theConfig->item_str["outputDir"].c_str(),
+			  theConfig->item_str["inputFileName"].substr(7, theConfig->item_str["inputFileName"].size()-4).c_str());
+			  
+  projectionROOT = new TFile(filename,"recreate");
   theCuts = new pCTcut();// Initialize the code for event selection  
 };
-
 // ******************************* ******************************* *******************************
 // end of the Preprocessing constructor
 // ******************************* ******************************* *******************************
@@ -80,6 +77,10 @@ void Preprocessing::pCTevents(pCTgeo* Geometry, pCTraw rawEvt, pedGainCalib *Cal
   // Loop over the events in the input data file and store the raw data in the
   // pCTraw class
   /////////////////////////////////////////////////////////////////////////////////////////
+
+  //Fluence de-modulation for strongly fluctuating data (at HIT), could in principle be extended to get any fluence field desired
+  TH2D *fluence = new TH2D("fluence", "Maximum fluence field", 200, -150,150, 90,-45,45);
+
 
   int nErrDmp = 0;
   while (!rawEvt.stop_reading) { // event loop
@@ -121,6 +122,78 @@ void Preprocessing::pCTevents(pCTgeo* Geometry, pCTraw rawEvt, pedGainCalib *Cal
       // PERFORM THE TRACKER PATTERN RECOGNITION
       pCT_Tracking pCTtracks(pCThits, Geometry);
       // WRITE OUT ONLY EVENTS THAT ARE SUITABLE FOR IMAGE RECONSTRUCTION
+<<<<<<< HEAD
+      ////////////////////////////////////////////////////////////////////
+
+      if (cuts.cutEvt(pCTtracks, pCThits)) {
+        if (rawEvt.event_counter % 100000 == 0)
+          cout << "Event " << rawEvt.event_number << ", GoodEvtCount " << cuts.nKeep << " timeTag " << rawEvt.time_tag << ", theta  " << theta << endl;	
+        // Write the good events out to a temporary file
+        float Vhit[4], Thit[4];
+        if (pCTtracks.nTracks == 1) {
+          for (int lyr = 0; lyr < 4; lyr++) {
+            Vhit[lyr] = pCTtracks.VTracks[pCTtracks.itkV].X[lyr];
+            Uhit[lyr] = pCTtracks.VTracks[pCTtracks.itkV].U[lyr];
+            if (lyr < 2) Thit[lyr] = pCTtracks.frontPredT(pCTtracks.itkT, Uhit[lyr]); // Extrapolate the T tracks to the U planes occupied by the V layers
+            else Thit[lyr] = pCTtracks.backPredT(pCTtracks.itkT, Uhit[lyr]);
+          }
+        } else { // Use just the first hit in each layer if there is no track
+          double UhitT[4], ThitD[4];
+          for (int lyr = 0; lyr < 4; lyr++) {
+            if (pCThits.Lyr[lyr].N[0] > 0) {
+              Vhit[lyr] = pCThits.Lyr[lyr].Y[0].at(0);
+              Uhit[lyr] = pCThits.Lyr[lyr].U[0].at(0);
+            } else {
+              Vhit[lyr] = 0.;
+              Uhit[lyr] = -999.;
+            }
+            if (pCThits.Lyr[lyr].N[1] > 0) {
+              ThitD[lyr] = pCThits.Lyr[lyr].Y[1].at(0);
+              UhitT[lyr] = pCThits.Lyr[lyr].U[1].at(0);
+            } else {
+              ThitD[lyr] = 0.;
+              UhitT[lyr] = -999.;
+            }
+          }
+          Thit[0] = ThitD[0];
+          Thit[1] = ThitD[1];
+          if (Uhit[2] > -900. && Uhit[3] > -900. && UhitT[2] > -900. &&
+              UhitT[3] > -900.) {                                        // Complete rear tracker vector
+            Thit[2] = Geometry->extrap2D(&UhitT[2], &ThitD[2], Uhit[2]); // Displace the T measurements
+            Thit[3] = Geometry->extrap2D(&UhitT[2], &ThitD[2], Uhit[3]); // to same U as V measurements
+          } else {
+            Thit[2] = ThitD[2];
+            Thit[3] = ThitD[3];
+          }
+        }
+
+	//Fluence De-Modulation to save on time performed here
+	if(fluence->GetBinContent(fluence->FindBin(Thit[1],Vhit[1]))>=config.item_int["maxFluence"]) continue; 
+	else fluence->Fill(Thit[1],Vhit[1],1); 
+
+        unsigned char mask[5] = { 0x01, 0x02, 0x04, 0x08, 0x10 };
+        unsigned char OTR = 0;
+        if (rawEvt.enrg_fpga[0].OTR[0]) OTR = OTR | mask[0];
+        if (rawEvt.enrg_fpga[0].OTR[1]) OTR = OTR | mask[1];
+        if (rawEvt.enrg_fpga[0].OTR[2]) OTR = OTR | mask[2];
+        if (rawEvt.enrg_fpga[1].OTR[0]) OTR = OTR | mask[3];
+        if (rawEvt.enrg_fpga[1].OTR[1]) OTR = OTR | mask[4];
+
+        int phSum[5];
+        phSum[0] = rawEvt.enrg_fpga[0].pulse_sum[0];
+        phSum[1] = rawEvt.enrg_fpga[0].pulse_sum[1];
+        phSum[2] = rawEvt.enrg_fpga[0].pulse_sum[2];
+        phSum[3] = rawEvt.enrg_fpga[1].pulse_sum[0];
+        phSum[4] = rawEvt.enrg_fpga[1].pulse_sum[1];
+
+        memcpy(&outBuff[0], &timeStampOut, sizeof(int));
+        memcpy(&outBuff[sizeof(int)], &eventIdOut, sizeof(int));
+        memcpy(&outBuff[2 * sizeof(int)], Thit, 4 * sizeof(float));
+        memcpy(&outBuff[2 * sizeof(int) + 4 * sizeof(float)], Vhit, 4 * sizeof(float));
+        memcpy(&outBuff[2 * sizeof(int) + 8 * sizeof(float)], phSum, 5 * sizeof(int));
+        memcpy(&outBuff[8 * sizeof(float) + 7 * sizeof(int)], &OTR, sizeof(unsigned char));
+        fwrite(outBuff, sizeof(char), nBuffBytes, fptmp); // Writing the processed event data to a temporary file
+=======
       if (theCuts->cutEvt(pCTtracks, pCThits)){
 	  if (rawEvt.event_counter % 100000 == 0)
 	    cout << "Event " << rawEvt.event_number << ", GoodEvtCount " << theCuts->nKeep << " timeTag " << rawEvt.time_tag << endl;
@@ -160,6 +233,7 @@ void Preprocessing::pCTevents(pCTgeo* Geometry, pCTraw rawEvt, pedGainCalib *Cal
 	  Thit[2] = ThitD[2];
 	  Thit[3] = ThitD[3];
 	}
+>>>>>>> upstream/master
       }
       
       unsigned char mask[5] = { 0x01, 0x02, 0x04, 0x08, 0x10 };
@@ -268,8 +342,8 @@ void Preprocessing::pCTevents(pCTgeo* Geometry, pCTraw rawEvt, pedGainCalib *Cal
         Vedet[stage] = Geometry->extrap2D(&Uhit[2], Vback, Geometry->energyDetectorU(stage));
         Tedet[stage] = Geometry->extrap2D(&Uhit[2], Tback, Geometry->energyDetectorU(stage));
         bool inBounds;
-        Ene[stage] = ((float)ADC[stage] - Calibrate->Ped[stage]) * theTVcorr->corrFactor(stage, Tedet[stage], Vedet[stage], inBounds);
-	//Ene[stage] = ((float)ADC[stage]) * theTVcorr->corrFactor(stage, Tedet[stage], Vedet[stage], inBounds);
+        //Ene[stage] = ((float)ADC[stage] - Calibrate->Ped[stage]) * theTVcorr->corrFactor(stage, Tedet[stage], Vedet[stage], inBounds);
+	Ene[stage] = ((float)ADC[stage]) * theTVcorr->corrFactor(stage, Tedet[stage], Vedet[stage], inBounds);
 	if (inBounds) nGood++;
       }
       if(nGood==5) Calibrate->FillGains(Vedet[0], Tphantom, Ene, ADC); // Accumulate histograms for gain recalibration 
@@ -520,8 +594,8 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
       float Vedet = Geometry->extrap2D(&Uhit[2], Vback, Geometry->energyDetectorU(stage));
       float Tedet = Geometry->extrap2D(&Uhit[2], Tback, Geometry->energyDetectorU(stage));
       float TVCorrFactor = theTVcorr->corrFactor(stage, Tedet, Vedet, inBounds);
-      Ene[stage] = Calibrate->GainFac[stage] * ((float)ADC[stage] - Calibrate->Ped[stage]) * TVCorrFactor;
-      //Ene[stage] = Calibrate->GainFac[stage] * ((float)ADC[stage]) * TVCorrFactor;
+      //Ene[stage] = Calibrate->GainFac[stage] * ((float)ADC[stage] - Calibrate->Ped[stage]) * TVCorrFactor;
+      Ene[stage] = Calibrate->GainFac[stage] * ((float)ADC[stage]) * TVCorrFactor;
       if(inBounds) nGood++;
 
     }
@@ -532,7 +606,7 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
     if(!MaxEnergyTransFilter) ++nMaxTrans;
     if (Wet < 0. || Wet > 999.) ++nBadWEPL;
     if(Wet > 0 && Wet < 260  && MaxEnergyTransFilter && ThresholdFilter && dEEFilter) Calibrate->FillADC(ADC);
-    //else ++nTot; // What does this do different to nEvtot?
+    else ++nTot;
     
     x0   = Uhit[1]; y0 = Thit[1]; z0 = Vhit[1];
     x1   = Uhit[2]; y1 = Thit[2]; z1 = Vhit[2];
@@ -558,7 +632,7 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
   cout << "Preprocessing.cpp: Try to delete the temporary file " << tempfile << "with command "<<cmd<<endl;
   ret = system(cmd.c_str());
   cout << "Preprocessing.cpp: The total number of events saved for output was " << nEvtot << endl;
-  // cout << "                   The total number of events rejected with was " << nTot << endl;
+  cout << "                   The total number of events rejected with was " << nTot << endl;
   cout << "                   The number of events rejected with bad WEPL was " << nBadWEPL << endl;
   cout << "                   The number of events rejected by the Max Transfer Filter "<<nMaxTrans<<endl;
   cout << "                   The number of events rejected by the Threshold Filter "<<nThreshold<<endl;
@@ -575,7 +649,7 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
   printf("Preprocessing.cpp: Local time and date at end of execution: %s", asctime(now));
   double seconds = difftime(end_time, start_time);
   cout << "Preprocessing.cpp: The total time lapse during execution was " << seconds << " seconds.\n";
-  cout << "Preprocessing.cpp: pCT_Preprocessing is all done, including output of the projection data." << endl;
+  cout << "Preprocessing.cpp: pCT_Preprocessing is all done, including output " "of the projection data." << endl;
   delete Calibrate;
   return 0;
 }
