@@ -71,8 +71,8 @@ public:
     geoLogFile << "pCTgeo.h: stage rotation speed is assumed to equal " << rotationSpeed << " degrees/s" << endl;
     geoLogFile << "pCTgeo.h: time-stamp resolution is assumed to equal " << timeStampRes << " seconds" << endl;
 
-    double beamZV = -3000; //-1850.;   // Average value for CPC, from Mark Pankuch, Sept 2018
-    double beamZT = -3000; //-1850.;   // NEW MEASURED DISTANCE GIVES WORSE RESULTS FOR WHATEVER REASON
+    double beamZV = -4069; //-1850.;   // From Data analysis //FIXME: make me a config item, same as wedge offset and Pinoffsets (for alignment)
+    double beamZT = -4576; //-1850.;  
 
     double beamX = 0.;
     double beamY = 0.;

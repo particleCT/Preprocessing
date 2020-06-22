@@ -15,6 +15,7 @@ class pCTcut {
   int nLT8hits;
   int nGoodXtra;
   int nBack;
+  int nHitReject;
   int mxXlyr;
   int mxTotXlyr;
   int mxXhits;
@@ -23,25 +24,25 @@ class pCTcut {
   int maxTkrs;
 
  public:
-  static inline pCTcut* GetInstance() { return theCuts; }
+  static inline pCTcut* GetInstance() {return theCuts;} 
   int nKeep;
   // constructor
   pCTcut(); // Class constructor called prior to the event loop
   // classes
+  bool cutHitSlope(int, int, double); 
+  bool cutTrackIsocenterIntercept(double);
   bool cutEvt(pCT_Tracking&, TkrHits&);
   bool EnrgCut(float [5], float, float, float, float );
   bool dEEFilter(float, float, float*, float*);
   void dEEFilterParameters(TH2D* dEEhist, float dEElow[3], float dEEhigh[3], int stage);
   void summary();
 
-  const double mxSlopeFront[2] = { 0.03, 0.09 }; // Cut on the slope of the front tracker vector, separately for V and T
-  const double mxSlopeBack[2] = { 0.1, 0.15 };   // Cut on the slope of the rear tracker vector, separately for V and T
-  const double deltaMx = 6.0;                    // Cut on how far the two vectors miss each other at u=0, in mm
+  double mxSlope[2][2]; // Cut on the slope of the front tracker vector, separately for V and T
+  double deltaMx;                    // Cut on how far the two vectors miss each other at u=0, in mm
+  
 
  private: 
   static pCTcut *theCuts; 
-
- private:
   pCTconfig* theConfig;
 };
 #endif

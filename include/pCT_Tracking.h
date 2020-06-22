@@ -11,6 +11,8 @@
 
 #include "TkrHits.h"
 #include "pCTgeo.h"
+#include "pCTcut.h"
+#include "pCTconfig.h"
 
 struct Tkr2D {
   double X[4], U[4]; // the lateral (X) and longitudinal (U) coordinates of the track
@@ -28,7 +30,17 @@ struct vct {
   double Y[2], U[2], I[2], intercept, slope;
 };
 
+class pCTcut;
+class pCTconfig;
 class pCT_Tracking {
+
+  //Substitute Variables to aid readability
+
+  double Y0_candidate,U0; // Y can mean either V or T here (lateral direction)
+  double Y1_candidate,U1;
+  double Y2_candidate,U2;
+  double Y3_candidate,U3;
+  double miss;
 
   inline double quadExtrap(double x1, double x2, double x3, double x4, double y1, double y2, double y3) {
     double m11 = x2 * x2 - x1 * x1;
@@ -59,6 +71,7 @@ class pCT_Tracking {
   std::vector<Tkr2D> Tracking2D(int Idx, TkrHits &pCThits, pCTgeo* Geometry);
 
 public:
+
   // To use these results for image reconstruction, require nTracks==1 and then
   // access the good tracks using itkV and itkT.
   int nTracks;                // Number of tracks found (max of V and T views if at least 1 in
@@ -96,6 +109,10 @@ public:
 
   // Method to display all good tracks in an event, using Gnuplot.
   void displayEvent(int eventNumber, TkrHits &pCThits, std::string outputDir);
+
+private:
+  pCTcut* theCuts; 
+  pCTconfig* theConfig;
 
 }; // End of the pCT_Tracking class
 #endif
