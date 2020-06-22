@@ -44,20 +44,13 @@ Preprocessing::Preprocessing(){
 
 
   //Setting the Filename and creating the output file
-  size_t found1 = theConfig->item_str["inputFileName"].find_last_of("/\\"); // for removing absolute path in file
+  size_t found1 = theConfig->item_str["inputFileName"].find_last_of("/\\"); // for removing absolute path in file (works for both windows and linux)
   size_t found2 = theConfig->item_str["inputFileName"].find('.');
-  cout << found1 << " " << found2 << endl;
   string outputFile;
   if(found1!=string::npos) outputFile = theConfig->item_str["outputDir"] + theConfig->item_str["inputFileName"].substr(found1,found2-found1)+".root";
   else outputFile = theConfig->item_str["outputDir"] + "/" + theConfig->item_str["inputFileName"].substr(0,theConfig->item_str["intputFileName"].size()-4) + ".root";
-
-  cout << "----------------------------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>" << outputFile << endl;
    
   pCTcalibRootFile = new TFile(theConfig->item_str["calib"].c_str());
-  //TString filename = printf("%s/%s.root",
-//			  theConfig->item_str["outputDir"].c_str(), outputFile.c_str());
-			  //theConfig->item_str["inputFileName"].substr(found+1, theConfig->item_str["inputFileName"].size()-4).c_str());
- // cout << "*****************>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << filename << endl;			  
   projectionROOT = new TFile(outputFile.c_str(),"recreate");
   theCuts = new pCTcut();// Initialize the code for event selection  
 };
