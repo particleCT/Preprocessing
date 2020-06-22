@@ -186,7 +186,11 @@ int main(int argc, char *argv[]) {
 
   int maxFluence = 1000; //max fluence per mm^2 (full Nb of part = maxFluence x fieldSize)
   cfg.addItem('f', "maxFluence", maxFluence);
-  
+ 
+  int MultiTrackReject = 0; 
+  cfg.addItem('M', "MultiTrackReject",MultiTrackReject);
+
+ 
   // Read the default configuration from the config file
   if (cfg.Configure() != 0) {
     cout << "Was not able to read a default configuration from " << configFile << endl;
