@@ -28,6 +28,7 @@
 #include "pCTraw.h"
 #include "pCTcut.h"
 #include "TFile.h"
+#include "Wepl.h"
 class Preprocessing { // Top level program from the pCT preprocessing task.
  public:
   Preprocessing();
@@ -43,17 +44,22 @@ class Preprocessing { // Top level program from the pCT preprocessing task.
   std::string study_name, Outputdir;
   std::string WcalibFile;
   std::string TVcorrFile;
+
+  //Class
   TVcorrection* theTVcorr;
+  pCTconfig* theConfig;
+  pCTcut* theCuts;
+  Wepl* theWEPL;
   FILE *in_file;
   char inFileName[256];
   time_t start_time;
-  pCTcut* theCuts;
+
   int ADC[5];
   struct tm *now;
   static int findEvt(FILE *fp);
   void pCTevents(pCTgeo* Geometry, pCTraw rawEvt, pedGainCalib *Calibrate, double Uhit[]);
- private:
-  pCTconfig* theConfig;
+
+  
   
 };
 #endif

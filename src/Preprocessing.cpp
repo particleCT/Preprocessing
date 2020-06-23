@@ -48,14 +48,17 @@ Preprocessing::Preprocessing(){
 			  theConfig->item_str["outputDir"].c_str(),
 			  theConfig->item_str["inputFileName"].substr(7, theConfig->item_str["inputFileName"].size()-4).c_str());
 			  
+
+  theCuts = new pCTcut();// Initialize the code for event selection
+  theTVcorr = new TVcorrection(pCTcalibRootFile, 0);
+  theWEPL = new Wepl(pCTcalibRootFile);  
   projectionROOT = new TFile(filename,"recreate");
-  theCuts = new pCTcut();// Initialize the code for event selection  
 };
 // ******************************* ******************************* *******************************
 // end of the Preprocessing constructor
 // ******************************* ******************************* *******************************
 // Routine called to read the raw data, analyze it, write results to a temporary file, and analyze the WEPL calibration pedestals and gains.  
-void Preprocessing::pCTevents(pCTgeo* Geometry, pCTraw rawEvt, pedGainCalib *Calibrate, double Uhit[]) {
+void Preprocessing::pCTevents(pCTgeo* Geometry, pCTraw rawEvt, pedGainCalib *thePedGainCalib, double Uhit[]) {
   cout << "****************** Executing pCTevents *******************************" << endl;
   char outBuff[93]; // Buffer for writing or reading the temporary file
   int nBuffBytes = 8 * sizeof(float) + 7 * sizeof(int) + sizeof(unsigned char);
@@ -91,7 +94,7 @@ void Preprocessing::pCTevents(pCTgeo* Geometry, pCTraw rawEvt, pedGainCalib *Cal
       /////////////////////////////////////////////////
 
       rawEvt.readOneEvent(debug);
-      Calibrate->FillPeds(rawEvt); // Accumulating histograms for pedestal analysis
+      thePedGainCalib->FillPeds(rawEvt); // Accumulating histograms for pedestal analysis
       bool daqErr = rawEvt.bad_fpga_address || rawEvt.tag_mismatch || rawEvt.CRC_error || rawEvt.chip_error || rawEvt.bad_strip_address;
       if (daqErr) nErrDmp++; 
       if (debug || (nErrDmp < 10 && daqErr)) {
@@ -201,15 +204,15 @@ void Preprocessing::pCTevents(pCTgeo* Geometry, pCTraw rawEvt, pedGainCalib *Cal
   // PEDESTAL ANALYSIS FOR THE WEPL DETECTOR
   /////////////////////////////////////////////////////////
   if (rawEvt.event_counter > 90000) {
-    Calibrate->GetPeds();
+    thePedGainCalib->GetPeds();
     cout <<"We are updating the energy detector pedestal settings to the on-the-fly measurement values.\n";
     for (int stage = 0; stage < 5; stage++) {
-      if (Calibrate->Ped[stage] == 0.) cout <<"Keeping the theTVcorr pedestal value " << theTVcorr->ped[stage] << " for stage " << stage << endl;
-      else cout <<"Pedestal from calibration file = " << theTVcorr->ped[stage] << "Drift= " << Calibrate->Ped[stage] - theTVcorr->ped[stage] << endl;
+      if (thePedGainCalib->Ped[stage] == 0.) cout <<"Keeping the theTVcorr pedestal value " << theTVcorr->ped[stage] << " for stage " << stage << endl;
+      else cout <<"Pedestal from calibration file = " << theTVcorr->ped[stage] << "Drift= " << thePedGainCalib->Ped[stage] - theTVcorr->ped[stage] << endl;
     }
   }
   else cout<<"Not enough events to recalibrate the pedestals." << endl;
-  for (int stage = 0; stage < 5; stage++) cout <<"The energy detector pedestal for stage " << stage << " is " << Calibrate->Ped[stage] << endl;
+  for (int stage = 0; stage < 5; stage++) cout <<"The energy detector pedestal for stage " << stage << " is " << thePedGainCalib->Ped[stage] << endl;
 
   /////////////////////////////////////////////////////////
   // Read PROCESSED DATA BACK FROM THE TEMPORARY FILE TO CALCULATE GAIN CORRECTION FACTORS
@@ -264,21 +267,19 @@ void Preprocessing::pCTevents(pCTgeo* Geometry, pCTraw rawEvt, pedGainCalib *Cal
         Vedet[stage] = Geometry->extrap2D(&Uhit[2], Vback, Geometry->energyDetectorU(stage));
         Tedet[stage] = Geometry->extrap2D(&Uhit[2], Tback, Geometry->energyDetectorU(stage));
         bool inBounds;
-        Ene[stage] = ((float)ADC[stage] - Calibrate->Ped[stage]) * theTVcorr->corrFactor(stage, Tedet[stage], Vedet[stage], inBounds);
+        Ene[stage] = ((float)ADC[stage] - thePedGainCalib->Ped[stage]) * theTVcorr->corrFactor(stage, Tedet[stage], Vedet[stage], inBounds);
 	//Ene[stage] = ((float)ADC[stage]) * theTVcorr->corrFactor(stage, Tedet[stage], Vedet[stage], inBounds);
 	if (inBounds) nGood++;
       }
-      if(nGood==5) Calibrate->FillGains(Vedet[0], Tphantom, Ene, ADC); // Accumulate histograms for gain recalibration 
+      if(nGood==5) thePedGainCalib->FillGains(Vedet[0], Tphantom, Ene, ADC); // Accumulate histograms for gain recalibration 
     }
-    Calibrate->GetGains(theTVcorr);
-    Calibrate->WriteHist();
+    thePedGainCalib->GetGains(theTVcorr);
     fclose(fptmp);
     cout << "closed the temporary file " << tempfile << endl;
   }
   cout <<"Gain correction factors: ";
-  for (int stage = 0; stage < 5; stage++) cout << Calibrate->GainFac[stage] << "  ";
+  for (int stage = 0; stage < 5; stage++) cout << thePedGainCalib->GainFac[stage] << "  ";
   cout << endl;
-
   cout << "done with pCTevents.  Number of events kept=" << theCuts->nKeep << endl;
   return;
 }
@@ -333,10 +334,8 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
       }
     } else {
       theConfig->item_float["projection"] = rawEvt.stage_angle;
-      cout << "Preprocessing.cpp: We are setting the projection angle "
-              "according to the input file value of " << theConfig->item_float["projection"] << endl;
-      cout << "The input file in general should contain the true reading from "
-              "the stage for non-continuous-scan runs.\n";
+      cout << "Preprocessing.cpp: We are setting the projection angle according to the input file value of " << theConfig->item_float["projection"] << endl;
+      cout << "The input file in general should contain the true reading from the stage for non-continuous-scan runs.\n";
     }
   }
 
@@ -352,10 +351,6 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
   // GET EXISTING WEPL CALIBRATION CONSTANTS  [CEO Aug 2016]
   /////////////////////////////////////////////////////////
 
-  for(int i =0; i<5; i++)StgThr[i] = theConfig->item_float[Form("thr%d",i)];
-  Wepl *WEPL = new Wepl(pCTcalibRootFile, projectionROOT);
-  theTVcorr = new TVcorrection(pCTcalibRootFile, 0);
-  WEPL->SetEthresholds(StgThr[0], StgThr[1], StgThr[2], StgThr[3], StgThr[4]);  
   // Create a vector of pointers to instances of the pedestal and gain calibration class
   float t1 = -100.; // These define two ranges for finding protons passing through zero phantom material, for gain calibration
   float t2 = -100.; // ****** Let's keep this to one side only, for now, to accommodate the wedge calibration runs with bricks
@@ -365,12 +360,12 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
   for (int stage = 0; stage < 5; stage++) pedestals[stage] = theTVcorr->ped[stage];
   int pdstlr[5];
   for (int stage = 0; stage < nStage; stage++) pdstlr[stage] = theConfig->item_int[Form("pedrng%d",stage)];
-  pedGainCalib* Calibrate = new pedGainCalib(projectionROOT, pdstlr, pedestals, t1, t2, t3, t4);
+  pedGainCalib* thePedGainCalib = new pedGainCalib(projectionROOT, pdstlr, pedestals, t1, t2, t3, t4);
   /////////////////////////////////////////////////////////////////
   // Call the routine that reads the data and does the analysis.
   /////////////////////////////////////////////////////////////////
   // Uhit is filled and returned for use below, just to save space in the temporary file.
-  pCTevents(Geometry, rawEvt, Calibrate, Uhit);
+  pCTevents(Geometry, rawEvt, thePedGainCalib, Uhit);
 
   // Prepare the ROOT File header
   projectionROOT->cd();
@@ -408,7 +403,7 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
   header->Branch("study_name",&study_name_string);
   header->Branch("data_source",&data_source_string);
   header->Branch("prepared_by",&prepared_by_string);
-  for (int stage = 0; stage < nStage; ++stage) header->Branch(Form("Gain_%d",stage),&Calibrate->GainFac[stage]);
+  for (int stage = 0; stage < nStage; ++stage) header->Branch(Form("Gain_%d",stage),&thePedGainCalib->GainFac[stage]);
   header->Fill();
 
   // Prepare the root file phasespace
@@ -474,7 +469,6 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
     MaxEnergyTransFilter = 1;
     ThresholdFilter = 1;
 
-
     unsigned int event_id;
     unsigned char OTR;
     memcpy(&timeStamp, &outBuff[0], sizeof(int));
@@ -484,8 +478,7 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
     memcpy(ADC, &outBuff[2 * sizeof(int) + 8 * sizeof(float)], 5 * sizeof(int));
     memcpy(&OTR, &outBuff[8 * sizeof(float) + 7 * sizeof(int)], sizeof(unsigned char));
     // Check for a flaky time stamp, and watch out for roll-over of the time stamp counter (after about 10 minutes)!
-    // Before V65 of the event builder firmware there were frequent overflows
-    // of the time stamp buffer, causing decreasing values for short times    
+    // Before V65 of the event builder firmware there were frequent overflows of the time stamp buffer, causing decreasing values for short times    
     if (timeStamp < timeStampOld) {
       nBadTimeStamp++;
       if (timeStampOld - timeStamp > 10000000.) {
@@ -516,18 +509,16 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
       float Vedet = Geometry->extrap2D(&Uhit[2], Vback, Geometry->energyDetectorU(stage));
       float Tedet = Geometry->extrap2D(&Uhit[2], Tback, Geometry->energyDetectorU(stage));
       float TVCorrFactor = theTVcorr->corrFactor(stage, Tedet, Vedet, inBounds);
-      Ene[stage] = Calibrate->GainFac[stage] * ((float)ADC[stage] - Calibrate->Ped[stage]) * TVCorrFactor;
-      //Ene[stage] = Calibrate->GainFac[stage] * ((float)ADC[stage]) * TVCorrFactor;
+      Ene[stage] = thePedGainCalib->GainFac[stage] * ((float)ADC[stage] - thePedGainCalib->Ped[stage]) * TVCorrFactor;
       if(inBounds) nGood++;
-
     }
 
-    Wet = WEPL->EtoWEPL(Ene, MaxEnergyTransFilter, ThresholdFilter, dEEFilter); // Energy to WEPL conversion
+    Wet = theWEPL->EtoWEPL(Ene, MaxEnergyTransFilter, ThresholdFilter, dEEFilter); // Energy to WEPL conversion
     if(!dEEFilter) ++ndEEFilter;
     if(!ThresholdFilter) ++nThreshold;
     if(!MaxEnergyTransFilter) ++nMaxTrans;
     if (Wet < 0. || Wet > 999.) ++nBadWEPL;
-    if(Wet > 0 && Wet < 260  && MaxEnergyTransFilter && ThresholdFilter && dEEFilter) Calibrate->FillADC(ADC);
+    if(Wet > 0 && Wet < 260  && MaxEnergyTransFilter && ThresholdFilter && dEEFilter) thePedGainCalib->FillADC(ADC);
     else ++nTot;
     
     x0   = Uhit[1]; y0 = Thit[1]; z0 = Vhit[1];
@@ -547,8 +538,9 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
     if (EvtNum % 100000 == 0) cout << " Processing event " << EvtNum << " from the temp file, time stamp=" << timeStamp <<" angle=" << theta << endl;
     ++nEvtot;
   }
-  Calibrate->WriteHist();
-  delete WEPL; // the class
+  thePedGainCalib->WriteHist();
+  theWEPL->WriteHist(projectionROOT);
+
   fclose(fptmp);
   string cmd  = "rm -f " + tempfile;
   cout << "Preprocessing.cpp: Try to delete the temporary file " << tempfile << "with command "<<cmd<<endl;
@@ -572,6 +564,7 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
   double seconds = difftime(end_time, start_time);
   cout << "Preprocessing.cpp: The total time lapse during execution was " << seconds << " seconds.\n";
   cout << "Preprocessing.cpp: pCT_Preprocessing is all done, including output " "of the projection data." << endl;
-  delete Calibrate;
+  delete thePedGainCalib;
+  delete theWEPL; 
   return 0;
 }
