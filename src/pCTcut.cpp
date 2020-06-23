@@ -84,8 +84,8 @@ void pCTcut::dEEFilterParameters(TH2D* dEEhist, float dEElow[3], float dEEhigh[3
       xhigh[j]    =  dEESlice->GetBinCenter(dEESlice->FindLastBinAbove(dEESlice->GetMaximum()/2));
       xlow[j]     =  xmax - (xhigh[j] -xmax);
     }
-    //xlow[j]     = xlow[j] - (xhigh[j] - xlow[j]) * 0.7848;
-    //xhigh[j]    =   xhigh[j] + (xhigh[j] - xlow[j]) * 0.7848; //From FWHM to 3sigma (not needed)
+    xlow[j]     = xlow[j] - (xhigh[j] - xlow[j]) * 0.5616;//0.7848 (if to 3 sigma)
+    xhigh[j]    =   xhigh[j] + (xhigh[j] - xlow[j]) * 0.5616; //From FWHM to 2.5 sigma
   }
   dEElow[0] = (E[0] * (xlow[2] - xlow[1]) + E[1] * (xlow[0] - xlow[2]) + E[2] * (xlow[1] - xlow[0])) /
               ((E[0] - E[1]) * (E[0] - E[2]) * (E[1] - E[2]));
