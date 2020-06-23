@@ -202,9 +202,9 @@ int pCTcalib::TVmapper() {
     Event thisEvent;
     thisEvent = theEvtRecon->evtList[EvtNum];
     // Front tracker T-V coordinates
-    Tf[0] = thisEvent.Thit[0] -1; Tf[1] = thisEvent.Thit[1]-1;
+    Tf[0] = thisEvent.Thit[0]; Tf[1] = thisEvent.Thit[1];
     Vf[0] = thisEvent.Vhit[0]; Vf[1] = thisEvent.Vhit[1];
-    T[0] = thisEvent.Thit[2]+1.1; T[1] = thisEvent.Thit[3]+1.1;
+    T[0] = thisEvent.Thit[2]; T[1] = thisEvent.Thit[3];
     V[0] = thisEvent.Vhit[2]; V[1] = thisEvent.Vhit[3];
     
     if (EvtNum % 1000000 == 0) {
@@ -713,7 +713,7 @@ void pCTcalib::writeCalibfile() {
   MiddleWedge =  (Tw3 + Tw2)/2;
 
     
-  for (int stage = 0; stage < nStage; ++stage) header->Branch(Form("thr_%d",stage),&theConfig->item_float[Form("thr%d",stage)]);
+  for (int stage = 0; stage < nStage; ++stage) header->Branch(Form("thr_%d",stage),&theConfig->item_float[Form("thr%d",stage)],Form("thr_%d/F",stage));
   for (int stage = 0; stage < nStage; ++stage){
     for (int i= 0;  i < 3; ++i) header->Branch(Form("dEElow_Stage%d_%d",stage,i),&dEElow[stage][i]);
     for (int i= 0;  i < 3; ++i) header->Branch(Form("dEEhigh_Stage%d_%d",stage,i),&dEEhigh[stage][i]);
@@ -726,10 +726,10 @@ void pCTcalib::writeCalibfile() {
 //////////////////////////////////////////////////////////////////////
 void pCTcalib::FilldEE(TH2D* dEEhist[nStage]) {
   cout<<"Fill dEE"<<endl;
-  //theConfig->item_int["doGains"] = true;
+  theConfig->item_int["doGains"] = true;
   //theConfig->item_int["Nbricks"] = theConfig->item_int["Nbricks"];
 
-  //theCalibration->ResetHist();
+  theCalibration->ResetHist();
   theEvtRecon->ReadInputFile(theGeometry, theTVcorr, theConfig->item_str["inputFileName"], theCalibration);
 
   for (int EvtNum = 0; EvtNum < theEvtRecon->nEvents; ++EvtNum) {
@@ -823,7 +823,7 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
   double BrickThickness = theGeometry->getBrickThickness(); // Brick thickness; also the wedge thickness
   double Ust[2]; // Polystyrene wedge phantom U coordinates, front and back
   Ust[0] = -2.5 * BrickThickness; // centered around the middle of the bricks, 4 bricks + 1 wedge
-  Ust[1] = Ust[0] + BrickThickness;
+  Ust[1] = Ust[0] + BrickThickness; // this is the plane after the wedge
   double Wbricks = BrickThickness * theConfig->item_int["Nbricks"];
   double Uout = Ust[1] + Wbricks; // U coordinate of the last brick, downstream side
 
@@ -875,7 +875,9 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
       eTot += eStage[stage];
     }
     if (!good) continue;
+
     // calculate geometric WET "wt0" for the wedge phantom using tracker info.
+
     // First estimate of the u coordinate at entry into the phantom wedge
     double Tin  = theGeometry->extrap2D(Uft, Tf, Ust[0]);
     double Vin  = theGeometry->extrap2D(Ufv, Vf, Ust[0]);
@@ -883,6 +885,7 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
     // First brick past the wedge
     double TinB = theGeometry->extrap2D(Uft, Tf, Ust[1]); 
     double VinB = theGeometry->extrap2D(Ufv, Vf, Ust[1]);
+
     if (fabs(Vin) > maxV || fabs(Tin) > maxT) continue; // if track is outside of detector in T/V - skip it
 
     //Back of bricks
@@ -890,46 +893,46 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
     double Vout = theGeometry->extrap2D(Ufv, Vf, Uout); // theGeometry->extrap2D(Uv, V, Uout);
     if (fabs(Vout) > maxV || fabs(Tout) > maxT) continue;  // if track is outside of detector in T/V- skip it
 
-    double Uin  = Ust[0];
+    double Uin    = Ust[0];
     bool emptyEvt = false;
     // Before the negative slope
 
     //if(TinB < Tw1) continue;
     if(TinB < Tw2) continue;
+    
+    // Before the negative slope -- NOT ACCOUNTED
+    if(TinB < Tw1) continue;
 
     // Negative Slope
     else if (TinB >= Tw1 && Tin <= Tw2) {
       if(!getLineIntersection(theEvtRecon->uhitT[0], thisEvent.Thit[0], theEvtRecon->uhitT[1], thisEvent.Thit[1],
-      Uin + BrickThickness, Tw1, Uin, Tw2, Uin, Tin)) continue;
-      //continue;
+			      Uin + BrickThickness, Tw1, Uin, Tw2, Uin, Tin)) continue;
     }
-    // Flat part of the wedge
+    // Flat part of the wedge - No need to change Vin and Tin
     else if(Tin > Tw2 && Tin < Tw3){
       continue;
       Uin = Ust[0];
-    }        
+    }
+    
     // Positive Slope
     else if (Tin >= Tw3 && TinB <= Tw4) {  // Verify the particle hasn't weirdly scattered
       if (!getLineIntersection(theEvtRecon->uhitT[0], thisEvent.Thit[0], theEvtRecon->uhitT[1], thisEvent.Thit[1],
-			      Uin, Tw3 ,Uin + BrickThickness, Tw4, Uin, Tin)) continue;
+			       Uin, Tw3 ,Uin + BrickThickness, Tw4, Uin, Tin)) continue;
     }
     // Past the positive slope 
     else if(TinB > Tw4 && TinB < tBrickEnd){
       continue;
       Uin = Ust[1];
       Tin = TinB;
-      Vin = theGeometry->extrap2D(Ufv, Vf, Uin);
+      Vin = VinB;
     }
 
     // Past the end of the brick
     else if(TinB > tBrickEnd){
       continue;
-      //Uout = Uin;
-      emptyEvt = true;   // Empty event
     }
     else continue;
-
-    Vin = theGeometry->extrap2D(Ufv, Vf, Uin);
+    Vin  = theGeometry->extrap2D(Ufv, Vf, Uin);
     double Length = sqrt( pow((Tin - Tout),2) + pow((Vin - Vout),2) + pow((Uin - Uout),2) ); // Length  crossed (converted to WET in Wepl.h)
     if (emptyEvt) {
       hTotEcorr->Fill(eTot);
@@ -937,10 +940,10 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
 	hStgEcorr[stage]->Fill(eStage[stage]);
       }
     }
+
     float RSP = 1.030; // Transformation to WET
     hLengthProf->Fill(TinB,Length*RSP);
     if(emptyEvt) continue;
-    //For each stage where the proton stops, increment the corresponding range-energy table cell content.
     //Energy cuts
     if (theConfig->item_str["partType"] == "He") {  
       cut0 = 87. ; cut1 = 95.;  cut2 = 100.;

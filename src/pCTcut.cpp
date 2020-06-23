@@ -102,7 +102,7 @@ void pCTcut::dEEFilterParameters(TH2D* dEEhist, float dEElow[3], float dEEhigh[3
 ////////////////////////////////////////////////////////////////////
 bool pCTcut::dEEFilter(float Elow, float Ehigh, float dEElow[3], float dEEhigh[3]){
   if (Elow  < (dEElow[0]  * pow(Ehigh,2) + dEElow[1] * Ehigh + dEElow[2]) ||
-      Ehigh > (dEEhigh[0] * pow(Ehigh,2) + dEEhigh[1] * Ehigh + dEEhigh[2])){
+      Elow  > (dEEhigh[0] * pow(Ehigh,2) + dEEhigh[1] * Ehigh + dEEhigh[2])){
     return false;}
   else return true;
 }

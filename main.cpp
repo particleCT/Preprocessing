@@ -179,7 +179,7 @@ int main(int argc, char *argv[]) {
 
   thr[4] = 1.0;
   cfg.addItem('4', "thr4", thr[4]);
-
+  cout<<thr[2]<<endl;
   int dodEEFilter = 1; // changed default to yes
   cfg.addItem('e', "dEEFilter", dodEEFilter); // Also add the option to the list used for parsing the config file
  
