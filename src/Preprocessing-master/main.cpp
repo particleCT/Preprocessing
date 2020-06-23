@@ -179,18 +179,10 @@ int main(int argc, char *argv[]) {
 
   thr[4] = 1.0;
   cfg.addItem('4', "thr4", thr[4]);
-  cout<<thr[2]<<endl;
+
   int dodEEFilter = 1; // changed default to yes
   cfg.addItem('e', "dEEFilter", dodEEFilter); // Also add the option to the list used for parsing the config file
- 
 
-  int maxFluence = 1000; //max fluence per mm^2 (full Nb of part = maxFluence x fieldSize)
-  cfg.addItem('f', "maxFluence", maxFluence);
- 
-  int MultiTrackReject = 0; 
-  cfg.addItem('M', "MultiTrackReject",MultiTrackReject);
-
- 
   // Read the default configuration from the config file
   if (cfg.Configure() != 0) {
     cout << "Was not able to read a default configuration from " << configFile << endl;

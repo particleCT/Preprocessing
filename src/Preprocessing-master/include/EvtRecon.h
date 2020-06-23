@@ -14,9 +14,7 @@
 #include "pCTcalib.h"
 #include "pCTconfig.h"
 #include "TFile.h"
-
 using namespace std;
-
 struct Event{
   float Thit[4];
   float Vhit[4];

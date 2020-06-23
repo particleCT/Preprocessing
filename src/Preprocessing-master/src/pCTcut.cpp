@@ -1,28 +1,16 @@
 #include "pCTcut.h"
-pCTcut* pCTcut::theCuts=NULL;
 
 pCTcut::pCTcut()
 { // Class constructor called prior to the event loop
 
   theConfig = pCTconfig::GetInstance();
-
-  theCuts = this; 
- 
-
   n1track = 0; // Various counters for summarizing the number of events killed by cuts
   nLT8hits = 0;
   nGoodXtra = 0;
-  nHitReject = 0; 
   nBack = 0;
   nKeep = 0;
   event_counter = 0;
   Thread = 0;
-
-
-  //Definitions for HIT selection cuts
-  mxSlope[0][0] = 0.03; mxSlope[0][1]=0.09; // Cut on the slope of the front tracker vector, separately for V and T
-  mxSlope[1][0] = 0.1; mxSlope[1][1]= 0.15;   // Cut on the slope of the rear tracker vector, separately for V and T
-  deltaMx = 6.0; //distance between tracks at isocenter
 
   // Definitions of the event selection cuts:
   mxXlyr = 3;    // Maximum number of V layers with extra, unused hits; and the same for T layers
@@ -84,8 +72,8 @@ void pCTcut::dEEFilterParameters(TH2D* dEEhist, float dEElow[3], float dEEhigh[3
       xhigh[j]    =  dEESlice->GetBinCenter(dEESlice->FindLastBinAbove(dEESlice->GetMaximum()/2));
       xlow[j]     =  xmax - (xhigh[j] -xmax);
     }
-    //xlow[j]     = xlow[j] - (xhigh[j] - xlow[j]) * 0.7848;
-    //xhigh[j]    =   xhigh[j] + (xhigh[j] - xlow[j]) * 0.7848; //From FWHM to 3sigma (not needed)
+    xlow[j]     = xlow[j] - (xhigh[j] - xlow[j]) * 0.7848;
+    xhigh[j]    =   xhigh[j] + (xhigh[j] - xlow[j]) * 0.7848;
   }
   dEElow[0] = (E[0] * (xlow[2] - xlow[1]) + E[1] * (xlow[0] - xlow[2]) + E[2] * (xlow[1] - xlow[0])) /
               ((E[0] - E[1]) * (E[0] - E[2]) * (E[1] - E[2]));
@@ -102,7 +90,7 @@ void pCTcut::dEEFilterParameters(TH2D* dEEhist, float dEElow[3], float dEEhigh[3
 ////////////////////////////////////////////////////////////////////
 bool pCTcut::dEEFilter(float Elow, float Ehigh, float dEElow[3], float dEEhigh[3]){
   if (Elow  < (dEElow[0]  * pow(Ehigh,2) + dEElow[1] * Ehigh + dEElow[2]) ||
-      Elow  > (dEEhigh[0] * pow(Ehigh,2) + dEEhigh[1] * Ehigh + dEEhigh[2])){
+      Ehigh > (dEEhigh[0] * pow(Ehigh,2) + dEEhigh[1] * Ehigh + dEEhigh[2])){
     return false;}
   else return true;
 }
@@ -137,35 +125,19 @@ bool pCTcut::EnrgCut(float Estage[5], float Etot, float cut0, float cut1, float 
   return dropEvent;
 }
 
+
 ////////////////////////////////////////////////////////////////////
 // Tracking cuts
 ////////////////////////////////////////////////////////////////////
-// Cut on Tracker hits in front/rear tracking detectors
-bool pCTcut::cutHitSlope(int i, int idX, double slope){
-
-  if(slope>=mxSlope[i][idX]){ nHitReject++; return true;} //Disregard this Hit combination
-  else return false; 
-
-}
-
-bool pCTcut::cutTrackIsocenterIntercept(double dist){
-
-  if(dist >= deltaMx) return true; // skip proposed track candidates 
-  else return false; 
-}
-
 // Call for each raw event after the tracking is completed
 bool pCTcut::cutEvt(pCT_Tracking &pCTtracks, TkrHits &pCThits) {
   event_counter++;
   bool good = false;
-  if (pCTtracks.nTracks >= minTkrs && pCTtracks.nTracks <= maxTkrs) { // Exactly 1 V track and 1 T track.  No 2-track events allowed. //ATTENTION: this only counts "good" tracks
+  if (pCTtracks.nTracks >= minTkrs && pCTtracks.nTracks <= maxTkrs) { // Exactly 1 V track and 1 T track.  No 2-track events allowed.
     n1track++;
     int nXtraHits = 0; // Number of unused hits in the tracker
     int nLyrXtraV = 0; // Number of layers with extra hits in V
     int nLyrXtraT = 0; // Number of layers with extra hits in T
-
-
-    //V view: This counts hits not used for the track reconstruction, i.e. such that only results in "bad" tracks.
     for (int lyr = 0; lyr < 4; lyr++) {
       bool extra = false;
       for (int i = 0; i < pCThits.Lyr[lyr].N[0]; i++) {
@@ -179,9 +151,8 @@ bool pCTcut::cutEvt(pCT_Tracking &pCTtracks, TkrHits &pCThits) {
 	}
       }
       
-      if (extra) nLyrXtraV++;
-
-      //Same for T View:
+      if (extra)
+	nLyrXtraV++;
       extra = false;
       for (int i = 0; i < pCThits.Lyr[lyr].N[1]; i++) {
 	int tk = pCThits.Lyr[lyr].F[1].at(i);
@@ -195,7 +166,8 @@ bool pCTcut::cutEvt(pCT_Tracking &pCTtracks, TkrHits &pCThits) {
 	  }
 	}
       }
-      if (extra) nLyrXtraT++;
+      if (extra)
+	nLyrXtraT++;
     }
     if (nXtraHits < mxXhits) {
       nLT8hits++;
@@ -223,7 +195,6 @@ bool pCTcut::cutEvt(pCT_Tracking &pCTtracks, TkrHits &pCThits) {
 void pCTcut::summary() { // Summary of the processing up to the point of selecting
   // events based on tracking
   cout << "pCTcut thread " << Thread << ": number of raw events processed = " << event_counter << endl;
-  cout << "pCTcut thread " << Thread << ": number of raw hits combinations rejected from slope cuts = " << nHitReject << endl;
   cout << "pCTcut thread " << Thread << ": number of events with exactly 1 track = " << n1track << endl;
   cout << "pCTcut thread " << Thread << ": number events with less than " << mxXhits << " unused hits = " << nLT8hits
        << endl;

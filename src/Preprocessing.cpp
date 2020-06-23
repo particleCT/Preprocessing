@@ -43,16 +43,16 @@ Preprocessing::Preprocessing(){
   if (theConfig->item_int["max_events"] > 0) cout << "The preprocessing will halt after processing " << theConfig->item_int["max_events"] << " events\n";
 
 
+  //Setting the Filename and creating the output file
+  size_t found1 = theConfig->item_str["inputFileName"].find_last_of("/\\"); // for removing absolute path in file (works for both windows and linux)
+  size_t found2 = theConfig->item_str["inputFileName"].find('.');
+  string outputFile;
+  if(found1!=string::npos) outputFile = theConfig->item_str["outputDir"] + theConfig->item_str["inputFileName"].substr(found1,found2-found1)+".root";
+  else outputFile = theConfig->item_str["outputDir"] + "/" + theConfig->item_str["inputFileName"].substr(0,theConfig->item_str["intputFileName"].size()-4) + ".root";
+   
   pCTcalibRootFile = new TFile(theConfig->item_str["calib"].c_str());
-  TString filename = Form("%s/%s.root",
-			  theConfig->item_str["outputDir"].c_str(),
-			  theConfig->item_str["inputFileName"].substr(7, theConfig->item_str["inputFileName"].size()-4).c_str());
-			  
-
-  theCuts = new pCTcut();// Initialize the code for event selection
-  theTVcorr = new TVcorrection(pCTcalibRootFile, 0);
-  theWEPL = new Wepl(pCTcalibRootFile);  
-  projectionROOT = new TFile(filename,"recreate");
+  projectionROOT = new TFile(outputFile.c_str(),"recreate");
+  theCuts = new pCTcut();// Initialize the code for event selection  
 };
 // ******************************* ******************************* *******************************
 // end of the Preprocessing constructor
