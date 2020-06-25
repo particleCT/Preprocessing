@@ -132,11 +132,11 @@ public:
           { -43.686, -43.687 } };
 
     // T board alignment pin locations, including corrections derived from data analysis
-    Tpin[0] =  215.168;
-    Tpin[1] =  211.373;
-    Tpin[2] = -203.373;
-    Tpin[3] = -207.168;
-
+    Tpin[0] =  215.168 - 1;
+    Tpin[1] =  211.373 - 1;
+    Tpin[2] = -203.373 + 1.218;
+    Tpin[3] = -207.168 + 1.218 + 0.145; //presumptive 
+ 
     Tdir[0] = -1.; // T board orientations (front and back trackers are reflected in u)
     Tdir[1] = -1.;
     Tdir[2] = 1.;

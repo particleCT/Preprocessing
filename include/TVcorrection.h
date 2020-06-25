@@ -66,13 +66,14 @@ public:
       inBounds = false;
     }
     if (inBounds){
-      Int_t binx = TVcorrHist[stage]->GetXaxis()->FindFixBin(T);
-      Int_t biny = TVcorrHist[stage]->GetYaxis()->FindFixBin(V);
-      for(int i =binx-1; i<binx+2; i++){
+      //Int_t binx = TVcorrHist[stage]->GetXaxis()->FindFixBin(T);
+      //Int_t biny = TVcorrHist[stage]->GetYaxis()->FindFixBin(V);
+ /*     for(int i =binx-1; i<binx+2; i++){
       for(int j =biny-1; j<biny+2; j++){
 	if(  TVcorrHist[stage]->GetBinContent(binx,biny) >0.9) return TVcorrHist[stage]->GetBinContent( TVcorrHist[stage]->FindBin(T,V));
       }
-      }
+      }*/
+
       return TVcorrHist[stage]->GetBinContent( TVcorrHist[stage]->FindBin(T,V));
       //return TVcorrHist[stage]->Interpolate(T,V); // bilinear interpolation
 
