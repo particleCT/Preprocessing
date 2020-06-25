@@ -20,7 +20,6 @@
 using namespace std;
 Preprocessing::Preprocessing(){
 
-
   theConfig = pCTconfig::GetInstance();
   cout << "*********** Entering the driver program for pCT preprocessing **************" << endl;
   energyOutput = 0;
@@ -53,6 +52,9 @@ Preprocessing::Preprocessing(){
   pCTcalibRootFile = new TFile(theConfig->item_str["calib"].c_str());
   projectionROOT = new TFile(outputFile.c_str(),"recreate");
   theCuts = new pCTcut();// Initialize the code for event selection  
+  
+  theTVcorr = new TVcorrection(pCTcalibRootFile,theConfig->item_int["calibrate"]);
+
 };
 // ******************************* ******************************* *******************************
 // end of the Preprocessing constructor
@@ -351,6 +353,8 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
   // GET EXISTING WEPL CALIBRATION CONSTANTS  [CEO Aug 2016]
   /////////////////////////////////////////////////////////
 
+  theWEPL = new Wepl(pCTcalibRootFile);
+
   // Create a vector of pointers to instances of the pedestal and gain calibration class
   float t1 = -100.; // These define two ranges for finding protons passing through zero phantom material, for gain calibration
   float t2 = -100.; // ****** Let's keep this to one side only, for now, to accommodate the wedge calibration runs with bricks
@@ -360,13 +364,14 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
   for (int stage = 0; stage < 5; stage++) pedestals[stage] = theTVcorr->ped[stage];
   int pdstlr[5];
   for (int stage = 0; stage < nStage; stage++) pdstlr[stage] = theConfig->item_int[Form("pedrng%d",stage)];
+
   pedGainCalib* thePedGainCalib = new pedGainCalib(projectionROOT, pdstlr, pedestals, t1, t2, t3, t4);
+  
   /////////////////////////////////////////////////////////////////
   // Call the routine that reads the data and does the analysis.
   /////////////////////////////////////////////////////////////////
   // Uhit is filled and returned for use below, just to save space in the temporary file.
   pCTevents(Geometry, rawEvt, thePedGainCalib, Uhit);
-
   // Prepare the ROOT File header
   projectionROOT->cd();
   TTree* header;
@@ -385,7 +390,6 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
   string data_source_string = theConfig->item_str["inputFileName"];
   string study_name_string = theConfig->item_str["study"];
   string prepared_by_string = string(PREPARED_BY);
-  
   int current_time      = time(NULL);
   int recalibrate       = theConfig->item_int["recalibrate"];
   int study_name_size = theConfig->item_str["study"].size(); 
@@ -405,7 +409,6 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
   header->Branch("prepared_by",&prepared_by_string);
   for (int stage = 0; stage < nStage; ++stage) header->Branch(Form("Gain_%d",stage),&thePedGainCalib->GainFac[stage]);
   header->Fill();
-
   // Prepare the root file phasespace
   TTree* phase;
   float Ene[5], Wet, theta;
@@ -420,30 +423,33 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
   phase->Branch("t", &Thit, "t[4]/F");  
   phase->Branch("v", &Vhit, "v[4]/F");
   phase->Branch("u", &Uhit, "u[4]/F");
-  phase->Branch("ADC", &ADC, "ADC[5]/I");
-  phase->Branch("timeStamp", &timeStamp, "timeStamp/I");
-  phase->Branch("E", &Ene, "E[5]/F");
   phase->Branch("wepl", &Wet, "wepl/F");
   phase->Branch("theta", &theta, "theta/F");
-
-  phase->Branch("x0",&x0,"x0/F");
-  phase->Branch("y0",&y0,"y0/F");
-  phase->Branch("z0",&z0,"z0/F");
-
-  phase->Branch("x1",&x1,"x1/F");
-  phase->Branch("y1",&y1,"y1/F");
-  phase->Branch("z1",&z1,"z1/F");
-
-  phase->Branch("px0",&px0,"px0/F");
-  phase->Branch("py0",&py0,"py0/F");
-  phase->Branch("pz0",&pz0,"pz0/F");
-  phase->Branch("px1",&px1,"px1/F");
-  
-  phase->Branch("py1",&py1,"py1/F");
-  phase->Branch("pz1",&pz1,"pz1/F");
   phase->Branch("MaxEnergyTransFilter",&MaxEnergyTransFilter,"MaxEnergyTransFilter/I");
   phase->Branch("ThresholdFilter",&ThresholdFilter,"ThresholdFilter/I");
   phase->Branch("dEEFilter",&dEEFilter,"dEEFilter/I");
+
+  if(!theConfig->item_int["CTOutput"]){
+      phase->Branch("ADC", &ADC, "ADC[5]/I");
+      phase->Branch("timeStamp", &timeStamp, "timeStamp/I");
+      phase->Branch("E", &Ene, "E[5]/F");
+      
+      phase->Branch("x0",&x0,"x0/F");
+      phase->Branch("y0",&y0,"y0/F");
+      phase->Branch("z0",&z0,"z0/F");
+
+      phase->Branch("x1",&x1,"x1/F");
+      phase->Branch("y1",&y1,"y1/F");
+      phase->Branch("z1",&z1,"z1/F");
+
+      phase->Branch("px0",&px0,"px0/F");
+      phase->Branch("py0",&py0,"py0/F");
+      phase->Branch("pz0",&pz0,"pz0/F");
+      phase->Branch("px1",&px1,"px1/F");
+      
+      phase->Branch("py1",&py1,"py1/F");
+      phase->Branch("pz1",&pz1,"pz1/F");
+  }
 
   char outBuff[93]; // Make this extra large, just in case floats are not 4 bytes in size
   int nBuffBytes = 8 * sizeof(float) + 7 * sizeof(int) + sizeof(unsigned char);
@@ -463,6 +469,7 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
     perror("Preprocessing.cpp: Failed to open the temporary file");
     exit(1);
   }
+  int N=0;
   for (int EvtNum = 0; EvtNum < theCuts->nKeep; EvtNum++) { // Analyze data from the temporary file event by event    
     ret = fread(outBuff, sizeof(char), nBuffBytes, fptmp);
     dEEFilter = 1;
@@ -502,16 +509,22 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
     }
 
     bool inBounds;
+    bool goodTV=true; 
     int nGood = 0;
     for (int stage = 0; stage < 5; stage++) {
       // TVcorrection and MeV conversion.  Extrapolate the rear track vector
       // to the energy detector location.
       float Vedet = Geometry->extrap2D(&Uhit[2], Vback, Geometry->energyDetectorU(stage));
       float Tedet = Geometry->extrap2D(&Uhit[2], Tback, Geometry->energyDetectorU(stage));
+      inBounds = true;
       float TVCorrFactor = theTVcorr->corrFactor(stage, Tedet, Vedet, inBounds);
+//cout << TVCorrFactor << endl;
+      if(TVCorrFactor>0.9){++N; goodTV = false;} 
       Ene[stage] = thePedGainCalib->GainFac[stage] * ((float)ADC[stage] - thePedGainCalib->Ped[stage]) * TVCorrFactor;
-      if(inBounds) nGood++;
+      if(inBounds && goodTV) nGood++;
+      else break;
     }
+    if(!inBounds || !goodTV){ ++nBadWEPL; continue; } 
 
     Wet = theWEPL->EtoWEPL(Ene, MaxEnergyTransFilter, ThresholdFilter, dEEFilter); // Energy to WEPL conversion
     if(!dEEFilter) ++ndEEFilter;

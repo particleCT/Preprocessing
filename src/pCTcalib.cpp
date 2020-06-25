@@ -142,8 +142,9 @@ int pCTcalib::TVmapper() {
   TH1D* ValignementPos21 = new TH1D("ValignementPosV2->V1","",300, -20, -20 +300*0.1);
 
   // Direction
-  TH1D* TalignementDir01 = new TH1D("TalignementDirT0T1","",300, -20, -20 +300*0.1);
-  TH1D* TalignementDir23 = new TH1D("TalignementDirT2T3","",300, -20, -20 +300*0.1);
+  TH1D* TalignementDir01 = new TH1D("TalignementDirT0T1","",300, -.1, -.1 +200*0.001);
+  TH1D* TalignementDir23 = new TH1D("TalignementDirT2T3","",300, -.1, -.1 +200*0.001);
+  TH1D* TalignementDir12 = new TH1D("TalignementDirT1T2","",300, -.1, -.1 +200*0.001);
   TH1D* ValignementDir01 = new TH1D("ValignementDirV0V1","",300, -20, -20 +300*0.1);
   TH1D* ValignementDir23 = new TH1D("ValignementDirV2V3","",300, -20, -20 +300*0.1);
   
@@ -251,8 +252,9 @@ int pCTcalib::TVmapper() {
     ValignementPos21->Fill(Vout21 - Vf[1]);
     
     // Direction
-    TalignementDir01->Fill(Tf[1]-Tf[0]);
-    TalignementDir23->Fill(T[1]-T[0]);
+    TalignementDir01->Fill((Tf[1]-Tf[0])/(Uft[1]-Uft[0]));
+    TalignementDir23->Fill((T[1]-T[0])/(Ut[1]-Ut[0]));
+    TalignementDir12->Fill((T[2]-Tf[1])/(Ut[0]-Uft[1]));
     ValignementDir01->Fill(Vf[1]-Vf[0]);
     ValignementDir23->Fill(V[1]-V[0]);
     
@@ -293,6 +295,7 @@ int pCTcalib::TVmapper() {
   
   TalignementDir01->Write("",TObject::kOverwrite);
   TalignementDir23->Write("",TObject::kOverwrite);
+  TalignementDir12->Write("",TObject::kOverwrite);
   ValignementDir01->Write("",TObject::kOverwrite);
   ValignementDir23->Write("",TObject::kOverwrite);
   
@@ -603,7 +606,7 @@ int pCTcalib::Wcalib(){
     rngEnrg[stage]->GetYaxis()->SetTitle("Range (mm)");      
     rngEnrg[stage]->Write("", TObject::kOverwrite);
     }
-  
+ 
   // Define a region of validity for this brick
   float xmin = -13;
   float xmax = 42; // arbitrary;
@@ -846,8 +849,8 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
     Event thisEvent;
     thisEvent = theEvtRecon->evtList[EvtNum];
 
-    Tf[0] = thisEvent.Thit[0] - 1; Tf[1] = thisEvent.Thit[1] - 1;// Front tracker coordinates 1 mm shift
-    //Tf[0] = thisEvent.Thit[0]; Tf[1] = thisEvent.Thit[1];// Front tracker coordinates    
+    //Tf[0] = thisEvent.Thit[0] - 1; Tf[1] = thisEvent.Thit[1] - 1;// Front tracker coordinates 1 mm shift
+    Tf[0] = thisEvent.Thit[0]; Tf[1] = thisEvent.Thit[1];// Front tracker coordinates    
     Vf[0] = thisEvent.Vhit[0]; Vf[1] = thisEvent.Vhit[1];
     T[0]  = thisEvent.Thit[2];  T[1] = thisEvent.Thit[3];// Rear tracker coordinates
     V[0]  = thisEvent.Vhit[2];  V[1] = thisEvent.Vhit[3];
@@ -889,8 +892,8 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
     if (fabs(Vin) > maxV || fabs(Tin) > maxT) continue; // if track is outside of detector in T/V - skip it
 
     //Back of bricks
-    double Tout = theGeometry->extrap2D(Uft, Tf, Uout); // theGeometry->extrap2D(Ut, T, Uout); 
-    double Vout = theGeometry->extrap2D(Ufv, Vf, Uout); // theGeometry->extrap2D(Uv, V, Uout);
+    double Tout = theGeometry->extrap2D(Ut, T, Uout);//theGeometry->extrap2D(Uft, Tf, Uout); // theGeometry->extrap2D(Ut, T, Uout); 
+    double Vout = theGeometry->extrap2D(Uv, V, Uout);//theGeometry->extrap2D(Ufv, Vf, Uout); // theGeometry->extrap2D(Uv, V, Uout);
     if (fabs(Vout) > maxV || fabs(Tout) > maxT) continue;  // if track is outside of detector in T/V- skip it
 
     double Uin    = Ust[0];
@@ -898,7 +901,7 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
     // Before the negative slope
 
     //if(TinB < Tw1) continue;
-    if(TinB < Tw2) continue;
+    //if(TinB < Tw2) continue;
     
     // Before the negative slope -- NOT ACCOUNTED
     if(TinB < Tw1) continue;
@@ -910,7 +913,7 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
     }
     // Flat part of the wedge - No need to change Vin and Tin
     else if(Tin > Tw2 && Tin < Tw3){
-      continue;
+      //continue;
       Uin = Ust[0];
     }
     
@@ -921,7 +924,7 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
     }
     // Past the positive slope 
     else if(TinB > Tw4 && TinB < tBrickEnd){
-      continue;
+      //continue;
       Uin = Ust[1];
       Tin = TinB;
       Vin = VinB;
@@ -1035,7 +1038,9 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
   delete hTotEcorr;
   for (int stage = 0; stage < nStage; ++stage) delete (hStgEcorr[stage]);
 }
-//////////////////////////////////////////////////////////////////////
+///
+
+///////////////////////////////////////////////////////////////////
 // 2D equation to find line intersection
 //////////////////////////////////////////////////////////////////////
 bool pCTcalib::getLineIntersection(double p0u, double p0t, double p1u, double p1t,  // Two points on the first line
