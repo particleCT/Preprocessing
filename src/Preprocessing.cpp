@@ -357,7 +357,7 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
 
   // Create a vector of pointers to instances of the pedestal and gain calibration class
   float t1 = -100.; // These define two ranges for finding protons passing through zero phantom material, for gain calibration
-  float t2 = -100.; // ****** Let's keep this to one side only, for now, to accommodate the wedge calibration runs with bricks
+  float t2 = -theConfig->item_float["size"].; // ****** Let's keep this to one side only, for now, to accommodate the wedge calibration runs with bricks
   float t3 = theConfig->item_float["size"];// + theConfig->item_float["wedgeoffset"];
   float t4 = 100.;
   float pedestals[5];
