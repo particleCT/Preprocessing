@@ -128,8 +128,11 @@ int main(int argc, char *argv[]) {
   int reCalibrate = 1;
   cfg.addItem('r', "recalibrate", reCalibrate);
 
-  float phantomSize = 110.;
-  cfg.addItem('S', "size", phantomSize);
+  float phantomSizeRight = 100.;
+  cfg.addItem('R', "sizeright", phantomSizeRight);
+
+  float phantomSizeLeft = 100.;
+  cfg.addItem('L', "sizeleft", phantomSizeLeft);
 
   int Calibrate = 0;
   cfg.addItem('C', "calibrate", Calibrate);
@@ -138,7 +141,7 @@ int main(int argc, char *argv[]) {
   cfg.addItem('L', "normalize", Normalize);
   
   float wedgeOff = 0.0;
-  cfg.addItem('F', "wedgeoffset", wedgeOff);
+  cfg.addItem('O', "wedgeoffset", wedgeOff);
 
   string minDate = "2030/01/01";
   cfg.addItem('x', "minDate", minDate);
@@ -147,7 +150,7 @@ int main(int argc, char *argv[]) {
   cfg.addItem('y', "maxDate", maxDate);
 
   int minRun = 999;
-  cfg.addItem('w', "minrun", minRun);
+  cfg.addItem('u', "minrun", minRun);
 
   int maxRun = -1;
   cfg.addItem('z', "maxrun", maxRun);
@@ -162,7 +165,7 @@ int main(int argc, char *argv[]) {
   cfg.addItem('T', "TVcorr", TVcorrFile);
 
   string rootCalibFile = "pCTcalib.root";
-  cfg.addItem('R', "calib", rootCalibFile);
+  cfg.addItem('w', "calib", rootCalibFile);
   
   float thr[5]; // Array of stage thresholds for WEPL analysis
   thr[0] = 1.0;
@@ -190,6 +193,8 @@ int main(int argc, char *argv[]) {
   int MultiTrackReject = 0; 
   cfg.addItem('M', "MultiTrackReject",MultiTrackReject);
 
+  int CTOutput = 0;
+  cfg.addItem('C',"CTOutput",CTOutput);
  
   // Read the default configuration from the config file
   if (cfg.Configure() != 0) {
@@ -278,7 +283,7 @@ int main(int argc, char *argv[]) {
 
   if (cfg.item_int["calibrate"]) cout << "Set the number of events to plot > 0 to get loads of debug histograms in calibration runs." << endl;
   cout << "Fraction of the input file to be analyzed is " << fileFraction << endl;
-  cout << "The phantom size for preprocessing is assumed to be " << phantomSize << " mm in radius." << endl;
+  cout << "The phantom size for preprocessing is assumed to be " << phantomSizeLeft << " mm in extent in -T and " << phantomSizeRight << " mm in +T." << endl;
     
   if (dodEEFilter) {
     if (!cfg.item_int["calibrate"])
