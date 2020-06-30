@@ -244,13 +244,13 @@ public:
       return BeamVtxT;
   }
 
-  inline double extrap2D(double X[2], double Y[2], double Xnew) {
-    double dX = X[1] - X[0];
-    if (dX == 0.) {
+  inline float extrap2D(float X[2], float Y[2], float Xnew) {
+    float dX = X[1] - X[0];
+    if (dX <= 0.0001) { 
       cout << "pCTgeo::extrap2D, division by zero; x values must be different." << endl;
       dX = 1.0e-23;
     }
-    double slope = (Y[1] - Y[0]) / (dX);
+    float slope = (Y[1] - Y[0]) / (dX);
     return Y[1] + (Xnew - X[1]) * slope;
   }
 

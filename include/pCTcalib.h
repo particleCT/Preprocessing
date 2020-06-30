@@ -54,7 +54,7 @@ class pCTcalib {
   int TVmapper_FlatBricks();
   void enrgDep();
   void writeCalibfile();
-  bool getLineIntersection(double, double, double, double, double, double, double, double, double &, double &);
+  bool getLineIntersection(float, float, float, float, float, float, float, float, float &, float &);
   bool EnrgCut(float [5], float, float, float, float);
   void FilldEE(TH2D* dEEhist[nStage]);
   // Other classes
@@ -69,9 +69,9 @@ class pCTcalib {
   vector<string> calFileNames;
   string CalFile;
   float EnergyBinWidth, RangeBinWidth;
-  double topW[2]; // min/max t value for range in top of wedge, relative to the center, both sides
-  double brickW;  // half width of range in t for brick-only protons
-  double emptyW;  // half width of range in t for selecting empty events
+  float topW[2]; // min/max t value for range in top of wedge, relative to the center, both sides
+  float brickW;  // half width of range in t for brick-only protons
+  float emptyW;  // half width of range in t for selecting empty events
 
   float Est[nStage] = {0}; // energy in each stage
   float EnS; // energy sum in all stage
@@ -97,7 +97,7 @@ class pCTcalib {
   TProfile* ProfileE[nStage];
   TH2D* ProfileE_Tot;
   TH2D* ProfileE_Tot_f;
-  double V[2], T[2], Ut[2], Uv[2], Uft[2], Ufv[2], Tf[2], Vf[2]; 
+  float V[2], T[2], Ut[2], Uv[2], Uft[2], Ufv[2], Tf[2], Vf[2]; 
   // Here are a bunch of parameters used to extract the calibration
   float EG4stage[nStage]; // MC derived stage energies, used to calibrate to MeV (CDH setup)
   float TVnormalizeFactor;
