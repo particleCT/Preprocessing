@@ -60,7 +60,7 @@ Preprocessing::Preprocessing(){
 // end of the Preprocessing constructor
 // ******************************* ******************************* *******************************
 // Routine called to read the raw data, analyze it, write results to a temporary file, and analyze the WEPL calibration pedestals and gains.  
-void Preprocessing::pCTevents(pCTgeo* Geometry, pCTraw rawEvt, pedGainCalib *thePedGainCalib, double Uhit[]) {
+void Preprocessing::pCTevents(pCTgeo* Geometry, pCTraw rawEvt, pedGainCalib *thePedGainCalib, float Uhit[]) {
   cout << "****************** Executing pCTevents *******************************" << endl;
   char outBuff[93]; // Buffer for writing or reading the temporary file
   int nBuffBytes = 8 * sizeof(float) + 7 * sizeof(int) + sizeof(unsigned char);
@@ -134,6 +134,8 @@ void Preprocessing::pCTevents(pCTgeo* Geometry, pCTraw rawEvt, pedGainCalib *the
 	  if (lyr < 2) Thit[lyr] = pCTtracks.frontPredT(pCTtracks.itkT, Uhit[lyr]); // Extrapolate the T tracks to the U planes occupied by the V layers
 	  else Thit[lyr] = pCTtracks.backPredT(pCTtracks.itkT, Uhit[lyr]);
 	}
+      } else continue;
+/*
       } else { // Use just the first hit in each layer if there is no track
 	double UhitT[4], ThitD[4];
 	for (int lyr = 0; lyr < 4; lyr++) {
@@ -161,7 +163,7 @@ void Preprocessing::pCTevents(pCTgeo* Geometry, pCTraw rawEvt, pedGainCalib *the
 	  Thit[2] = ThitD[2];
 	  Thit[3] = ThitD[3];
 	}
-      }
+      }*/
       
       unsigned char mask[5] = { 0x01, 0x02, 0x04, 0x08, 0x10 };
       unsigned char OTR = 0;
@@ -251,8 +253,8 @@ void Preprocessing::pCTevents(pCTgeo* Geometry, pCTraw rawEvt, pedGainCalib *the
       }
       // Calculate the calibrated WEPL
       float Ene[5], Vedet[5], Tedet[5];
-      double Tback[2], Vback[2];
-      double Tfront[2], Vfront[2];
+      float Tback[2], Vback[2];
+      float Tfront[2], Vfront[2];
       for (int lyr = 2; lyr < 4; lyr++) {
         Tback[lyr - 2] = Thit[lyr];
         Vback[lyr - 2] = Vhit[lyr];
@@ -357,7 +359,8 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
 
   // Create a vector of pointers to instances of the pedestal and gain calibration class
   float t1 = -100.; // These define two ranges for finding protons passing through zero phantom material, for gain calibration
-  float t2 = theConfig->item_float["sizeleft"]; 
+
+  float t2 = -theConfig->item_float["sizeleft"]; 
   float t3 = theConfig->item_float["sizeright"];// + theConfig->item_float["wedgeoffset"];
   float t4 = 100.;
   float pedestals[5];
@@ -367,14 +370,17 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
 
   pedGainCalib* thePedGainCalib = new pedGainCalib(projectionROOT, pdstlr, pedestals, t1, t2, t3, t4);
   
+  // Uhit is filled and returned for use below, just to save space in the temporary file.
+  pCTevents(Geometry, rawEvt, thePedGainCalib, Uhit);
+
+
   /////////////////////////////////////////////////////////////////
   // Call the routine that reads the data and does the analysis.
   /////////////////////////////////////////////////////////////////
-  // Uhit is filled and returned for use below, just to save space in the temporary file.
-  pCTevents(Geometry, rawEvt, thePedGainCalib, Uhit);
-  // Prepare the ROOT File header
+   // Prepare the ROOT File header
   projectionROOT->cd();
   TTree* header;
+
   char magic_number[] = "PCTD";
   const char *PREPARED_BY = getenv("USER");
   if (PREPARED_BY == NULL) { // The getenv fails in Windows
@@ -462,13 +468,17 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
   int nBadWEPL = 0, nBadTimeStamp = 0, nMaxTrans = 0, nThreshold = 0, ndEEFilter = 0, nTot = 0;
   unsigned int timeStampOld = 0;
   long long timeStampOffset = 0;
-  
+ 
+ 
   tempfile = theConfig->item_str["outputDir"] + "/extracted_data_0d.tmp";
   fptmp = fopen(tempfile.c_str(), "rb");
   if (fptmp == NULL) {
     perror("Preprocessing.cpp: Failed to open the temporary file");
     exit(1);
   }
+
+
+
   int N=0;
   for (int EvtNum = 0; EvtNum < theCuts->nKeep; EvtNum++) { // Analyze data from the temporary file event by event    
     ret = fread(outBuff, sizeof(char), nBuffBytes, fptmp);
@@ -502,7 +512,7 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
     } 
     else  theta = proj_angle;    
     // Calculate the calibrated WEPL
-    double Tback[2], Vback[2];
+    float Tback[2], Vback[2];
     for (int lyr = 2; lyr < 4; lyr++){
 	Tback[lyr - 2] = Thit[lyr];
 	Vback[lyr - 2] = Vhit[lyr];
@@ -546,6 +556,7 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
 
     px0 /=  Length_0; py0 /= Length_0; pz0 /= Length_0;
     px1 /=  Length_1; py1 /= Length_1; pz1 /= Length_1;
+
 
     phase->Fill();    
     if (EvtNum % 100000 == 0) cout << " Processing event " << EvtNum << " from the temp file, time stamp=" << timeStamp <<" angle=" << theta << endl;

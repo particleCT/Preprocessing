@@ -216,8 +216,8 @@ int pCTcalib::TVmapper() {
     // Extrapolate the rear track vector to the energy detector stage
     for (int stage = 0; stage < nStage; stage++) {
       
-      double Tcorr = theGeometry->extrap2D(Ut, T, theGeometry->energyDetectorU(stage));
-      double Vcorr = theGeometry->extrap2D(Uv, V, theGeometry->energyDetectorU(stage));
+      float Tcorr = theGeometry->extrap2D(Ut, T, theGeometry->energyDetectorU(stage));
+      float Vcorr = theGeometry->extrap2D(Uv, V, theGeometry->energyDetectorU(stage));
       // Outside of the detector
       if (fabs(Tcorr) > 150.0) continue;
       if (fabs(Vcorr) > 40.0)  continue;
@@ -232,20 +232,20 @@ int pCTcalib::TVmapper() {
 
 
     // Projected to the exit tracker
-    double Tin12 = theGeometry->extrap2D(Uft,Tf, Ut[0]);
-    double Vin12 = theGeometry->extrap2D(Ufv,Vf, Uv[0]);
-    double Tin13 = theGeometry->extrap2D(Uft,Tf, Ut[1]);
-    double Vin13 = theGeometry->extrap2D(Ufv,Vf, Uv[1]);
+    float Tin12 = theGeometry->extrap2D(Uft,Tf, Ut[0]);
+    float Vin12 = theGeometry->extrap2D(Ufv,Vf, Uv[0]);
+    float Tin13 = theGeometry->extrap2D(Uft,Tf, Ut[1]);
+    float Vin13 = theGeometry->extrap2D(Ufv,Vf, Uv[1]);
     TalignementPos12->Fill(Tin12 - T[0]);
     ValignementPos12->Fill(Vin12 - V[0]);
     TalignementPos13->Fill(Tin13 - T[1]);
     ValignementPos13->Fill(Vin13 - V[1]);
     
     // Projected to the front tracker
-    double Tout20 = theGeometry->extrap2D(Ut,T, Uft[0]);
-    double Vout20 = theGeometry->extrap2D(Uv,V, Ufv[0]);
-    double Tout21 = theGeometry->extrap2D(Ut,T, Uft[1]);
-    double Vout21 = theGeometry->extrap2D(Uv,V, Ufv[1]);
+    float Tout20 = theGeometry->extrap2D(Ut,T, Uft[0]);
+    float Vout20 = theGeometry->extrap2D(Uv,V, Ufv[0]);
+    float Tout21 = theGeometry->extrap2D(Ut,T, Uft[1]);
+    float Vout21 = theGeometry->extrap2D(Uv,V, Ufv[1]);
     TalignementPos20->Fill(Tout20 - Tf[0]);
     ValignementPos20->Fill(Vout20 - Vf[0]);
     TalignementPos21->Fill(Tout21 - Tf[1]);
@@ -747,7 +747,7 @@ void pCTcalib::FilldEE(TH2D* dEEhist[nStage]) {
     for (int stage = 0; stage < nStage; ++stage) {
       
       // Extrapolate the rear track vector to the energy detector stage
-      double Tcorr = theGeometry->extrap2D(Ut, T, theGeometry->energyDetectorU(stage));
+      float Tcorr = theGeometry->extrap2D(Ut, T, theGeometry->energyDetectorU(stage));
       double Vcorr = theGeometry->extrap2D(Uv, V, theGeometry->energyDetectorU(stage));
       bool inBounds;
 
@@ -816,19 +816,19 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
   float cut0, cut1, cut2, cut3, cut4, cut5;
     
   // Wedge phantom geometry and locations in the T axis,
-  double Tw1 = theGeometry->getTWedgeBreaks(1);
-  double Tw2 = theGeometry->getTWedgeBreaks(2);
-  double Tw3 = theGeometry->getTWedgeBreaks(3);
-  double Tw4 = theGeometry->getTWedgeBreaks(4);
-  double tBrickEnd = theGeometry->getTWedgeBreaks(4) + 10.0; // Bricks shifted but we take only the first ten cm//???
+  float Tw1 = theGeometry->getTWedgeBreaks(1);
+  float Tw2 = theGeometry->getTWedgeBreaks(2);
+  float Tw3 = theGeometry->getTWedgeBreaks(3);
+  float Tw4 = theGeometry->getTWedgeBreaks(4);
+  float tBrickEnd = theGeometry->getTWedgeBreaks(4) + 10.0; // Bricks shifted but we take only the first ten cm//???
 
   // Define the U Position of the bricks now
-  double BrickThickness = theGeometry->getBrickThickness(); // Brick thickness; also the wedge thickness
-  double Ust[2]; // Polystyrene wedge phantom U coordinates, front and back
+  float BrickThickness = theGeometry->getBrickThickness(); // Brick thickness; also the wedge thickness
+  float Ust[2]; // Polystyrene wedge phantom U coordinates, front and back
   Ust[0] = -2.5 * BrickThickness; // centered around the middle of the bricks, 4 bricks + 1 wedge
   Ust[1] = Ust[0] + BrickThickness; // this is the plane after the wedge
-  double Wbricks = BrickThickness * theConfig->item_int["Nbricks"];
-  double Uout = Ust[1] + Wbricks; // U coordinate of the last brick, downstream side
+  float Wbricks = BrickThickness * theConfig->item_int["Nbricks"];
+  float Uout = Ust[1] + Wbricks; // U coordinate of the last brick, downstream side
 
   cout << "procWEPLcal: The wedge phantom goes from u=" << Ust[0] << " to u=" << Ust[1] << " for a thickness of "<< Ust[1] - Ust[0]<<" or in WET "
        << 1.03*(Ust[1] - Ust[0])<<endl;
@@ -841,8 +841,8 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
   cout << "procWEPLcal: The calibration brick thickness is " << BrickThickness << " mm " << endl;
 
 
-  double maxV       = 45.;    // limit of range in V for calibration
-  double maxT       = 170.;   // limit of range in T for calibration
+  float maxV       = 45.;    // limit of range in V for calibration
+  float maxT       = 170.;   // limit of range in T for calibration
   // Start of the event loop
 
   for (int EvtNum = 0; EvtNum < theEvtRecon->nEvents; ++EvtNum) {
@@ -860,8 +860,8 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
     bool good = true;
     for (int stage = 0; stage < nStage; ++stage) {
       // Extrapolate the rear track vector to the energy detector stage
-      double Tcorr = theGeometry->extrap2D(Ut, T, theGeometry->energyDetectorU(stage));
-      double Vcorr = theGeometry->extrap2D(Uv, V, theGeometry->energyDetectorU(stage));
+      float Tcorr = theGeometry->extrap2D(Ut, T, theGeometry->energyDetectorU(stage));
+      float Vcorr = theGeometry->extrap2D(Uv, V, theGeometry->energyDetectorU(stage));
       
       // Apply the pedestals and TV correction to the stage ADC values
       bool inBounds;
@@ -882,21 +882,21 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
     // calculate geometric WET "wt0" for the wedge phantom using tracker info.
 
     // First estimate of the u coordinate at entry into the phantom wedge
-    double Tin  = theGeometry->extrap2D(Uft, Tf, Ust[0]);
-    double Vin  = theGeometry->extrap2D(Ufv, Vf, Ust[0]);
+    float Tin  = theGeometry->extrap2D(Uft, Tf, Ust[0]);
+    float Vin  = theGeometry->extrap2D(Ufv, Vf, Ust[0]);
 
     // First brick past the wedge
-    double TinB = theGeometry->extrap2D(Uft, Tf, Ust[1]); 
-    double VinB = theGeometry->extrap2D(Ufv, Vf, Ust[1]);
+    float TinB = theGeometry->extrap2D(Uft, Tf, Ust[1]); 
+    float VinB = theGeometry->extrap2D(Ufv, Vf, Ust[1]);
 
     if (fabs(Vin) > maxV || fabs(Tin) > maxT) continue; // if track is outside of detector in T/V - skip it
 
     //Back of bricks
-    double Tout = theGeometry->extrap2D(Ut, T, Uout);//theGeometry->extrap2D(Uft, Tf, Uout); // theGeometry->extrap2D(Ut, T, Uout); 
-    double Vout = theGeometry->extrap2D(Uv, V, Uout);//theGeometry->extrap2D(Ufv, Vf, Uout); // theGeometry->extrap2D(Uv, V, Uout);
+    float Tout = theGeometry->extrap2D(Ut, T, Uout);//theGeometry->extrap2D(Uft, Tf, Uout); // theGeometry->extrap2D(Ut, T, Uout); 
+    float Vout = theGeometry->extrap2D(Uv, V, Uout);//theGeometry->extrap2D(Ufv, Vf, Uout); // theGeometry->extrap2D(Uv, V, Uout);
     if (fabs(Vout) > maxV || fabs(Tout) > maxT) continue;  // if track is outside of detector in T/V- skip it
 
-    double Uin    = Ust[0];
+    float Uin    = Ust[0];
     bool emptyEvt = false;
     // Before the negative slope
 
@@ -1043,9 +1043,9 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
 ///////////////////////////////////////////////////////////////////
 // 2D equation to find line intersection
 //////////////////////////////////////////////////////////////////////
-bool pCTcalib::getLineIntersection(double p0u, double p0t, double p1u, double p1t,  // Two points on the first line
-				   double p2u, double p2t, double p3u, double p3t,  // Two points on the second line
-				   double &ipu, double &ipt) { // Return the intersection point
+bool pCTcalib::getLineIntersection(float p0u, float p0t, float p1u, float p1t,  // Two points on the first line
+				   float p2u, float p2t, float p3u, float p3t,  // Two points on the second line
+				   float &ipu, float &ipt) { // Return the intersection point
   if (p0u == p1u || p2u == p3u) return false;
     
   double slope1 = (p1t - p0t) / (p1u - p0u); // Slope of the first line
