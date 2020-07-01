@@ -40,7 +40,7 @@ class pCTcut {
   double mxSlope[2][2]; // Cut on the slope of the front tracker vector, separately for V and T
   double deltaMx;                    // Cut on how far the two vectors miss each other at u=0, in mm
   
-
+  int pileUp; 
  private: 
   static pCTcut *theCuts; 
   pCTconfig* theConfig;
