@@ -47,11 +47,18 @@ class pCTgeo {
   float timeStampRes;  // Hardware time-stamp resolution in seconds
 
 public:
+<<<<<<< HEAD
   pCTgeo(float tWedgeOffset = 0.) { // Most of this stuff needs to be kept in a database and read from there in this constructor
+=======
+  pCTgeo(double tWedgeOffset = 0., double TpinOff[]={0},double VpinOff[]={0}) { // Most of this stuff needs to be kept in a database and read from there in this constructor
+>>>>>>> b8a489b150bd6877659b80b451aaf9e5befae926
     
     ofstream geoLogFile;
     geoLogFile.open("pCTGeometry.log");
     geoLogFile << "pCTgeo.h: loading geometry constants for the real Phase-II pCT Scanner." << endl;
+    geoLogFile << "pCTgeo.h: wegde offset is " << tWedgeOffset << endl;
+    cout << "pCTgeo.h: Tpin offsets are " << TpinOff[0] << " " << TpinOff[1] << " " << TpinOff[2] << " " << TpinOff[3] << endl;
+    cout << "pCTgeo.h: Vpin offsets are " << VpinOff[0] << " " << VpinOff[1] << " " << VpinOff[2] << " " << VpinOff[3] << endl;
     fpgaLyr[0] = 0; // Translation from FPGA to layer
     fpgaLyr[1] = 1;
     fpgaLyr[2] = 2;
@@ -114,10 +121,10 @@ public:
     VBoard[2] = 2;
     VBoard[3] = 1;
 
-    Vpin[0] = 0.001; // V board alignment pin locations, including offsets derived from data analysis
-    Vpin[1] = 0.115;
-    Vpin[2] = 0.063;
-    Vpin[3] = 0.040;
+    Vpin[0] = 0.001 + VpinOff[0]; // V board alignment pin locations, including offsets derived from data analysis
+    Vpin[1] = 0.115 + VpinOff[1];
+    Vpin[2] = 0.063 + VpinOff[2];
+    Vpin[3] = 0.040 + VpinOff[3];
 
     for (int i = 0; i < 4; i++) geoLogFile << "pCTgeo.h: V layer " << i << " is board " << VBoard[i] << " with alignment pin at v=" << Vpin[i] << " mm\n";
 
@@ -132,11 +139,11 @@ public:
           { -43.686, -43.687 } };
 
     // T board alignment pin locations, including corrections derived from data analysis
-    Tpin[0] =  215.168;
-    Tpin[1] =  211.373;
-    Tpin[2] = -203.373;
-    Tpin[3] = -207.168;
-
+    Tpin[0] =  215.168 + TpinOff[0];//  - 1;
+    Tpin[1] =  211.373 + TpinOff[1];// - 1;
+    Tpin[2] = -203.373 + TpinOff[2]; // + 1.218;
+    Tpin[3] = -207.168 + TpinOff[3]; //+ 1.218 + 0.145; //presumptive 
+ 
     Tdir[0] = -1.; // T board orientations (front and back trackers are reflected in u)
     Tdir[1] = -1.;
     Tdir[2] = 1.;
@@ -246,7 +253,11 @@ public:
 
   inline float extrap2D(float X[2], float Y[2], float Xnew) {
     float dX = X[1] - X[0];
+<<<<<<< HEAD
     if (dX == 0.) {
+=======
+    if (dX <= 0.0001) { 
+>>>>>>> b8a489b150bd6877659b80b451aaf9e5befae926
       cout << "pCTgeo::extrap2D, division by zero; x values must be different." << endl;
       dX = 1.0e-23;
     }

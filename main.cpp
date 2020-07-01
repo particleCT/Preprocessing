@@ -128,8 +128,16 @@ int main(int argc, char *argv[]) {
   int reCalibrate = 1;
   cfg.addItem("recalibrate", reCalibrate);
 
+<<<<<<< HEAD
   float phantomSize = 110.;
   cfg.addItem("size", phantomSize);
+=======
+  float phantomSizeRight = 100.;
+  cfg.addItem('R', "sizeright", phantomSizeRight);
+
+  float phantomSizeLeft = 100.;
+  cfg.addItem('L', "sizeleft", phantomSizeLeft);
+>>>>>>> b8a489b150bd6877659b80b451aaf9e5befae926
 
   int Calibrate = 0;
   cfg.addItem("calibrate", Calibrate);
@@ -138,7 +146,11 @@ int main(int argc, char *argv[]) {
   cfg.addItem("normalize", Normalize);
   
   float wedgeOff = 0.0;
+<<<<<<< HEAD
   cfg.addItem("wedgeoffset", wedgeOff);
+=======
+  cfg.addItem('O', "wedgeoffset", wedgeOff);
+>>>>>>> b8a489b150bd6877659b80b451aaf9e5befae926
 
   string minDate = "2030/01/01";
   cfg.addItem("minDate", minDate);
@@ -147,7 +159,11 @@ int main(int argc, char *argv[]) {
   cfg.addItem("maxDate", maxDate);
 
   int minRun = 999;
+<<<<<<< HEAD
   cfg.addItem("minrun", minRun);
+=======
+  cfg.addItem('u', "minrun", minRun);
+>>>>>>> b8a489b150bd6877659b80b451aaf9e5befae926
 
   int maxRun = -1;
   cfg.addItem("maxrun", maxRun);
@@ -155,15 +171,27 @@ int main(int argc, char *argv[]) {
   string study_name = "";
   cfg.addItem("study", study_name);
 
+/* Not used anymore due to pCTcalib.root 
   string WcalibFile = "Wcalib.txt";
   cfg.addItem("Wcalib", WcalibFile);
 
   string TVcorrFile = "TVcorr.txt";
+<<<<<<< HEAD
   cfg.addItem("TVcorr", TVcorrFile);
 
   string rootCalibFile = "pCTcalib.root";
   cfg.addItem("calib", rootCalibFile);
+=======
+  cfg.addItem('T', "TVcorr", TVcorrFile);
+*/
+  string rootCalibFile = "pCTcalib.root";
+  cfg.addItem('w', "calib", rootCalibFile);
+>>>>>>> b8a489b150bd6877659b80b451aaf9e5befae926
   
+  int CalibCurve = 0; 
+  cfg.addItem('W', "calibCurve", CalibCurve);
+
+
   float thr[5]; // Array of stage thresholds for WEPL analysis
   thr[0] = 1.0;
   cfg.addItem("thr0", thr[0]);
@@ -190,7 +218,29 @@ int main(int argc, char *argv[]) {
   int MultiTrackReject = 0; 
   cfg.addItem("MultiTrackReject",MultiTrackReject);
 
- 
+  int CTOutput = 0;
+  cfg.addItem('C',"CTOutput",CTOutput);
+
+
+  float TpinOff1 = -1.; // Offset of the Tpins 
+  cfg.addItem('t', "TpinOff1", TpinOff1); 
+  float TpinOff2 = -1.; // Offset of the Tpins 
+  cfg.addItem('t', "TpinOff2", TpinOff2);
+  float TpinOff3 = 1.218; // Offset of the Tpins 
+  cfg.addItem('t', "TpinOff3", TpinOff3);
+  float TpinOff4 = 1.363; // Offset of the Tpins //1.218 + 0.145
+  cfg.addItem('t', "TpinOff4", TpinOff4);
+
+  float VpinOff1 = 0; // Offset of the Tpins 
+  cfg.addItem('v', "VpinOff1", VpinOff1);
+  float VpinOff2 = 0; // Offset of the Tpins 
+  cfg.addItem('v', "VpinOff2", VpinOff2);
+  float VpinOff3 = 1.218; // Offset of the Tpins 
+  cfg.addItem('v', "VpinOff3", VpinOff3);
+  float VpinOff4 = 1.363; // Offset of the Tpins //1.218 + 0.145
+  cfg.addItem('v', "VpinOff4", VpinOff4); 
+
+
   // Read the default configuration from the config file
   if (cfg.Configure() != 0) {
     cout << "Was not able to read a default configuration from " << configFile << endl;
@@ -279,7 +329,7 @@ int main(int argc, char *argv[]) {
 
   if (cfg.item_int["calibrate"]) cout << "Set the number of events to plot > 0 to get loads of debug histograms in calibration runs." << endl;
   cout << "Fraction of the input file to be analyzed is " << fileFraction << endl;
-  cout << "The phantom size for preprocessing is assumed to be " << phantomSize << " mm in radius." << endl;
+  cout << "The phantom size for preprocessing is assumed to be " << phantomSizeLeft << " mm in extent in -T and " << phantomSizeRight << " mm in +T." << endl;
     
   if (dodEEFilter) {
     if (!cfg.item_int["calibrate"])

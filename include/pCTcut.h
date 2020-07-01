@@ -22,6 +22,7 @@ class pCTcut {
   int Thread;
   int minTkrs;
   int maxTkrs;
+  int pileUp; 
 
  public:
   static inline pCTcut* GetInstance() {return theCuts;} 
@@ -29,8 +30,14 @@ class pCTcut {
   // constructor
   pCTcut(); // Class constructor called prior to the event loop
   // classes
+<<<<<<< HEAD
   bool cutHitSlope(int, int, float); 
   bool cutTrackIsocenterIntercept(float);
+=======
+  bool cutHitSlope(int, int, double); 
+  void AddToPileUp();
+  bool cutTrackIsocenterIntercept(double);
+>>>>>>> b8a489b150bd6877659b80b451aaf9e5befae926
   bool cutEvt(pCT_Tracking&, TkrHits&);
   bool EnrgCut(float [5], float, float, float, float );
   bool dEEFilter(float, float, float*, float*);
@@ -40,7 +47,6 @@ class pCTcut {
   float mxSlope[2][2]; // Cut on the slope of the front tracker vector, separately for V and T
   float deltaMx;                    // Cut on how far the two vectors miss each other at u=0, in mm
   
-
  private: 
   static pCTcut *theCuts; 
   pCTconfig* theConfig;

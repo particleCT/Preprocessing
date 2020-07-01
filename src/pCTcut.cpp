@@ -7,7 +7,8 @@ pCTcut::pCTcut()
   theConfig = pCTconfig::GetInstance();
 
   theCuts = this; 
- 
+
+  pileUp = 0; 
 
   n1track = 0; // Various counters for summarizing the number of events killed by cuts
   nLT8hits = 0;
@@ -84,8 +85,8 @@ void pCTcut::CalculatedEEFilterParameters(TH2D* dEEhist, float dEElow[3], float 
       xhigh[j]    =  dEESlice->GetBinCenter(dEESlice->FindLastBinAbove(dEESlice->GetMaximum()/2));
       xlow[j]     =  xmax - (xhigh[j] -xmax);
     }
-    //xlow[j]     = xlow[j] - (xhigh[j] - xlow[j]) * 0.7848;
-    //xhigh[j]    =   xhigh[j] + (xhigh[j] - xlow[j]) * 0.7848; //From FWHM to 3sigma (not needed)
+    xlow[j]     = xlow[j] - (xhigh[j] - xlow[j]) * 0.5616;//0.7848 (if to 3 sigma)
+    xhigh[j]    =   xhigh[j] + (xhigh[j] - xlow[j]) * 0.5616; //From FWHM to 2.5 sigma
   }
   dEElow[0] = (E[0] * (xlow[2] - xlow[1]) + E[1] * (xlow[0] - xlow[2]) + E[2] * (xlow[1] - xlow[0])) /
               ((E[0] - E[1]) * (E[0] - E[2]) * (E[1] - E[2]));
@@ -152,6 +153,11 @@ bool pCTcut::cutTrackIsocenterIntercept(float dist){
 
   if(dist >= deltaMx) return true; // skip proposed track candidates 
   else return false; 
+}
+
+void pCTcut::AddToPileUp(){
+	//cout << "I was here " << pileUp << endl;
+	pileUp++; 
 }
 
 // Call for each raw event after the tracking is completed
@@ -224,6 +230,7 @@ void pCTcut::summary() { // Summary of the processing up to the point of selecti
   // events based on tracking
   cout << "pCTcut thread " << Thread << ": number of raw events processed = " << event_counter << endl;
   cout << "pCTcut thread " << Thread << ": number of raw hits combinations rejected from slope cuts = " << nHitReject << endl;
+  cout << "pCTcut thread " << Thread << ": number of raw events with multiple front tracker vectors = " << pileUp << endl; //FIXME displays 0 despite pileUp being counted up..
   cout << "pCTcut thread " << Thread << ": number of events with exactly 1 track = " << n1track << endl;
   cout << "pCTcut thread " << Thread << ": number events with less than " << mxXhits << " unused hits = " << nLT8hits
        << endl;
