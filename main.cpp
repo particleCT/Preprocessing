@@ -158,15 +158,20 @@ int main(int argc, char *argv[]) {
   string study_name = "";
   cfg.addItem('s', "study", study_name);
 
+/* Not used anymore due to pCTcalib.root 
   string WcalibFile = "Wcalib.txt";
   cfg.addItem('W', "Wcalib", WcalibFile);
 
   string TVcorrFile = "TVcorr.txt";
   cfg.addItem('T', "TVcorr", TVcorrFile);
-
+*/
   string rootCalibFile = "pCTcalib.root";
   cfg.addItem('w', "calib", rootCalibFile);
   
+  int CalibCurve = 0; 
+  cfg.addItem('W', "calibCurve", CalibCurve);
+
+
   float thr[5]; // Array of stage thresholds for WEPL analysis
   thr[0] = 1.0;
   cfg.addItem('0', "thr0", thr[0]);
