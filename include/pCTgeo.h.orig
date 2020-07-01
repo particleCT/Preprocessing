@@ -47,7 +47,11 @@ class pCTgeo {
   float timeStampRes;  // Hardware time-stamp resolution in seconds
 
 public:
+<<<<<<< HEAD
+  pCTgeo(float tWedgeOffset = 0.) { // Most of this stuff needs to be kept in a database and read from there in this constructor
+=======
   pCTgeo(double tWedgeOffset = 0., double TpinOff[]={0},double VpinOff[]={0}) { // Most of this stuff needs to be kept in a database and read from there in this constructor
+>>>>>>> b8a489b150bd6877659b80b451aaf9e5befae926
     
     ofstream geoLogFile;
     geoLogFile.open("pCTGeometry.log");
@@ -249,7 +253,11 @@ public:
 
   inline float extrap2D(float X[2], float Y[2], float Xnew) {
     float dX = X[1] - X[0];
+<<<<<<< HEAD
+    if (dX == 0.) {
+=======
     if (dX <= 0.0001) { 
+>>>>>>> b8a489b150bd6877659b80b451aaf9e5befae926
       cout << "pCTgeo::extrap2D, division by zero; x values must be different." << endl;
       dX = 1.0e-23;
     }
