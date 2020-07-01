@@ -85,10 +85,8 @@ pCTcalib::pCTcalib(string inputFileName)
   currentTime = time(NULL);
   now = localtime(&currentTime);  
 
-
-
   // Initialize class
-  theGeometry    = new pCTgeo(theConfig->item_float["wedgeoffset"]);                 
+  theGeometry    = new pCTgeo(theConfig->item_float["wedgeoffset"]);
   theCuts        = new pCTcut();
   theTVcorr      = new TVcorrection(pCTcalibRootFile, 1);
   theEvtRecon    = new EvtRecon();
@@ -585,26 +583,10 @@ int pCTcalib::Wcalib(){
   pCTcalibRootFile->mkdir("CalibrationCurves");
   pCTcalibRootFile->cd("CalibrationCurves");
 
-  for (int stage = 0; stage < nStage; ++stage) { // Normal direction
-    string Title = "Range vs Energy Uncorrected for Stage " + to_string((long long int)stage);
-
-    rngEnrg[stage] = new TGraphErrors(nEnrg);
-    rngEnrg[stage]->SetTitle(Title.c_str());
-    rngEnrg[stage]->SetName(Form("RangeVsEnergy_%d",stage));
-
-    for (int nrg = 0; nrg < nEnrg; ++nrg){
-      rngB[nrg] = float(nrg) * EnergyBinWidth;
-      rngEnrg[stage]->SetPointError(nrg, 0.,   float(Sst[stage][nrg]));
-    }
-    rngEnrg[stage]->GetXaxis()->SetTitle("Energy (MeV)");
-    rngEnrg[stage]->GetYaxis()->SetTitle("Range (mm)");      
-    rngEnrg[stage]->Write("", TObject::kOverwrite);
-  }
-  
   // Define a region of validity for this brick
   float xmin = -13;
   float xmax = 42; // arbitrary;
-  for (int stage = nStage-1 ; stage >= 0 ; --stage) { // X vs Y
+  for (int stage = nStage-1 ; stage >= 0 ; --stage) {
     string Title = "Range vs Energy Uncorrected for Stage " + to_string((long long int)stage);
     rngEnrg[stage]    = new TGraphErrors();
     EnrgRng[stage] = new TGraphErrors();
@@ -617,7 +599,7 @@ int pCTcalib::Wcalib(){
       rngB[nrg] = float(nrg) * (RangeBinWidth) ;
       if(rngB[nrg] > xmin && rngB[nrg] < xmax) {
 	rngB[nrg] += 0.5*RangeBinWidth;
-	int N =  rngEnrg[stage]->GetN();
+	int N =  EnrgRng[stage]->GetN();
 	EnrgRng[stage]->SetPoint(N, float(rngB[nrg]),float(Rst[stage][nrg]));	
 	EnrgRng[stage]->SetPointError(N, 0.,float(Sst[stage][nrg]));
 	rngEnrg[stage]->SetPoint(N, float(Rst[stage][nrg]), float(rngB[nrg]));
@@ -737,13 +719,11 @@ void pCTcalib::FilldEE(TH2D* dEEhist[nStage]) {
     V[0]  = thisEvent.Vhit[2];  V[1] = thisEvent.Vhit[3];
     float eStage[nStage];
 
-    for (int stage = 0; stage < nStage; ++stage) {
-      
+    for (int stage = 0; stage < nStage; ++stage) {      
       // Extrapolate the rear track vector to the energy detector stage
       float Tcorr = theGeometry->extrap2D(Ut, T, theGeometry->energyDetectorU(stage));
       float Vcorr = theGeometry->extrap2D(Uv, V, theGeometry->energyDetectorU(stage));
       bool inBounds;
-
       // Apply the pedestals and TV correction to the stage ADC values
       eStage[stage] = theEvtRecon->GainFac[stage] * theTVcorr->corrFactor(stage, Tcorr, Vcorr, inBounds) * (thisEvent.ADC[stage] - theEvtRecon->Peds[stage]);
     }

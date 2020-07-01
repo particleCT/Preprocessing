@@ -9,8 +9,10 @@ using namespace std;
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include "pCTconfig.h"
 
 class pCTgeo {
+  pCTconfig* theConfig;
   int fpgaLyr[12];          // mapping from fpga number to layer
 
   float uPosV[4];          // u locations of each of the V layers
@@ -24,37 +26,34 @@ class pCTgeo {
   float Tpin[4];           // cassette alignment in T layers
   float Tdir[4];           // T-board orientation
   int TBoard[4];            // hardware identifier for each T layer
-  float firstStripT[7][4]; // offset of the first strip on each sensor of each
-                            // hardware T board
-  // relative to the alignment pin, as measured under a microscope by Forest
+  float firstStripT[7][4]; // offset of the first strip on each sensor of each hardware T board relative to the alignment pin, as measured under a microscope by Forest
 
   float tGap[3][4]; // gap locations for each T layer
-
   float stripPitch;
   std::vector<float> BeamVtxV; // approximate origin of the proton beam (the
                                 // lead foil in LLUMC runs)
   std::vector<float> BeamVtxT; // at CPC it is different in the V and T views
-  float uEdet;                 // approximate u coordinate of the front face of the energy
-                                // detector
-
+  float uEdet;                 // approximate u coordinate of the front face of the energy detector
   float TwedgeBreaks[4]; // Break points in the wedge phantom geometry
   float BrickThickness;  // Brick thickness; also the wedge thickness
 
   float StageThickness; // Thickness in u of each energy detector stage
 
-  float rotationSpeed; // Speed of the stage rotation in continuous scans, in
-                        // degrees/s
+  float rotationSpeed; // Speed of the stage rotation in continuous scans, in  degrees/s
   float timeStampRes;  // Hardware time-stamp resolution in seconds
-
 public:
-  pCTgeo(double tWedgeOffset = 0., double TpinOff[]={0},double VpinOff[]={0}) { // Most of this stuff needs to be kept in a database and read from there in this constructor
+  pCTgeo(double tWedgeOffset = 0.) { // Most of this stuff needs to be kept in a database and read from there in this constructor
+    theConfig = pCTconfig::GetInstance();
     
     ofstream geoLogFile;
     geoLogFile.open("pCTGeometry.log");
     geoLogFile << "pCTgeo.h: loading geometry constants for the real Phase-II pCT Scanner." << endl;
     geoLogFile << "pCTgeo.h: wegde offset is " << tWedgeOffset << endl;
-    cout << "pCTgeo.h: Tpin offsets are " << TpinOff[0] << " " << TpinOff[1] << " " << TpinOff[2] << " " << TpinOff[3] << endl;
-    cout << "pCTgeo.h: Vpin offsets are " << VpinOff[0] << " " << VpinOff[1] << " " << VpinOff[2] << " " << VpinOff[3] << endl;
+    cout << "pCTgeo.h: Tpin offsets are " << theConfig->item_float["TpinOff1"] << " " << theConfig->item_float["TpinOff2"]
+	 << " " << theConfig->item_float["TpinOff3"] << " " <<theConfig->item_float["TpinOff4"] << endl;
+    cout << "pCTgeo.h: Vpin offsets are " << theConfig->item_float["VpinOff1"]  << " " << theConfig->item_float["VpinOff2"]
+	 << " " << theConfig->item_float["VpinOff3"] << " " << theConfig->item_float["VpinOff4"] << endl;
+
     fpgaLyr[0] = 0; // Translation from FPGA to layer
     fpgaLyr[1] = 1;
     fpgaLyr[2] = 2;
@@ -117,10 +116,10 @@ public:
     VBoard[2] = 2;
     VBoard[3] = 1;
 
-    Vpin[0] = 0.001 + VpinOff[0]; // V board alignment pin locations, including offsets derived from data analysis
-    Vpin[1] = 0.115 + VpinOff[1];
-    Vpin[2] = 0.063 + VpinOff[2];
-    Vpin[3] = 0.040 + VpinOff[3];
+    Vpin[0] = 0.001 + theConfig->item_float["VpinOff1"] ; // V board alignment pin locations, including offsets derived from data analysis
+    Vpin[1] = 0.115 + theConfig->item_float["VpinOff2"] ;
+    Vpin[2] = 0.063 + theConfig->item_float["VpinOff3"];
+    Vpin[3] = 0.040 + theConfig->item_float["VpinOff4"];
 
     for (int i = 0; i < 4; i++) geoLogFile << "pCTgeo.h: V layer " << i << " is board " << VBoard[i] << " with alignment pin at v=" << Vpin[i] << " mm\n";
 
@@ -135,10 +134,10 @@ public:
           { -43.686, -43.687 } };
 
     // T board alignment pin locations, including corrections derived from data analysis
-    Tpin[0] =  215.168 + TpinOff[0];//  - 1;
-    Tpin[1] =  211.373 + TpinOff[1];// - 1;
-    Tpin[2] = -203.373 + TpinOff[2]; // + 1.218;
-    Tpin[3] = -207.168 + TpinOff[3]; //+ 1.218 + 0.145; //presumptive 
+    Tpin[0] =  215.168 + theConfig->item_float["TpinOff1"];//  - 1;
+    Tpin[1] =  211.373 + theConfig->item_float["TpinOff2"];// - 1;
+    Tpin[2] = -203.373 + theConfig->item_float["TpinOff3"]; // + 1.218;
+    Tpin[3] = -207.168 +theConfig->item_float["TpinOff4"]; //+ 1.218 + 0.145; //presumptive 
  
     Tdir[0] = -1.; // T board orientations (front and back trackers are reflected in u)
     Tdir[1] = -1.;

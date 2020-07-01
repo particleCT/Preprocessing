@@ -33,8 +33,8 @@ class Wepl {
   // Common parameters
   float RSP;                          // Known phantom RSP
   TFile* projectionROOT;
-  TGraphErrors* calWEPL[5];
   TH2D* dEEhist_root[5];
+  TGraphErrors* calWEPL[5];
   TGraphErrors* RangeVsEnergy;
   TGraphErrors* EnergyVsRange;
   pCTcut *theCuts;

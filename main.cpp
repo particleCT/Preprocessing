@@ -161,7 +161,7 @@ int main(int argc, char *argv[]) {
   cfg.addItem("calib", rootCalibFile);
 
   int CalibCurve = 0; 
-  cfg.addItem("calibCurve", CalibCurve);
+  cfg.addItem("CalibCurve", CalibCurve);
 
   float thr[5]; // Array of stage thresholds for WEPL analysis
   thr[0] = 1.0;

@@ -323,9 +323,7 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
   pCTraw rawEvt(in_file, fileSize, 0, numbTkrFPGA, numbEdetFPGA); 
   rawEvt.readRunHeader(theConfig->item_str["inputFileName"].c_str()); // Look for the run header bits and parse them
 
-  double TpinOff[4] = {theConfig->item_float["TpinOff1"],theConfig->item_float["TpinOff2"],theConfig->item_float["TpinOff3"],theConfig->item_float["TpinOff4"]};
-  double VpinOff[4] = {theConfig->item_float["VpinOff1"],theConfig->item_float["VpinOff2"],theConfig->item_float["VpinOff3"],theConfig->item_float["VpinOff4"]};
-  pCTgeo* Geometry = new pCTgeo(0., TpinOff, VpinOff);   // Create a class instance with all of the geometry information
+  pCTgeo* Geometry = new pCTgeo(0.);   // Create a class instance with all of the geometry information
 
   cout << "Preprocessing.cpp: The output directory is " << theConfig->item_str["outputDir"] << endl;
   // Check whether the specified stage angle agrees with what is in the data file
@@ -547,9 +545,9 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
     if (EvtNum % 100000 == 0) cout << " Processing event " << EvtNum << " from the temp file, time stamp=" << timeStamp <<" angle=" << theta << endl;
     ++nEvtot;
   }
+
   thePedGainCalib->WriteHist();
   theWEPL->WriteHist(projectionROOT);
-
   fclose(fptmp);
   string cmd  = "rm -f " + tempfile;
   cout << "Preprocessing.cpp: Try to delete the temporary file " << tempfile << "with command "<<cmd<<endl;

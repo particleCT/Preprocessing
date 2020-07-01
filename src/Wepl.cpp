@@ -20,10 +20,11 @@ Wepl::Wepl(TFile* calibFile){
   TTree* header= (TTree*)calibFile->Get("header");
 
   // Load the Range-Energy calibration individual stage
-  for(int stage =0;stage<5;stage++) calWEPL[stage]= (TGraphErrors*)calibFile->Get(Form("RangeVsEnergy/RangeVsEnergy_%d",stage));
+  for(int stage =0;stage<5;stage++) calWEPL[stage]= (TGraphErrors*)calibFile->Get(Form("CalibrationCurves/RangeVsEnergy_%d",stage));
   // Combined all stages
-  RangeVsEnergy = (TGraphErrors*)calibFile->Get("RangeVsEnergy/RangeVsEnergy_YX");
-  EnergyVsRange = (TGraphErrors*)calibFile->Get("RangeVsEnergy/RangeVsEnergy_XY");
+  RangeVsEnergy = (TGraphErrors*)calibFile->Get("CalibrationCurves/RangeVsEnergy");
+  EnergyVsRange = (TGraphErrors*)calibFile->Get("CalibrationCurves/EnergyVsRange");
+
   // dEE Filter parameters
   for(int stage =0;stage<5;stage++){ // 1 stage less due to the fact that the 1st-stage can't do dEE
     for(int i =0; i<3; i++){
@@ -59,16 +60,18 @@ float Wepl::EtoWEPL(float Estage[5], Int_t &MaxTrans, Int_t &Threshold, Int_t &d
 {
   double WET;
   double E_tot;
+
   if (Estage[4] > theConfig->item_float["thr4"] ) { // // if particle stop in Stage 4
     E_tot = Estage[0]+Estage[1]+Estage[2]+Estage[3]+ Estage[4];
     if(theConfig->item_int["CalibCurve"]==2) WET = RangeVsEnergy->Eval(E_tot);
     else if(theConfig->item_int["CalibCurve"]==1) WET = EnergyVsRange->Eval(E_tot);
     else WET = calWEPL[4]->Eval(Estage[4]);
-
+    
     if (Estage[4] > maxEnergy || Estage[4] < minEnergy) MaxTrans = 0;
     if (Estage[3] < cut3 || Estage[2] < cut2 || Estage[1] < cut1 || Estage[0] < cut0) Threshold = 0;
-    if (theConfig->item_int["dEEFilter"] && !theCuts->dEEFilter(Estage[3], Estage[4], dEElow[4], dEEhigh[4])) dEE = 0;
-    else dEEhist_root[4]->Fill(Estage[3], Estage[4]);
+
+    if (theConfig->item_int["dEEFilter"] && ! theCuts->dEEFilter(Estage[3], Estage[4], dEElow[4], dEEhigh[4])) dEE = 0;
+    else dEEhist_root[4]->Fill(Estage[3], Estage[4]); // Passed dEE
     return WET; // polystyrene to water equivalent // everything passed
   }
 
@@ -123,6 +126,7 @@ float Wepl::EtoWEPL(float Estage[5], Int_t &MaxTrans, Int_t &Threshold, Int_t &d
   else return 2000;    // No Energy found in any stage above the thresold, returning big WEPL
 }
 void Wepl::WriteHist(TFile* projectionROOT){
+
   projectionROOT->cd();
   projectionROOT->mkdir("dEE");
   projectionROOT->cd("dEE");
@@ -133,4 +137,5 @@ void Wepl::WriteHist(TFile* projectionROOT){
   RangeVsEnergy->Write("",TObject::kOverwrite);
   EnergyVsRange->Write("",TObject::kOverwrite);
   for(int i =0;i<5;i++) calWEPL[i]->Write("",TObject::kOverwrite);
+
 }

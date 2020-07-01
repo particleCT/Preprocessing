@@ -44,42 +44,31 @@ public:
   //////////////////////////////////////////////////////
   //////////////////////////////////////////////////////
   float corrFactor(int stage, float T, float V, bool &inBounds) {
+
     inBounds = true;                    
-    int tPix = floor(0.1 * (T + 190.));
-    int vPix = floor(0.1 * (V + 50.));
+    int tPix = TVcorrHist[stage]->GetXaxis()->FindBin(T);
+    int vPix = TVcorrHist[stage]->GetYaxis()->FindBin(V);
 
-    if (tPix < 0) {
-      tPix = 0;
+    if (tPix < 0 || tPix > TVcorrHist[stage]->GetNbinsX()-1) {
       inBounds = false;
     }
-    if (tPix > TVcorrHist[stage]->GetNbinsX()-1) {
-      tPix = TVcorrHist[stage]->GetNbinsX()-1;
-      inBounds = false;
-    }
-
-    if (vPix < 0) {
+    if (vPix < 0 || vPix > TVcorrHist[stage]->GetNbinsY()-1) {
       vPix = 0;
       inBounds = false;
     }
-    if (vPix > TVcorrHist[stage]->GetNbinsY()-1) {
-      vPix = TVcorrHist[stage]->GetNbinsY()-1;
-      inBounds = false;
-    }
     if (inBounds){
-      //Int_t binx = TVcorrHist[stage]->GetXaxis()->FindFixBin(T);
-      //Int_t biny = TVcorrHist[stage]->GetYaxis()->FindFixBin(V);
- /*     for(int i =binx-1; i<binx+2; i++){
-      for(int j =biny-1; j<biny+2; j++){
-	if(  TVcorrHist[stage]->GetBinContent(binx,biny) >0.9) return TVcorrHist[stage]->GetBinContent( TVcorrHist[stage]->FindBin(T,V));
+      Int_t binx = TVcorrHist[stage]->GetXaxis()->FindFixBin(T);
+      Int_t biny = TVcorrHist[stage]->GetYaxis()->FindFixBin(V);
+      for(int i =binx-1; i<binx+2; i++){
+	for(int j =biny-1; j<biny+2; j++){
+	  if(TVcorrHist[stage]->GetBinContent(binx,biny) >0.9){ inBounds = false;
+	    return TVcorrHist[stage]->GetBinContent( TVcorrHist[stage]->FindBin(T,V));
+	  }
+	  else return TVcorrHist[stage]->Interpolate(T,V); // bilinear interpolation
+	}      
       }
-      }*/
-
-      return TVcorrHist[stage]->GetBinContent( TVcorrHist[stage]->FindBin(T,V));
-      //return TVcorrHist[stage]->Interpolate(T,V); // bilinear interpolation
-
-      }
+    }
     else return 0.;
-  }
-
+  } 
 }; // end of TVcorrection class
 #endif
