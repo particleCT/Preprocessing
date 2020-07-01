@@ -196,6 +196,8 @@ std::vector<Tkr2D> pCT_Tracking::Tracking2D(int Idx, TkrHits &pCThits, pCTgeo *G
     if (front.size()>1 || back.size()>1) return tmp; //Test // If there is more than one reasonable track possible for either front or rear, skip this event.
   }
 
+  if(front.size()>1) theCuts->pileUp+=1; 
+
   //-----------------------------------------------------------------------------
   // Find any front/back vector combination from the hits
   //----------------------------------------------------------------------------
