@@ -126,6 +126,9 @@ int pCTcalib::TVmapper() {
   //---------------------------------------------------------------------------
   // Alignement
   //--------------------------------------------------------------------------- 
+  TH1D* TalignementPos01 = new TH1D("TalignementPosT0->T1","",300, -20, -20 +300*0.1);
+  TH1D* TalignementPos23 = new TH1D("TalignementPosT2->T3","",300, -20, -20 +300*0.1);
+
   //Forward Project
   TH1D* TalignementPos12 = new TH1D("TalignementPosT1->T2","",300, -20, -20 +300*0.1);
   TH1D* ValignementPos12 = new TH1D("ValignementPosV1->V2","",300, -20, -20 +300*0.1);
@@ -139,8 +142,9 @@ int pCTcalib::TVmapper() {
   TH1D* ValignementPos21 = new TH1D("ValignementPosV2->V1","",300, -20, -20 +300*0.1);
 
   // Direction
-  TH1D* TalignementDir01 = new TH1D("TalignementDirT0T1","",300, -20, -20 +300*0.1);
-  TH1D* TalignementDir23 = new TH1D("TalignementDirT2T3","",300, -20, -20 +300*0.1);
+  TH1D* TalignementDir01 = new TH1D("TalignementDirT0T1","",300, -.1, -.1 +200*0.001);
+  TH1D* TalignementDir23 = new TH1D("TalignementDirT2T3","",300, -.1, -.1 +200*0.001);
+  TH1D* TalignementDir12 = new TH1D("TalignementDirT1T2","",300, -.1, -.1 +200*0.001);
   TH1D* ValignementDir01 = new TH1D("ValignementDirV0V1","",300, -20, -20 +300*0.1);
   TH1D* ValignementDir23 = new TH1D("ValignementDirV2V3","",300, -20, -20 +300*0.1);
   
@@ -212,8 +216,8 @@ int pCTcalib::TVmapper() {
     // Extrapolate the rear track vector to the energy detector stage
     for (int stage = 0; stage < nStage; stage++) {
       
-      double Tcorr = theGeometry->extrap2D(Ut, T, theGeometry->energyDetectorU(stage));
-      double Vcorr = theGeometry->extrap2D(Uv, V, theGeometry->energyDetectorU(stage));
+      float Tcorr = theGeometry->extrap2D(Ut, T, theGeometry->energyDetectorU(stage));
+      float Vcorr = theGeometry->extrap2D(Uv, V, theGeometry->energyDetectorU(stage));
       // Outside of the detector
       if (fabs(Tcorr) > 150.0) continue;
       if (fabs(Vcorr) > 40.0)  continue;
@@ -221,29 +225,36 @@ int pCTcalib::TVmapper() {
       pxHistADC[stage][global]->Fill(thisEvent.ADC[stage] - theEvtRecon->Peds[stage]);
       //pxHistADC[stage][global]->Fill(thisEvent.ADC[stage]);
     }
+
+
+    TalignementPos01->Fill(Tf[1]-Tf[0]);
+    TalignementPos23->Fill(T[1]-T[0]);
+
+
     // Projected to the exit tracker
-    double Tin12 = theGeometry->extrap2D(Uft,Tf, Ut[0]);
-    double Vin12 = theGeometry->extrap2D(Ufv,Vf, Uv[0]);
-    double Tin13 = theGeometry->extrap2D(Uft,Tf, Ut[1]);
-    double Vin13 = theGeometry->extrap2D(Ufv,Vf, Uv[1]);
+    float Tin12 = theGeometry->extrap2D(Uft,Tf, Ut[0]);
+    float Vin12 = theGeometry->extrap2D(Ufv,Vf, Uv[0]);
+    float Tin13 = theGeometry->extrap2D(Uft,Tf, Ut[1]);
+    float Vin13 = theGeometry->extrap2D(Ufv,Vf, Uv[1]);
     TalignementPos12->Fill(Tin12 - T[0]);
     ValignementPos12->Fill(Vin12 - V[0]);
     TalignementPos13->Fill(Tin13 - T[1]);
     ValignementPos13->Fill(Vin13 - V[1]);
     
     // Projected to the front tracker
-    double Tout20 = theGeometry->extrap2D(Ut,T, Uft[0]);
-    double Vout20 = theGeometry->extrap2D(Uv,V, Ufv[0]);
-    double Tout21 = theGeometry->extrap2D(Ut,T, Uft[1]);
-    double Vout21 = theGeometry->extrap2D(Uv,V, Ufv[1]);
+    float Tout20 = theGeometry->extrap2D(Ut,T, Uft[0]);
+    float Vout20 = theGeometry->extrap2D(Uv,V, Ufv[0]);
+    float Tout21 = theGeometry->extrap2D(Ut,T, Uft[1]);
+    float Vout21 = theGeometry->extrap2D(Uv,V, Ufv[1]);
     TalignementPos20->Fill(Tout20 - Tf[0]);
     ValignementPos20->Fill(Vout20 - Vf[0]);
     TalignementPos21->Fill(Tout21 - Tf[1]);
     ValignementPos21->Fill(Vout21 - Vf[1]);
     
     // Direction
-    TalignementDir01->Fill(Tf[1]-Tf[0]);
-    TalignementDir23->Fill(T[1]-T[0]);
+    TalignementDir01->Fill((Tf[1]-Tf[0])/(Uft[1]-Uft[0]));
+    TalignementDir23->Fill((T[1]-T[0])/(Ut[1]-Ut[0]));
+    TalignementDir12->Fill((T[2]-Tf[1])/(Ut[0]-Uft[1]));
     ValignementDir01->Fill(Vf[1]-Vf[0]);
     ValignementDir23->Fill(V[1]-V[0]);
     
@@ -254,8 +265,8 @@ int pCTcalib::TVmapper() {
     ValignementPos2->Fill(V[0]);  ValignementPos3->Fill(V[1]);      
 
     //Source position alignment V
-    double dirV = (Vf[1] - Vf[0])/(50.); //50mm is the distance between tracker planes
-    double dirT = (Tf[1] - Tf[0])/(50.); 
+    double dirV = (Vf[1] - Vf[0])/(Ufv[1]-Ufv[0]); //50mm is the distance between tracker planes
+    double dirT = (Tf[1] - Tf[0])/(Uft[1]-Uft[0]); 
     Vsource->Fill(-(Vf[0]/dirV));
     Tsource->Fill(-(Tf[0]/dirT));
           
@@ -268,6 +279,9 @@ int pCTcalib::TVmapper() {
   pCTcalibRootFile->cd();
   pCTcalibRootFile->mkdir("Alignement");  
   pCTcalibRootFile->cd("Alignement");
+
+  TalignementPos01->Write("",TObject::kOverwrite);
+  TalignementPos23->Write("",TObject::kOverwrite);
   
   TalignementPos12->Write("",TObject::kOverwrite);
   ValignementPos12->Write("",TObject::kOverwrite);
@@ -281,6 +295,7 @@ int pCTcalib::TVmapper() {
   
   TalignementDir01->Write("",TObject::kOverwrite);
   TalignementDir23->Write("",TObject::kOverwrite);
+  TalignementDir12->Write("",TObject::kOverwrite);
   ValignementDir01->Write("",TObject::kOverwrite);
   ValignementDir23->Write("",TObject::kOverwrite);
   
@@ -450,7 +465,7 @@ int pCTcalib::Wcalib(){
       "the WEPL calibration." << endl;
     return -1;
   }
-  for (int bricks = 0; bricks < nBricks; bricks++) cout << "The raw data file for " << bricks << " bricks is " << calFileNames[bricks] << endl;
+  for (int bricks = 0; bricks < nBricks; bricks++) cout << "The raw data file for " << bricks << " bricks is " << calFileNames[bricks+1] << endl; //bug
   TH2D* dEEhist[nStage];
   TH2D* REhist[nBricks][nStage];
 
@@ -591,7 +606,7 @@ int pCTcalib::Wcalib(){
     rngEnrg[stage]->GetYaxis()->SetTitle("Range (mm)");      
     rngEnrg[stage]->Write("", TObject::kOverwrite);
     }
-  
+ 
   // Define a region of validity for this brick
   float xmin = -13;
   float xmax = 42; // arbitrary;
@@ -715,7 +730,7 @@ void pCTcalib::writeCalibfile() {
 void pCTcalib::FilldEE(TH2D* dEEhist[nStage]) {
   cout<<"Fill dEE"<<endl;
   theConfig->item_int["doGains"] = true;
-  theConfig->item_int["Nbricks"] = theConfig->item_int["Nbricks"];
+  //theConfig->item_int["Nbricks"] = theConfig->item_int["Nbricks"];
 
   theCalibration->ResetHist();
   theEvtRecon->ReadInputFile(theGeometry, theTVcorr, theConfig->item_str["inputFileName"], theCalibration);
@@ -732,7 +747,7 @@ void pCTcalib::FilldEE(TH2D* dEEhist[nStage]) {
     for (int stage = 0; stage < nStage; ++stage) {
       
       // Extrapolate the rear track vector to the energy detector stage
-      double Tcorr = theGeometry->extrap2D(Ut, T, theGeometry->energyDetectorU(stage));
+      float Tcorr = theGeometry->extrap2D(Ut, T, theGeometry->energyDetectorU(stage));
       double Vcorr = theGeometry->extrap2D(Uv, V, theGeometry->energyDetectorU(stage));
       bool inBounds;
 
@@ -741,15 +756,15 @@ void pCTcalib::FilldEE(TH2D* dEEhist[nStage]) {
       //eStage[stage] = theEvtRecon->GainFac[stage] * theTVcorr->corrFactor(stage, Tcorr, Vcorr, inBounds) * (thisEvent.ADC[stage]);
     }
 
-    /*if (eStage[4] > theConfig->item_float["thr4"])       dEEhist[4]->Fill(eStage[3], eStage[4]);
+    if (eStage[4] > theConfig->item_float["thr4"])       dEEhist[4]->Fill(eStage[3], eStage[4]);
     else if (eStage[3] > theConfig->item_float["thr3"])  dEEhist[3]->Fill(eStage[2], eStage[3]);
     else if (eStage[2] > theConfig->item_float["thr2"] ) dEEhist[2]->Fill(eStage[1], eStage[2]);
     else if (eStage[1] > theConfig->item_float["thr1"])  dEEhist[1]->Fill(eStage[0], eStage[1]);
-    else if (eStage[0] > theConfig->item_float["thr0"])  continue;*/
-    dEEhist[4]->Fill(eStage[3], eStage[4]);
+//    else if (eStage[0] > theConfig->item_float["thr0"])  continue;
+/*    dEEhist[4]->Fill(eStage[3], eStage[4]);
     dEEhist[3]->Fill(eStage[2], eStage[3]);
     dEEhist[2]->Fill(eStage[1], eStage[2]);
-    dEEhist[1]->Fill(eStage[0], eStage[1]);
+    dEEhist[1]->Fill(eStage[0], eStage[1]);*/
 	  
   }
 }  
@@ -801,19 +816,19 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
   float cut0, cut1, cut2, cut3, cut4, cut5;
     
   // Wedge phantom geometry and locations in the T axis,
-  double Tw1 = theGeometry->getTWedgeBreaks(1);
-  double Tw2 = theGeometry->getTWedgeBreaks(2);
-  double Tw3 = theGeometry->getTWedgeBreaks(3);
-  double Tw4 = theGeometry->getTWedgeBreaks(4);
-  double tBrickEnd = theGeometry->getTWedgeBreaks(4) + 10.0; // Bricks shifted but we take only the first ten cm//???
+  float Tw1 = theGeometry->getTWedgeBreaks(1);
+  float Tw2 = theGeometry->getTWedgeBreaks(2);
+  float Tw3 = theGeometry->getTWedgeBreaks(3);
+  float Tw4 = theGeometry->getTWedgeBreaks(4);
+  float tBrickEnd = theGeometry->getTWedgeBreaks(4) + 10.0; // Bricks shifted but we take only the first ten cm//???
 
   // Define the U Position of the bricks now
-  double BrickThickness = theGeometry->getBrickThickness(); // Brick thickness; also the wedge thickness
-  double Ust[2]; // Polystyrene wedge phantom U coordinates, front and back
-  Ust[0] = -2.5 * BrickThickness; // centered around the middle of the bricks, 4 bricks + 1 wedge, this is the plane at the top of the wedge
+  float BrickThickness = theGeometry->getBrickThickness(); // Brick thickness; also the wedge thickness
+  float Ust[2]; // Polystyrene wedge phantom U coordinates, front and back
+  Ust[0] = -2.5 * BrickThickness; // centered around the middle of the bricks, 4 bricks + 1 wedge
   Ust[1] = Ust[0] + BrickThickness; // this is the plane after the wedge
-  double Wbricks = BrickThickness * theConfig->item_int["Nbricks"];
-  double Uout = Ust[1] + Wbricks; // U coordinate of the last brick, downstream side
+  float Wbricks = BrickThickness * theConfig->item_int["Nbricks"];
+  float Uout = Ust[1] + Wbricks; // U coordinate of the last brick, downstream side
 
   cout << "procWEPLcal: The wedge phantom goes from u=" << Ust[0] << " to u=" << Ust[1] << " for a thickness of "<< Ust[1] - Ust[0]<<" or in WET "
        << 1.03*(Ust[1] - Ust[0])<<endl;
@@ -826,16 +841,16 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
   cout << "procWEPLcal: The calibration brick thickness is " << BrickThickness << " mm " << endl;
 
 
-  double maxV       = 45.;    // limit of range in V for calibration
-  double maxT       = 170.;   // limit of range in T for calibration
+  float maxV       = 45.;    // limit of range in V for calibration
+  float maxT       = 170.;   // limit of range in T for calibration
   // Start of the event loop
 
   for (int EvtNum = 0; EvtNum < theEvtRecon->nEvents; ++EvtNum) {
     Event thisEvent;
     thisEvent = theEvtRecon->evtList[EvtNum];
 
-    Tf[0] = thisEvent.Thit[0] - 1; Tf[1] = thisEvent.Thit[1] - 1;// Front tracker coordinates 1 mm shift
-    //Tf[0] = thisEvent.Thit[0]; Tf[1] = thisEvent.Thit[1];// Front tracker coordinates    
+    //Tf[0] = thisEvent.Thit[0] - 1; Tf[1] = thisEvent.Thit[1] - 1;// Front tracker coordinates 1 mm shift
+    Tf[0] = thisEvent.Thit[0]; Tf[1] = thisEvent.Thit[1];// Front tracker coordinates    
     Vf[0] = thisEvent.Vhit[0]; Vf[1] = thisEvent.Vhit[1];
     T[0]  = thisEvent.Thit[2];  T[1] = thisEvent.Thit[3];// Rear tracker coordinates
     V[0]  = thisEvent.Vhit[2];  V[1] = thisEvent.Vhit[3];
@@ -845,8 +860,8 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
     bool good = true;
     for (int stage = 0; stage < nStage; ++stage) {
       // Extrapolate the rear track vector to the energy detector stage
-      double Tcorr = theGeometry->extrap2D(Ut, T, theGeometry->energyDetectorU(stage));
-      double Vcorr = theGeometry->extrap2D(Uv, V, theGeometry->energyDetectorU(stage));
+      float Tcorr = theGeometry->extrap2D(Ut, T, theGeometry->energyDetectorU(stage));
+      float Vcorr = theGeometry->extrap2D(Uv, V, theGeometry->energyDetectorU(stage));
       
       // Apply the pedestals and TV correction to the stage ADC values
       bool inBounds;
@@ -867,22 +882,26 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
     // calculate geometric WET "wt0" for the wedge phantom using tracker info.
 
     // First estimate of the u coordinate at entry into the phantom wedge
-    double Tin  = theGeometry->extrap2D(Uft, Tf, Ust[0]);
-    double Vin  = theGeometry->extrap2D(Ufv, Vf, Ust[0]);
+    float Tin  = theGeometry->extrap2D(Uft, Tf, Ust[0]);
+    float Vin  = theGeometry->extrap2D(Ufv, Vf, Ust[0]);
 
     // First brick past the wedge
-    double TinB = theGeometry->extrap2D(Uft, Tf, Ust[1]); 
-    double VinB = theGeometry->extrap2D(Ufv, Vf, Ust[1]);
+    float TinB = theGeometry->extrap2D(Uft, Tf, Ust[1]); 
+    float VinB = theGeometry->extrap2D(Ufv, Vf, Ust[1]);
 
     if (fabs(Vin) > maxV || fabs(Tin) > maxT) continue; // if track is outside of detector in T/V - skip it
 
     //Back of bricks
-    double Tout = theGeometry->extrap2D(Uft, Tf, Uout); // theGeometry->extrap2D(Ut, T, Uout); 
-    double Vout = theGeometry->extrap2D(Ufv, Vf, Uout); // theGeometry->extrap2D(Uv, V, Uout);
+    float Tout = theGeometry->extrap2D(Ut, T, Uout);//theGeometry->extrap2D(Uft, Tf, Uout); // theGeometry->extrap2D(Ut, T, Uout); 
+    float Vout = theGeometry->extrap2D(Uv, V, Uout);//theGeometry->extrap2D(Ufv, Vf, Uout); // theGeometry->extrap2D(Uv, V, Uout);
     if (fabs(Vout) > maxV || fabs(Tout) > maxT) continue;  // if track is outside of detector in T/V- skip it
 
-    double Uin    = Ust[0];
+    float Uin    = Ust[0];
     bool emptyEvt = false;
+    // Before the negative slope
+
+    //if(TinB < Tw1) continue;
+    //if(TinB < Tw2) continue;
     
     // Before the negative slope -- NOT ACCOUNTED
     if(TinB < Tw1) continue;
@@ -894,6 +913,7 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
     }
     // Flat part of the wedge - No need to change Vin and Tin
     else if(Tin > Tw2 && Tin < Tw3){
+      //continue;
       Uin = Ust[0];
     }
     
@@ -904,6 +924,7 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
     }
     // Past the positive slope 
     else if(TinB > Tw4 && TinB < tBrickEnd){
+      //continue;
       Uin = Ust[1];
       Tin = TinB;
       Vin = VinB;
@@ -1017,12 +1038,14 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
   delete hTotEcorr;
   for (int stage = 0; stage < nStage; ++stage) delete (hStgEcorr[stage]);
 }
-//////////////////////////////////////////////////////////////////////
+///
+
+///////////////////////////////////////////////////////////////////
 // 2D equation to find line intersection
 //////////////////////////////////////////////////////////////////////
-bool pCTcalib::getLineIntersection(double p0u, double p0t, double p1u, double p1t,  // Two points on the first line
-				   double p2u, double p2t, double p3u, double p3t,  // Two points on the second line
-				   double &ipu, double &ipt) { // Return the intersection point
+bool pCTcalib::getLineIntersection(float p0u, float p0t, float p1u, float p1t,  // Two points on the first line
+				   float p2u, float p2t, float p3u, float p3t,  // Two points on the second line
+				   float &ipu, float &ipt) { // Return the intersection point
   if (p0u == p1u || p2u == p3u) return false;
     
   double slope1 = (p1t - p0t) / (p1u - p0u); // Slope of the first line
