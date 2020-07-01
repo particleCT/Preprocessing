@@ -7,7 +7,8 @@ pCTcut::pCTcut()
   theConfig = pCTconfig::GetInstance();
 
   theCuts = this; 
- 
+
+  pileUp = 0; 
 
   n1track = 0; // Various counters for summarizing the number of events killed by cuts
   nLT8hits = 0;
@@ -224,6 +225,7 @@ void pCTcut::summary() { // Summary of the processing up to the point of selecti
   // events based on tracking
   cout << "pCTcut thread " << Thread << ": number of raw events processed = " << event_counter << endl;
   cout << "pCTcut thread " << Thread << ": number of raw hits combinations rejected from slope cuts = " << nHitReject << endl;
+  cout << "pCTcut thread " << Thread << ": number of raw events with multiple front tracker vectors = " << pileUp << endl;
   cout << "pCTcut thread " << Thread << ": number of events with exactly 1 track = " << n1track << endl;
   cout << "pCTcut thread " << Thread << ": number events with less than " << mxXhits << " unused hits = " << nLT8hits
        << endl;
