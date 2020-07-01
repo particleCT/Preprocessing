@@ -509,8 +509,8 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
     if (theConfig->item_int["continuous"]) {
       long long longTimeStamp = 16 * ((long long)timeStamp);
       theta = ((double)(longTimeStamp + timeStampOffset)) * Geometry->timeRes() * Geometry->stageSpeed() + initialAngle;
-    } 
-    else  theta = proj_angle;    
+    } else  theta = proj_angle;    
+
     // Calculate the calibrated WEPL
     float Tback[2], Vback[2];
     for (int lyr = 2; lyr < 4; lyr++){
