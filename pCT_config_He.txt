@@ -3,7 +3,7 @@
 #Spaces are optional, but the = sign is required
 #key = value lines can also include comments after the value(space required)
 #Blank lines are not allowed, at least for now(will cause a crash)
-max_events = 0     # Set nonzero if you don't want to analyze all of the events
+max_events = 1000000     # Set nonzero if you don't want to analyze all of the events
 dEEFilter = 1	   # dEE FILTER to be used always (will result in bad events returned with 5000+WEPL)
 energy    = 200    # Beam Energy used in this experiment. Should always be 200 for now.
 normalize = 0      # HAS TO STAY 0 FOR NOW (an addition from Robert that results in massive deterioriation of the calib curves, it is not fully understood why) 
@@ -13,7 +13,7 @@ user = no          # Set to 'yes' only if you want to generate all of the monito
 projection = -999. # Normally the correct value is taken from the run header, so don't use this
 continuous = 0     # Difference between stepped and continuous scan is shown here
 bins = 1           # Specify the number of files to split the data into
-outputDir = ./Meatphan # Leave as '.' only if you want all the output to end up in the current directory
+outputDir = ./Calib # Leave as '.' only if you want all the output to end up in the current directory
 calib  = pCTcalib.root # New root calibration file contains all the calibrations
 log = NULL # Specify a path to the DAQ log file, continuous scans -> find the starting angle
 angle = 0.        # For a continuous scan, if this angle is zero, then the program will try to get it from the log file 
@@ -37,5 +37,13 @@ wedgeoffset = -50.8   # Offset of the phantom from center , in the T direction, 
 study = NULL      # Can be used to override automatic generation of the study name from the filename
 MultiTrackReject = 0 # Per default this is false, if set to 1, any event with more than one possible track vector in either tracker will be rejected, regardless if that vector is useful or not
 CTOutput = 0 # Flag to indicate whether the root file should comprise the full output or a reduced version with the necessary variables for CT imaging
+TpinOff1 = -1
+TpinOff2 = -1
+TpinOff3 = 1.218
+TpinOff4 = 1.363
+VpinOff1 = 0
+VpinOff2 = 0
+VpinOff3 = 0
+VpinOff4 = 0
 #maxFluence = 280 #Maximum fluence in part/mm^2 to normalize the intial fluence 
 #Last line of the file
