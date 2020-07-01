@@ -323,7 +323,10 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
   // Create an instance of the class for parsing and storing the raw data from the input file
   pCTraw rawEvt(in_file, fileSize, 0, numbTkrFPGA, numbEdetFPGA); 
   rawEvt.readRunHeader(theConfig->item_str["inputFileName"].c_str()); // Look for the run header bits and parse them
-  pCTgeo* Geometry = new pCTgeo(0.);   // Create a class instance with all of the geometry information
+
+  double TpinOff[4] = {theConfig->item_float["TpinOff1"],theConfig->item_float["TpinOff3"],theConfig->item_float["TpinOff3"],theConfig->item_float["TpinOff4"]};
+  double VpinOff[4] = {theConfig->item_float["VpinOff1"],theConfig->item_float["VpinOff3"],theConfig->item_float["VpinOff3"],theConfig->item_float["VpinOff4"]};
+  pCTgeo* Geometry = new pCTgeo(0., TpinOff, VpinOff);   // Create a class instance with all of the geometry information
 
   cout << "Preprocessing.cpp: The output directory is " << theConfig->item_str["outputDir"] << endl;
   // Check whether the specified stage angle agrees with what is in the data file
