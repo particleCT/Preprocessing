@@ -200,7 +200,27 @@ int main(int argc, char *argv[]) {
 
   int CTOutput = 0;
   cfg.addItem('C',"CTOutput",CTOutput);
- 
+
+
+  float TpinOff1 = -1.; // Offset of the Tpins 
+  cfg.addItem('t', "TpinOff1", TpinOff1); 
+  float TpinOff2 = -1.; // Offset of the Tpins 
+  cfg.addItem('t', "TpinOff2", TpinOff2);
+  float TpinOff3 = 1.218; // Offset of the Tpins 
+  cfg.addItem('t', "TpinOff3", TpinOff3);
+  float TpinOff4 = 1.363; // Offset of the Tpins //1.218 + 0.145
+  cfg.addItem('t', "TpinOff4", TpinOff4);
+
+  float VpinOff1 = 0; // Offset of the Tpins 
+  cfg.addItem('v', "VpinOff1", VpinOff1);
+  float VpinOff2 = 0; // Offset of the Tpins 
+  cfg.addItem('v', "VpinOff2", VpinOff2);
+  float VpinOff3 = 1.218; // Offset of the Tpins 
+  cfg.addItem('v', "VpinOff3", VpinOff3);
+  float VpinOff4 = 1.363; // Offset of the Tpins //1.218 + 0.145
+  cfg.addItem('v', "VpinOff4", VpinOff4); 
+
+
   // Read the default configuration from the config file
   if (cfg.Configure() != 0) {
     cout << "Was not able to read a default configuration from " << configFile << endl;
