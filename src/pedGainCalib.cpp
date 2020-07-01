@@ -100,7 +100,7 @@ void pedGainCalib::WriteHist(){ // For analysis
 
 void pedGainCalib::GetPeds() {
   // Calculate the pedestal
-  double std[5];
+  float std[5];
   for (int stage = 0; stage < 5; stage++) {
     float xLow, xHigh;
     float max, xmax, xpeak;
@@ -145,8 +145,8 @@ void pedGainCalib::FillGains(float Vedet, float Tedet, float Ene[5], int phSum[5
 void pedGainCalib::GetGains(TVcorrection *TVcorr) {
                             
   // Calculate the gain
-  double Peak[5];
-  double std[5];
+  float Peak[5];
+  float std[5];
   for (int stage = 0; stage < 5; stage++) {
     float xLow, xHigh;
     float max, xmax, xpeak,min;

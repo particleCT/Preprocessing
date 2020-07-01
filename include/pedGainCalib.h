@@ -27,7 +27,7 @@ class pedGainCalib {
  
   ~pedGainCalib();  
   //Variables
-  double Ped[5];
+  float Ped[5];
   TH1D* hPed[5];
   TH1D* hPed_In[5];
   TH1D* hPed_Out[5];

@@ -16,10 +16,8 @@ pCTconfig::pCTconfig(string fileName) {
 }
 
 
-void pCTconfig::addItem(char key, string longKey, string &value) { // Call this to add a key to the list for string
+void pCTconfig::addItem(string longKey, string &value) { // Call this to add a key to the list for string
   cfgItm tmpItem;
-
-  tmpItem.key = key;
   tmpItem.longKey = longKey;
   tmpItem.type = "STRING";
   tmpItem.valString = &value; // Save a pointer to the item value, so that it can be altered later.
@@ -29,9 +27,8 @@ void pCTconfig::addItem(char key, string longKey, string &value) { // Call this 
   itemList.push_back(tmpItem);
 
 }
-void pCTconfig::addItem(char key, string longKey, int &value) { // For the case that the value is integer
+void pCTconfig::addItem(string longKey, int &value) { // For the case that the value is integer
   cfgItm tmpItem;
-  tmpItem.key = key;
   tmpItem.longKey = longKey;
   tmpItem.type = "INT";
   tmpItem.valInt = &value;
@@ -40,9 +37,8 @@ void pCTconfig::addItem(char key, string longKey, int &value) { // For the case 
   if(!ret.second) item_int[longKey] = value;
   itemList.push_back(tmpItem);
 }
-void pCTconfig::addItem(char key, string longKey, float &value) { // For the case that the value is float
+void pCTconfig::addItem(string longKey, float &value) { // For the case that the value is float
   cfgItm tmpItem;
-  tmpItem.key = key;
   tmpItem.longKey = longKey;
   tmpItem.type = "FLOAT";
   tmpItem.valFloat = &value;

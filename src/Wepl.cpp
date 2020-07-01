@@ -22,8 +22,8 @@ Wepl::Wepl(TFile* calibFile){
   // Load the Range-Energy calibration individual stage
   for(int stage =0;stage<5;stage++) calWEPL[stage]= (TGraphErrors*)calibFile->Get(Form("RangeVsEnergy/RangeVsEnergy_%d",stage));
   // Combined all stages
-  Test = (TGraphErrors*)calibFile->Get("RangeVsEnergy/RangeVsEnergy_YX");
-  Test2 = (TGraphErrors*)calibFile->Get("RangeVsEnergy/RangeVsEnergy_XY");
+  RangeVsEnergy = (TGraphErrors*)calibFile->Get("RangeVsEnergy/RangeVsEnergy_YX");
+  EnergyVsRange = (TGraphErrors*)calibFile->Get("RangeVsEnergy/RangeVsEnergy_XY");
   // dEE Filter parameters
   for(int stage =0;stage<5;stage++){ // 1 stage less due to the fact that the 1st-stage can't do dEE
     for(int i =0; i<3; i++){
@@ -46,7 +46,7 @@ Wepl::Wepl(TFile* calibFile){
     minEnergy = 1;
   }
 
-  theCuts = new pCTcut();
+  theCuts = pCTcut::GetInstance();
   float EnergyBinWidth = 0.5;
   if (theConfig->item_str["partType"] == "He") EnergyBinWidth = 1.0;
   for(int i =0; i<5; i++){
@@ -59,10 +59,9 @@ float Wepl::EtoWEPL(float Estage[5], Int_t &MaxTrans, Int_t &Threshold, Int_t &d
 {
   double WET;
   double E_tot;
-
   if (Estage[4] > theConfig->item_float["thr4"] ) { // // if particle stop in Stage 4
     E_tot = Estage[0]+Estage[1]+Estage[2]+Estage[3]+ Estage[4];
-    WET = Test->Eval(E_tot);
+    WET = RangeVsEnergy->Eval(E_tot);
     //WET = calWEPL[4]->Eval(Estage[4]);
     if (Estage[4] > maxEnergy || Estage[4] < minEnergy) MaxTrans = 0;
     if (Estage[3] < cut3 || Estage[2] < cut2 || Estage[1] < cut1 || Estage[0] < cut0) Threshold = 0;
@@ -72,8 +71,8 @@ float Wepl::EtoWEPL(float Estage[5], Int_t &MaxTrans, Int_t &Threshold, Int_t &d
   }
 
   else if (Estage[3] > theConfig->item_float["thr3"]){ // if particle stop in Stage 3
-    E_tot = Estage[0]+Estage[1]+Estage[2]+Estage[3];
-    WET = Test->Eval(E_tot);
+    E_tot = Estage[0]+Estage[1]+Estage[2]+Estage[3];  
+    WET = RangeVsEnergy->Eval(E_tot);
     //WET = calWEPL[3]->Eval(Estage[3]);
     if (Estage[3] > maxEnergy || Estage[3] < minEnergy) MaxTrans = 0;
     if (Estage[2] < cut2 || Estage[1] < cut1 || Estage[0] < cut0) Threshold = 0;
@@ -83,7 +82,7 @@ float Wepl::EtoWEPL(float Estage[5], Int_t &MaxTrans, Int_t &Threshold, Int_t &d
   }
   else if (Estage[2] > theConfig->item_float["thr2"]) { // if particle stop in Stage 2
     E_tot = Estage[0]+Estage[1]+Estage[2];
-    WET = Test->Eval(E_tot);
+    WET = RangeVsEnergy->Eval(E_tot);
     //WET = calWEPL[2]->Eval(Estage[2]);
     if (Estage[2] > maxEnergy || Estage[2] < minEnergy) MaxTrans = 0;
     if (Estage[1] < cut1 || Estage[0] < cut0) Threshold = 0;
@@ -94,7 +93,7 @@ float Wepl::EtoWEPL(float Estage[5], Int_t &MaxTrans, Int_t &Threshold, Int_t &d
 
   else if (Estage[1] > theConfig->item_float["thr1"]) {   // if particle stop in Stage 1
     E_tot = Estage[0]+Estage[1];
-    WET = Test->Eval(E_tot);
+    WET = RangeVsEnergy->Eval(E_tot);
     //WET = calWEPL[1]->Eval(Estage[1]);
     if (Estage[1] > maxEnergy || Estage[1] < minEnergy) MaxTrans = 0;
     if (Estage[0] < cut0) Threshold = 0;
@@ -105,7 +104,7 @@ float Wepl::EtoWEPL(float Estage[5], Int_t &MaxTrans, Int_t &Threshold, Int_t &d
   }
   else if (Estage[0] > theConfig->item_float["thr0"]) {   // if particle stop in Stage 0
     E_tot = Estage[0];
-    WET = Test->Eval(E_tot);
+    WET = RangeVsEnergy->Eval(E_tot);
     //WET = calWEPL[0]->Eval(Estage[0]);
     if( WET < 0 ) return -1000;  // Unit Test
     if (Estage[0] > maxEnergy || Estage[0] < minEnergy) MaxTrans = 0;
@@ -121,8 +120,8 @@ void Wepl::WriteHist(TFile* projectionROOT){
   projectionROOT->cd();
   projectionROOT->mkdir("calWEPL");
   projectionROOT->cd("calWEPL");
-  Test->Write("",TObject::kOverwrite);
-  Test2->Write("",TObject::kOverwrite);
+  RangeVsEnergy->Write("",TObject::kOverwrite);
+  EnergyVsRange->Write("",TObject::kOverwrite);
   for(int i =0;i<5;i++) calWEPL[i]->Write("",TObject::kOverwrite);
 }
 

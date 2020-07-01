@@ -72,10 +72,8 @@ pCT_Tracking::pCT_Tracking(TkrHits &pCThits, pCTgeo* Geometry) { // This class c
   if (nVtkrs == 0 || nTtkrs == 0)
     nTracks = 0;
   else
-    nTracks = (nVtkrs > nTtkrs) ? nVtkrs
-                                : nTtkrs; // Generally we will reject events if this number is not exactly equal to 1.
+    nTracks = (nVtkrs > nTtkrs) ? nVtkrs : nTtkrs; // Generally we will reject events if this number is not exactly equal to 1.
 };
-
 
 // This is the pattern recognition, which works only in 2D, separately for the V-U and T-U views.
 std::vector<Tkr2D> pCT_Tracking::Tracking2D(int Idx, TkrHits &pCThits, pCTgeo *Geometry) {
@@ -100,7 +98,7 @@ std::vector<Tkr2D> pCT_Tracking::Tracking2D(int Idx, TkrHits &pCThits, pCTgeo *G
 //Reprint from the TkrHits class for undertsanding
 /*
     int N[2];                       // Number of hits in each of the V and T views for a given layer
-    std::vector<double> Y[2], U[2]; // 0=V and 1=T
+    std::vector<float> Y[2], U[2]; // 0=V and 1=T
     std::vector<int> F[2];          // Track number; -1 if not use
 */
 //End For Undertsanding only 
@@ -132,7 +130,7 @@ std::vector<Tkr2D> pCT_Tracking::Tracking2D(int Idx, TkrHits &pCThits, pCTgeo *G
       Y1_candidate = pCThits.Lyr[1].Y[Idx].at(j);
 
  
-      double slope = (Y1_candidate - Y0_candidate) /
+      float slope = (Y1_candidate - Y0_candidate) /
                      (U1 - U0);
 
       if(theCuts->cutHitSlope(0,Idx,slope)) continue; // Check if the slope of the hits matches the expected maximum slope (front=0/back=1,Idx,slope)
@@ -165,7 +163,7 @@ std::vector<Tkr2D> pCT_Tracking::Tracking2D(int Idx, TkrHits &pCThits, pCTgeo *G
 
 
 
-      double slope = (Y3_candidate - Y2_candidate) /
+      float slope = (Y3_candidate - Y2_candidate) /
                      (U3 - U2);
 
 
@@ -315,19 +313,19 @@ std::vector<Tkr2D> pCT_Tracking::Tracking2D(int Idx, TkrHits &pCThits, pCTgeo *G
             }
 *///Can be skipped with condition introduced above
 	    
-            double t1 = pCThits.Lyr[lyr].Y[Idx].at(j);
-            double u1 = pCThits.Lyr[lyr].U[Idx].at(j);
+            float t1 = pCThits.Lyr[lyr].Y[Idx].at(j);
+            float u1 = pCThits.Lyr[lyr].U[Idx].at(j);
 
             for (int gap = 0; gap < 3; gap++) {
 
-              double t2 = Geometry->tBoardGap(gap, otherLyr[lyr]);
-              double u2 = Geometry->uT(otherLyr[lyr]);
+              float t2 = Geometry->tBoardGap(gap, otherLyr[lyr]);
+              float u2 = Geometry->uT(otherLyr[lyr]);
 
-              double slope = (t2 - t1) / (u2 - u1);
+              float slope = (t2 - t1) / (u2 - u1);
 
               if (theCuts->cutHitSlope(0,Idx,slope)) continue; // front = 0 in the cuts function
 
-              double intercept = t1 - slope * u1;
+              float intercept = t1 - slope * u1;
               miss = intercept - back[i].intercept;
 
               if (theCuts->cutTrackIsocenterIntercept(miss)) continue;
@@ -393,20 +391,20 @@ std::vector<Tkr2D> pCT_Tracking::Tracking2D(int Idx, TkrHits &pCThits, pCTgeo *G
           }
 */
 
-          double t1 = pCThits.Lyr[lyr].Y[Idx].at(j);
-          double u1 = pCThits.Lyr[lyr].U[Idx].at(j);
-          double u2;
+          float t1 = pCThits.Lyr[lyr].Y[Idx].at(j);
+          float u1 = pCThits.Lyr[lyr].U[Idx].at(j);
+          float u2;
 
           if (Idx == 1) u2 = Geometry->uT(otherLyr[lyr]);
           else u2 = Geometry->uV(otherLyr[lyr]);
 
-          double slope = (t1 - Geometry->BeamVertex(Idx)[Idx]) / (u1 - Geometry->BeamVertex(Idx)[2]);
-          double intercept = Geometry->BeamVertex(Idx)[Idx] - slope * Geometry->BeamVertex(Idx)[2];
+          float slope = (t1 - Geometry->BeamVertex(Idx)[Idx]) / (u1 - Geometry->BeamVertex(Idx)[2]);
+          float intercept = Geometry->BeamVertex(Idx)[Idx] - slope * Geometry->BeamVertex(Idx)[2];
 
           miss = intercept - back[i].intercept;
           if (theCuts->cutTrackIsocenterIntercept(miss)) continue;
 
-          double t2 = intercept + slope * u2;
+          float t2 = intercept + slope * u2;
 
           Tkr2D tmpTk;
           tmpTk.X[lyr] = t1;
@@ -459,19 +457,19 @@ std::vector<Tkr2D> pCT_Tracking::Tracking2D(int Idx, TkrHits &pCThits, pCTgeo *G
             }
 *///Can be skipped with above condition
 
-            double t1 = pCThits.Lyr[lyr].Y[Idx].at(j);
-            double u1 = pCThits.Lyr[lyr].U[Idx].at(j);
+            float t1 = pCThits.Lyr[lyr].Y[Idx].at(j);
+            float u1 = pCThits.Lyr[lyr].U[Idx].at(j);
 
             for (int gap = 0; gap < 3; gap++) { //Check for all combinations of gaps with the unused hit
 
-              double t2 = Geometry->tBoardGap(gap, otherLyr[lyr]);
-              double u2 = Geometry->uT(otherLyr[lyr]);
-              double slope = (t2 - t1) / (u2 - u1);
+              float t2 = Geometry->tBoardGap(gap, otherLyr[lyr]);
+              float u2 = Geometry->uT(otherLyr[lyr]);
+              float slope = (t2 - t1) / (u2 - u1);
 
               if (theCuts->cutHitSlope(1,Idx,slope)) continue;
 
-              double intercept = t1 - slope * u1;
-              double miss = intercept - front[i].intercept;
+              float intercept = t1 - slope * u1;
+              float miss = intercept - front[i].intercept;
               if (theCuts->cutTrackIsocenterIntercept(miss)) continue;
 
 	      Tkr2D tmpTk;
@@ -520,21 +518,21 @@ std::vector<Tkr2D> pCT_Tracking::Tracking2D(int Idx, TkrHits &pCThits, pCTgeo *G
               if (tmp[tk].Good && tmp[tk].Q > 0)
                 break; // Skip hits already used on better tracks
             }*/
-            double t1 = front[i].Y[0];
-            double u1 = front[i].U[0];
-            double t2 = front[i].Y[1];
-            double u2 = front[i].U[1];
-            double t3 = pCThits.Lyr[lyr].Y[Idx].at(j);
-            double u3 = pCThits.Lyr[lyr].U[Idx].at(j);
-            double u4;
+            float t1 = front[i].Y[0];
+            float u1 = front[i].U[0];
+            float t2 = front[i].Y[1];
+            float u2 = front[i].U[1];
+            float t3 = pCThits.Lyr[lyr].Y[Idx].at(j);
+            float u3 = pCThits.Lyr[lyr].U[Idx].at(j);
+            float u4;
             if (Idx == 1)
               u4 = Geometry->uT(otherLyr[lyr]);
             else
               u4 = Geometry->uV(otherLyr[lyr]);
-            double t4 = quadExtrap(u1, u2, u3, u4, t1, t2, t3);
-            double slope = (t4 - t3) / (u4 - u3);
+            float t4 = quadExtrap(u1, u2, u3, u4, t1, t2, t3);
+            float slope = (t4 - t3) / (u4 - u3);
             if (theCuts->cutHitSlope(1,Idx,slope)) continue;
-            double intercept = t3 - slope * u3;
+            float intercept = t3 - slope * u3;
             miss = intercept - front[i].intercept;
             if (theCuts->cutTrackIsocenterIntercept(miss)) continue;
 
@@ -605,81 +603,4 @@ void pCT_Tracking::dumpTracks(int eventNumber) {
   }
 }
 
-// Method to display all good tracks in an event, using Gnuplot.
-void pCT_Tracking::displayEvent(int eventNumber, TkrHits &pCThits, std::string outputDir) {
-  char fn[80] = "";
-  char Q[5] = "ebg ";
-  sprintf(fn, "%s/Event%d.gp", outputDir.c_str(), eventNumber);
-  std::cout << "**** pCT_Tracking::displayEvent: Writing a single event display for event number" << eventNumber
-            << " to file " << fn << std::endl;
-  FILE *oFile = fopen(fn, "w");
-  if (oFile != NULL) {
-    fprintf(oFile, "#*** This file is intended to be displayed by gnuplot.\n");
-    fprintf(oFile, "#*** Either double click on the file (works in Windows at least),\n");
-    fprintf(oFile, "#*** or else start up gnuplot and use the load command to display the plot.\n");
-    fprintf(
-        oFile,
-        "set multiplot title 'pCT Tracking Single Event Display for Event %d' layout 2,1 columnsfirst scale 1.0,1.0\n",
-        eventNumber);
-    fprintf(oFile, "set title 'Tracker V View'\n");
-    fprintf(oFile, "set xlabel 'U (mm)'\n");
-    fprintf(oFile, "set ylabel 'V (mm)'\n");
-    fprintf(oFile, "set xrange [-250.:250.]\n");
-    fprintf(oFile, "set yrange [-50.:50.]\n");
-    fprintf(oFile, "set nokey\n");
-    fprintf(oFile, "plot '-' with labels\n");
-    for (int tkr = 0; tkr < VTracks.size(); tkr++) {
-      if (VTracks[tkr].Good) {
-        for (int lyr = 0; lyr < 4; lyr++) {
-          fprintf(oFile, "%7.2f %7.2f %d%c\n", VTracks[tkr].U[lyr], VTracks[tkr].X[lyr], tkr,
-                  Q[VTracks[tkr].Qh[lyr]]); // plot hits on tracks
-        }
-      }
-    }
-    for (int lyr = 0; lyr < 4; lyr++) {
-      for (int hit = 0; hit < pCThits.Lyr[lyr].N[0]; hit++) {
-        int tk = pCThits.Lyr[lyr].F[0].at(hit);
-        if (tk >= 0) {
-          if (!VTracks[tk].Good)
-            tk = -1;
-        }
-        if (tk < 0) { // plot unused hits
-          fprintf(oFile, "%7.2f %7.2f x\n", pCThits.Lyr[lyr].U[0].at(hit), pCThits.Lyr[lyr].Y[0].at(hit));
-        }
-      }
-    }
-    fprintf(oFile, "e\n");
 
-    fprintf(oFile, "set title 'Tracker T View'\n");
-    fprintf(oFile, "set xlabel 'U (mm)'\n");
-    fprintf(oFile, "set ylabel 'T (mm)'\n");
-    fprintf(oFile, "set xrange [-250.:250.]\n");
-    fprintf(oFile, "set yrange [-150.:150.]\n");
-    fprintf(oFile, "set nokey\n");
-    fprintf(oFile, "plot '-' with labels\n");
-    for (int tkr = 0; tkr < TTracks.size(); tkr++) {
-      if (TTracks[tkr].Good) {
-        for (int lyr = 0; lyr < 4; lyr++) {
-          fprintf(oFile, "%7.2f %7.2f %d%c\n", TTracks[tkr].U[lyr], TTracks[tkr].X[lyr], tkr, Q[TTracks[tkr].Qh[lyr]]);
-        }
-      }
-    }
-    for (int lyr = 0; lyr < 4; lyr++) {
-      for (int hit = 0; hit < pCThits.Lyr[lyr].N[1]; hit++) {
-        int tk = pCThits.Lyr[lyr].F[1].at(hit);
-        if (tk >= 0) {
-          if (!TTracks[tk].Good)
-            tk = -1;
-        }
-        if (tk < 0) { // plot unused hits
-          fprintf(oFile, "%7.2f %7.2f x\n", pCThits.Lyr[lyr].U[1].at(hit), pCThits.Lyr[lyr].Y[1].at(hit));
-        }
-      }
-    }
-    fprintf(oFile, "e\n");
-    fprintf(oFile, "unset multiplot\n");
-    fprintf(oFile, "show label");
-    fclose(oFile);
-  } else
-    std::cout << "pCT_Tracking::displayEvent: unable to open file for display of event " << eventNumber << std::endl;
-}

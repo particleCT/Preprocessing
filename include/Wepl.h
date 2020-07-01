@@ -35,8 +35,8 @@ class Wepl {
   TFile* projectionROOT;
   TGraphErrors* calWEPL[5];
   TH2D* dEEhist_root[5];
-  TGraphErrors* Test;
-  TGraphErrors* Test2;
+  TGraphErrors* RangeVsEnergy;
+  TGraphErrors* EnergyVsRange;
   pCTcut *theCuts;
   void WriteHist(TFile*);
   Wepl(TFile*);       

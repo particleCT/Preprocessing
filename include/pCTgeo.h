@@ -13,41 +13,41 @@ using namespace std;
 class pCTgeo {
   int fpgaLyr[12];          // mapping from fpga number to layer
 
-  double uPosV[4];          // u locations of each of the V layers
+  float uPosV[4];          // u locations of each of the V layers
   int VBoard[4];            // hardware identifier for each V layer
-  double Vpin[4];           // cassette alignment in V layers
-  double firstStripV[7][2]; // offset of the first strip on each sensor of each
+  float Vpin[4];           // cassette alignment in V layers
+  float firstStripV[7][2]; // offset of the first strip on each sensor of each
                             // hardware V board
   // relative to the alignment pin, as measured under a microscope by Forest
 
-  double uPosT[4];          // u locations of each of the T layers
-  double Tpin[4];           // cassette alignment in T layers
-  double Tdir[4];           // T-board orientation
+  float uPosT[4];          // u locations of each of the T layers
+  float Tpin[4];           // cassette alignment in T layers
+  float Tdir[4];           // T-board orientation
   int TBoard[4];            // hardware identifier for each T layer
-  double firstStripT[7][4]; // offset of the first strip on each sensor of each
+  float firstStripT[7][4]; // offset of the first strip on each sensor of each
                             // hardware T board
   // relative to the alignment pin, as measured under a microscope by Forest
 
-  double tGap[3][4]; // gap locations for each T layer
+  float tGap[3][4]; // gap locations for each T layer
 
-  double stripPitch;
-  std::vector<double> BeamVtxV; // approximate origin of the proton beam (the
+  float stripPitch;
+  std::vector<float> BeamVtxV; // approximate origin of the proton beam (the
                                 // lead foil in LLUMC runs)
-  std::vector<double> BeamVtxT; // at CPC it is different in the V and T views
-  double uEdet;                 // approximate u coordinate of the front face of the energy
+  std::vector<float> BeamVtxT; // at CPC it is different in the V and T views
+  float uEdet;                 // approximate u coordinate of the front face of the energy
                                 // detector
 
-  double TwedgeBreaks[4]; // Break points in the wedge phantom geometry
-  double BrickThickness;  // Brick thickness; also the wedge thickness
+  float TwedgeBreaks[4]; // Break points in the wedge phantom geometry
+  float BrickThickness;  // Brick thickness; also the wedge thickness
 
-  double StageThickness; // Thickness in u of each energy detector stage
+  float StageThickness; // Thickness in u of each energy detector stage
 
-  double rotationSpeed; // Speed of the stage rotation in continuous scans, in
+  float rotationSpeed; // Speed of the stage rotation in continuous scans, in
                         // degrees/s
-  double timeStampRes;  // Hardware time-stamp resolution in seconds
+  float timeStampRes;  // Hardware time-stamp resolution in seconds
 
 public:
-  pCTgeo(double tWedgeOffset = 0.) { // Most of this stuff needs to be kept in a database and read from there in this constructor
+  pCTgeo(float tWedgeOffset = 0.) { // Most of this stuff needs to be kept in a database and read from there in this constructor
     
     ofstream geoLogFile;
     geoLogFile.open("pCTGeometry.log");
@@ -71,11 +71,11 @@ public:
     geoLogFile << "pCTgeo.h: stage rotation speed is assumed to equal " << rotationSpeed << " degrees/s" << endl;
     geoLogFile << "pCTgeo.h: time-stamp resolution is assumed to equal " << timeStampRes << " seconds" << endl;
 
-    double beamZV = -4069; //-1850.;   // From Data analysis //FIXME: make me a config item, same as wedge offset and Pinoffsets (for alignment)
-    double beamZT = -4576; //-1850.;  
+    float beamZV = -4069; //-1850.;   // From Data analysis //FIXME: make me a config item, same as wedge offset and Pinoffsets (for alignment)
+    float beamZT = -4576; //-1850.;  
 
-    double beamX = 0.;
-    double beamY = 0.;
+    float beamX = 0.;
+    float beamY = 0.;
     BeamVtxV.push_back(beamX);
     BeamVtxV.push_back(beamY);
     BeamVtxV.push_back(beamZV);
@@ -121,7 +121,7 @@ public:
 
     for (int i = 0; i < 4; i++) geoLogFile << "pCTgeo.h: V layer " << i << " is board " << VBoard[i] << " with alignment pin at v=" << Vpin[i] << " mm\n";
 
-    double fSV[7][2] = // V board internal alignment from optical surveys of
+    float fSV[7][2] = // V board internal alignment from optical surveys of
                        // physics boards
         { { -43.7193, -43.716 },
           { -43.727, -43.687 },
@@ -150,7 +150,7 @@ public:
       geoLogFile << "pCTgeo.h: T layer " << i << " is board " << TBoard[i] << " with alignment pin at t=" << Tpin[i]
                  << " mm and direction " << Tdir[i] << endl;
     }
-    double fST[7][4] = { // T board internal alignment from optical surveys of the physical boards
+    float fST[7][4] = { // T board internal alignment from optical surveys of the physical boards
       { -999, -999, -999, -999 },
       { 38.60, 126.87, 215.15, 303.42 },
       { 38.48, 126.76, 215.04, 303.32 },
@@ -184,8 +184,8 @@ public:
       int brd = TBoard[lyr];
       geoLogFile << "pCTgeo.h: t-layer gap locations for layer " << lyr << ":";
       for (int gap = 0; gap < 3; gap++) {
-        double t1 = Tpin[lyr] + Tdir[lyr] * (firstStripT[brd][gap] + (6.0 * 64.0 - 1.0) * stripPitch);
-        double t2 = Tpin[lyr] + Tdir[lyr] * firstStripT[brd][gap + 1];
+        float t1 = Tpin[lyr] + Tdir[lyr] * (firstStripT[brd][gap] + (6.0 * 64.0 - 1.0) * stripPitch);
+        float t2 = Tpin[lyr] + Tdir[lyr] * firstStripT[brd][gap + 1];
         tGap[gap][lyr] = 0.5 * (t1 + t2);
         geoLogFile << "  " << tGap[gap][lyr];
       }
@@ -212,51 +212,51 @@ public:
     geoLogFile.close();
   };
 
-  inline double stageSpeed() { return rotationSpeed; }
-  inline double timeRes() { return timeStampRes; }
+  inline float stageSpeed() { return rotationSpeed; }
+  inline float timeRes() { return timeStampRes; }
   inline int getFPGAlayer(int FPGA) { return fpgaLyr[FPGA]; }
 
   // Return the 4 calibration wedge break points in t; n=1,2,3,4 in increasing t
-  inline double getTWedgeBreaks(int n) const { return TwedgeBreaks[n - 1]; }
+  inline float getTWedgeBreaks(int n) const { return TwedgeBreaks[n - 1]; }
 
   // Return the calibration brick and wedge thickness
-  inline double getBrickThickness() const { return BrickThickness; }
+  inline float getBrickThickness() const { return BrickThickness; }
 
   // stage from 0 through 4
-  inline double energyDetectorU(int stage) const { return uEdet + stage * (StageThickness); }
+  inline float energyDetectorU(int stage) const { return uEdet + stage * (StageThickness); }
 
   // Method to return the t-layer gap locations
-  inline double tBoardGap(int gap, int lyr) const { return tGap[gap][lyr]; }
+  inline float tBoardGap(int gap, int lyr) const { return tGap[gap][lyr]; }
 
   // Method to translate from FPGA to layer number
   inline int Lyr(int FPGA) const { return fpgaLyr[FPGA]; }
 
   // Method to return the U coordinate of V boards
-  inline double uV(int Lyr) const { return uPosV[Lyr]; }
+  inline float uV(int Lyr) const { return uPosV[Lyr]; }
 
   // Method to return the U coordinate of T boards
-  inline double uT(int Lyr) const { return uPosT[Lyr]; }
+  inline float uT(int Lyr) const { return uPosT[Lyr]; }
 
-  inline std::vector<double> BeamVertex(int view) const {
+  inline std::vector<float> BeamVertex(int view) const {
     if (view == 0)
       return BeamVtxV;
     else
       return BeamVtxT;
   }
 
-  inline double extrap2D(double X[2], double Y[2], double Xnew) {
-    double dX = X[1] - X[0];
+  inline float extrap2D(float X[2], float Y[2], float Xnew) {
+    float dX = X[1] - X[0];
     if (dX == 0.) {
       cout << "pCTgeo::extrap2D, division by zero; x values must be different." << endl;
       dX = 1.0e-23;
     }
-    double slope = (Y[1] - Y[0]) / (dX);
+    float slope = (Y[1] - Y[0]) / (dX);
     return Y[1] + (Xnew - X[1]) * slope;
   }
 
   // Method to translate strip number to coordinate for V layers
-  inline double strip_position_V(int fpga, int chip, double strip) const {
-    double global_strip;
+  inline float strip_position_V(int fpga, int chip, float strip) const {
+    float global_strip;
     int side;
     if (chip < 6) {
       global_strip = (5 - chip) * 64.0 + strip;
@@ -271,10 +271,10 @@ public:
 
 
   // Method to translate strip number to coordinate for T layers
-  inline double strip_position_T(int fpga, int chip, double strip) const {
+  inline float strip_position_T(int fpga, int chip, float strip) const {
     int sensor = 2 * (fpga % 2) + chip / 6;
     int chip_in_sensor = chip % 6;
-    double global_strip = 64.0 * chip_in_sensor + (63.0 - strip);
+    float global_strip = 64.0 * chip_in_sensor + (63.0 - strip);
     int lyr = fpgaLyr[fpga];
     int brd = TBoard[lyr];
     return Tpin[lyr] + Tdir[lyr] * (firstStripT[brd][sensor] + global_strip * stripPitch);

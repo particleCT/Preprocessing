@@ -36,7 +36,7 @@ pCTcut::pCTcut()
 //////////////////////////////////////////////////////////////////////
 // dEE Parameters
 //////////////////////////////////////////////////////////////////////
-void pCTcut::dEEFilterParameters(TH2D* dEEhist, float dEElow[3], float dEEhigh[3], int stage){
+void pCTcut::CalculatedEEFilterParameters(TH2D* dEEhist, float dEElow[3], float dEEhigh[3], int stage){
   float EnergyBinWidth;
   if (theConfig->item_str["partType"] == "H") EnergyBinWidth = 0.5;
   else EnergyBinWidth = 1.0;
@@ -141,14 +141,14 @@ bool pCTcut::EnrgCut(float Estage[5], float Etot, float cut0, float cut1, float 
 // Tracking cuts
 ////////////////////////////////////////////////////////////////////
 // Cut on Tracker hits in front/rear tracking detectors
-bool pCTcut::cutHitSlope(int i, int idX, double slope){
+bool pCTcut::cutHitSlope(int i, int idX, float slope){
 
   if(slope>=mxSlope[i][idX]){ nHitReject++; return true;} //Disregard this Hit combination
   else return false; 
 
 }
 
-bool pCTcut::cutTrackIsocenterIntercept(double dist){
+bool pCTcut::cutTrackIsocenterIntercept(float dist){
 
   if(dist >= deltaMx) return true; // skip proposed track candidates 
   else return false; 

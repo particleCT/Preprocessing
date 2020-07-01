@@ -40,7 +40,7 @@ class Preprocessing { // Top level program from the pCT preprocessing task.
   float Version, beamEnergy, StgThr[5], initialAngle, proj_angle;
   int fileBins, analysisLevel, max_events, max_time, n_debug, n_plot;
   bool callUser, continuous_scan, eventOrder, energyOutput, timeStampOutput, eventIDOutput, dodEEFilter;
-  double Uhit[4];
+  float Uhit[4];
   std::string study_name, Outputdir;
   std::string WcalibFile;
   std::string TVcorrFile;
@@ -57,7 +57,7 @@ class Preprocessing { // Top level program from the pCT preprocessing task.
   int ADC[5];
   struct tm *now;
   static int findEvt(FILE *fp);
-  void pCTevents(pCTgeo* Geometry, pCTraw rawEvt, pedGainCalib *Calibrate, double Uhit[]);
+  void pCTevents(pCTgeo* Geometry, pCTraw rawEvt, pedGainCalib *Calibrate, float Uhit[]);
 
   
   

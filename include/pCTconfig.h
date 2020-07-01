@@ -40,9 +40,9 @@ public:
 
   // Functions
   pCTconfig(string fileName); // constructor
-  void addItem(char key, string longKey, string &value);
-  void addItem(char key, string longKey, int &value);
-  void addItem(char key, string longKey, float &value);
+  void addItem(string longKey, string &value);
+  void addItem(string longKey, int &value);
+  void addItem(string longKey, float &value);
   int Configure();
  private:
   static pCTconfig* theConfig;

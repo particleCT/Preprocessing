@@ -29,16 +29,16 @@ class pCTcut {
   // constructor
   pCTcut(); // Class constructor called prior to the event loop
   // classes
-  bool cutHitSlope(int, int, double); 
-  bool cutTrackIsocenterIntercept(double);
+  bool cutHitSlope(int, int, float); 
+  bool cutTrackIsocenterIntercept(float);
   bool cutEvt(pCT_Tracking&, TkrHits&);
   bool EnrgCut(float [5], float, float, float, float );
   bool dEEFilter(float, float, float*, float*);
-  void dEEFilterParameters(TH2D* dEEhist, float dEElow[3], float dEEhigh[3], int stage);
+  void CalculatedEEFilterParameters(TH2D* dEEhist, float dEElow[3], float dEEhigh[3], int stage);
   void summary();
 
-  double mxSlope[2][2]; // Cut on the slope of the front tracker vector, separately for V and T
-  double deltaMx;                    // Cut on how far the two vectors miss each other at u=0, in mm
+  float mxSlope[2][2]; // Cut on the slope of the front tracker vector, separately for V and T
+  float deltaMx;                    // Cut on how far the two vectors miss each other at u=0, in mm
   
 
  private: 

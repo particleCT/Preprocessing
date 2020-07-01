@@ -65,130 +65,130 @@ int main(int argc, char *argv[]) {
   pCTconfig cfg(configFile); // Create a class instance for parsing the configuration file
 
   int numbTkrFPGA = 12;
-  cfg.addItem('q', "nTracker", numbTkrFPGA);
+  cfg.addItem("nTracker", numbTkrFPGA);
 
   int numbEdetFPGA = 2;
-  cfg.addItem('Q', "nEdet", numbEdetFPGA);
+  cfg.addItem("nEdet", numbEdetFPGA);
 
   int pdstlr[5];
   pdstlr[0] = -500;
-  cfg.addItem('5', "pedrng0", pdstlr[0]);
+  cfg.addItem("pedrng0", pdstlr[0]);
 
   pdstlr[1] = -500;
-  cfg.addItem('6', "pedrng1", pdstlr[1]);
+  cfg.addItem("pedrng1", pdstlr[1]);
 
   pdstlr[2] = -500;
-  cfg.addItem('7', "pedrng2", pdstlr[2]);
+  cfg.addItem("pedrng2", pdstlr[2]);
 
   pdstlr[3] = -500;
-  cfg.addItem('8', "pedrng3", pdstlr[3]);
+  cfg.addItem("pedrng3", pdstlr[3]);
 
   pdstlr[4] = -500;
-  cfg.addItem('9', "pedrng4", pdstlr[4]);
+  cfg.addItem("pedrng4", pdstlr[4]);
 
   float fileFraction = 1.0;
-  cfg.addItem('f', "fraction", fileFraction);
+  cfg.addItem("fraction", fileFraction);
 
   string partType = "H";
-  cfg.addItem('S', "partType", partType);
+  cfg.addItem("partType", partType);
 
   int fileBins = 1;
-  cfg.addItem('b', "bins", fileBins);
+  cfg.addItem("bins", fileBins);
 
   int continuous_scan = 1;
-  cfg.addItem('c', "continuous", continuous_scan);
+  cfg.addItem("continuous", continuous_scan);
 
   string Outputdir = ".";
-  cfg.addItem('o', "outputDir", Outputdir);
+  cfg.addItem("outputDir", Outputdir);
   
   int max_events = 0;
-  cfg.addItem('n', "max_events", max_events);
+  cfg.addItem("max_events", max_events);
 
   int max_time = 0;
-  cfg.addItem('M', "max_time", max_time);
+  cfg.addItem("max_time", max_time);
 
   int n_debug = 1;
-  cfg.addItem('d', "n_debug", n_debug);
+  cfg.addItem("n_debug", n_debug);
 
   int n_plot = 0;
-  cfg.addItem('j', "n_plot", n_plot);
+  cfg.addItem("n_plot", n_plot);
 
   string logFile = "";
-  cfg.addItem('g', "log", logFile);
+  cfg.addItem("log", logFile);
 
   float initialAngle = 0.0;
-  cfg.addItem('a', "angle", initialAngle);
+  cfg.addItem("angle", initialAngle);
 
   float beamEnergy = 200.; // Unless a value is supplied by the user, this angle will be taken from the input file
-  cfg.addItem('e', "energy", beamEnergy);
+  cfg.addItem("energy", beamEnergy);
 
   float proj_angle = -999.; // Unless a value is supplied by the user, this angle will be taken from the input file
-  cfg.addItem('p', "projection", proj_angle);
+  cfg.addItem("projection", proj_angle);
 
   int reCalibrate = 1;
-  cfg.addItem('r', "recalibrate", reCalibrate);
+  cfg.addItem("recalibrate", reCalibrate);
 
   float phantomSize = 110.;
-  cfg.addItem('S', "size", phantomSize);
+  cfg.addItem("size", phantomSize);
 
   int Calibrate = 0;
-  cfg.addItem('C', "calibrate", Calibrate);
+  cfg.addItem("calibrate", Calibrate);
 
   int Normalize = 0;
-  cfg.addItem('L', "normalize", Normalize);
+  cfg.addItem("normalize", Normalize);
   
   float wedgeOff = 0.0;
-  cfg.addItem('F', "wedgeoffset", wedgeOff);
+  cfg.addItem("wedgeoffset", wedgeOff);
 
   string minDate = "2030/01/01";
-  cfg.addItem('x', "minDate", minDate);
+  cfg.addItem("minDate", minDate);
 
   string maxDate = "2000/01/01";
-  cfg.addItem('y', "maxDate", maxDate);
+  cfg.addItem("maxDate", maxDate);
 
   int minRun = 999;
-  cfg.addItem('w', "minrun", minRun);
+  cfg.addItem("minrun", minRun);
 
   int maxRun = -1;
-  cfg.addItem('z', "maxrun", maxRun);
+  cfg.addItem("maxrun", maxRun);
 
   string study_name = "";
-  cfg.addItem('s', "study", study_name);
+  cfg.addItem("study", study_name);
 
   string WcalibFile = "Wcalib.txt";
-  cfg.addItem('W', "Wcalib", WcalibFile);
+  cfg.addItem("Wcalib", WcalibFile);
 
   string TVcorrFile = "TVcorr.txt";
-  cfg.addItem('T', "TVcorr", TVcorrFile);
+  cfg.addItem("TVcorr", TVcorrFile);
 
   string rootCalibFile = "pCTcalib.root";
-  cfg.addItem('R', "calib", rootCalibFile);
+  cfg.addItem("calib", rootCalibFile);
   
   float thr[5]; // Array of stage thresholds for WEPL analysis
   thr[0] = 1.0;
-  cfg.addItem('0', "thr0", thr[0]);
+  cfg.addItem("thr0", thr[0]);
 
   thr[1] = 1.0;
-  cfg.addItem('1', "thr1", thr[1]);
+  cfg.addItem("thr1", thr[1]);
 
   thr[2] = 1.0;
-  cfg.addItem('2', "thr2", thr[2]);
+  cfg.addItem("thr2", thr[2]);
 
   thr[3] = 1.0;
-  cfg.addItem('3', "thr3", thr[3]);
+  cfg.addItem("thr3", thr[3]);
 
   thr[4] = 1.0;
-  cfg.addItem('4', "thr4", thr[4]);
-  cout<<thr[2]<<endl;
-  int dodEEFilter = 1; // changed default to yes
-  cfg.addItem('e', "dEEFilter", dodEEFilter); // Also add the option to the list used for parsing the config file
- 
+  cfg.addItem("thr4", thr[4]);
 
+
+  int dodEEFilter = 1; // changed default to yes
+  cfg.addItem("dEEFilter", dodEEFilter); // Also add the option to the list used for parsing the config file
+ 
   int maxFluence = 1000; //max fluence per mm^2 (full Nb of part = maxFluence x fieldSize)
-  cfg.addItem('f', "maxFluence", maxFluence);
+  cfg.addItem("maxFluence", maxFluence);
  
   int MultiTrackReject = 0; 
-  cfg.addItem('M', "MultiTrackReject",MultiTrackReject);
+  cfg.addItem("MultiTrackReject",MultiTrackReject);
 
  
   // Read the default configuration from the config file
@@ -196,6 +196,7 @@ int main(int argc, char *argv[]) {
     cout << "Was not able to read a default configuration from " << configFile << endl;
     cout << "The hardwired default configuration will be used." << endl;
   }
+
   //////////////////////////////////////////////////////
   // Printing out some number
   //////////////////////////////////////////////////////
@@ -296,9 +297,9 @@ int main(int argc, char *argv[]) {
 
     // Few more options to be used later in the calibration
     int Nbricks = 1; 
-    cfg.addItem('b', "Nbricks", Nbricks);
+    cfg.addItem("Nbricks", Nbricks);
     int doGains = 1; 
-    cfg.addItem('g', "doGains", doGains);
+    cfg.addItem("doGains", doGains);
     
     pCTcalib calibProcessor(CalFile);
     if (calibProcessor.TVmapper() == 0) { // First the TVmapper
@@ -316,7 +317,7 @@ int main(int argc, char *argv[]) {
   // Real run
   ////////////////////////////////////////////////////
   else {
-    cfg.addItem('i', "inputFileName", inputFileName);
+    cfg.addItem("inputFileName", inputFileName);
     cout << "Executing a pCT data pre-processing run" << endl;
     // Here we call the complete preprocessing program
     Preprocessing pCTpreprocessor;

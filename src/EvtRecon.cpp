@@ -107,7 +107,7 @@ void EvtRecon::ReadInputFile(pCTgeo* Geometry, TVcorrection *const TVcorr , stri
 
       // Calculate the calibrated WEPL
       float Ene[5], Vedet[5], Tedet[5];
-      double UV[4], UT[4], V[4], T[4];
+      float UV[4], UT[4], V[4], T[4];
       for (int i = 0; i < 4; ++i) {
         UV[i]  = uhitV[i];
         UT[i]  = uhitT[i];
