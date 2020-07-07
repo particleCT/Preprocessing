@@ -25,6 +25,7 @@
 #include "pCTgeo.h"
 #include "TkrHits.h"
 #include "pCT_Tracking.h"
+#include "EvtRecon.h"
 #include "pCTraw.h"
 #include "pCTcut.h"
 #include "TFile.h"
@@ -46,14 +47,20 @@ class Preprocessing { // Top level program from the pCT preprocessing task.
   std::string TVcorrFile;
 
   //Class
+  EvtRecon *theEvtRecon;  
   TVcorrection* theTVcorr;
   pCTconfig* theConfig;
   pCTcut* theCuts;
   Wepl* theWEPL;
+  pCTgeo *theGeometry;
+  pedGainCalib* theCalibration;  
+  
   FILE *in_file;
   char inFileName[256];
   time_t start_time;
 
+
+  
   int ADC[5];
   struct tm *now;
   static int findEvt(FILE *fp);

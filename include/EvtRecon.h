@@ -18,6 +18,7 @@
 using namespace std;
 
 struct Event{
+  float timestamp;
   float Thit[4];
   float Vhit[4];
   int ADC[5];

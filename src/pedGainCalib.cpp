@@ -123,8 +123,7 @@ void pedGainCalib::GetPeds() {
 void pedGainCalib::FillGains(float Vedet, float Tedet, float Ene[5], int phSum[5]) {// Called for each event in the temporary file of proton histories -- gain recalibration
   float Esum = 0.;
   //between t1 and t2 or between t3 and t4
-  if ((Tedet > emtrng1 && Tedet < emtrng2) || (Tedet > emtrng3 && Tedet < emtrng4)) { // Analyze full-energy protons
-                                                                                      // outside of the phantom region
+  if ((Tedet > emtrng1 && Tedet < emtrng2) || (Tedet > emtrng3 && Tedet < emtrng4)) { // Analyze full-energy protons outside of the phantom region
     if (fabs(Vedet) < 40.) { // not outside the detector
       for (int stage = 0; stage < 5; stage++) {
         hEnrg[stage]->Fill(Ene[stage]);

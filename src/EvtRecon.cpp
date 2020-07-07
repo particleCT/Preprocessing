@@ -52,6 +52,7 @@ void EvtRecon::ReadInputFile(pCTgeo* Geometry, TVcorrection *const TVcorr , stri
   // so this range had to be moved.  It should be okay also for earlier runs with the wedge phantom.
 
   // Here is the start of the event loop
+  //cout<<nEvents<<endl;
   while (!rawEvt.stop_reading) {
     try {
       bool Eureka = rawEvt.findEvtHdr(false); // Search for the bits that indicate the beginning of an event
@@ -81,6 +82,7 @@ void EvtRecon::ReadInputFile(pCTgeo* Geometry, TVcorrection *const TVcorr , stri
         tmpEvt.ADC[3] = rawEvt.enrg_fpga[1].pulse_sum[0];
         tmpEvt.ADC[4] = rawEvt.enrg_fpga[1].pulse_sum[1];
 
+	tmpEvt.timestamp = rawEvt.time_tag / 16; // Reduced precision to fit into 32 bits  
 	evtList.push_back(tmpEvt);
         nEvents++;
       }
@@ -96,7 +98,6 @@ void EvtRecon::ReadInputFile(pCTgeo* Geometry, TVcorrection *const TVcorr , stri
 
   cuts.summary(); // Summarize the event counts
   Calibrate->GetPeds();
-  
   for (int stage = 0; stage < 5; stage++) Peds[stage] = Calibrate->Ped[stage];  
   if (theConfig->item_int["doGains"]) {
     cout << "Starting the gain analysis for nBlocks= " << theConfig->item_int["Nbricks"] << endl;
@@ -119,7 +120,6 @@ void EvtRecon::ReadInputFile(pCTgeo* Geometry, TVcorrection *const TVcorr , stri
         // Extrapolate the rear track vector to the energy detector stage
         Vedet[stage] = Geometry->extrap2D(&UV[2], &V[2], Geometry->energyDetectorU(stage));
         Tedet[stage] = Geometry->extrap2D(&UT[2], &T[2], Geometry->energyDetectorU(stage));
-
         bool inBounds;
         Ene[stage] = ((float)thisEvent.ADC[stage] - Calibrate->Ped[stage]) * TVcorr->corrFactor(stage, Tedet[stage], Vedet[stage], inBounds);
         if (inBounds) nGood++;
