@@ -85,6 +85,7 @@ pCTcalib::pCTcalib(string inputFileName)
   currentTime = time(NULL);
   now = localtime(&currentTime);  
 
+
   // Initialize class
   theGeometry    = new pCTgeo(theConfig->item_float["wedgeoffset"]);
   theCuts        = new pCTcut();
@@ -95,10 +96,11 @@ pCTcalib::pCTcalib(string inputFileName)
   float openRange  = 20.0;
   float pedestals[nStage] = {0};
   int pedMin[nStage];  
+  theCalibration = new pedGainCalib(pCTcalibRootFile, pedMin, pedestals,-150., -151., wedgeLimit, wedgeLimit + openRange);  
+ 
   for (int stage = 0; stage < nStage; stage++) pedMin[stage]   = theConfig->item_int[Form("pedrng%d",stage)];
   ProfileE_Tot      = new TH2D("ProfileE_Tot","",300,-100,150, 1000, 0, 1000);//
   ProfileE_Tot_f    = new TH2D("ProfileE_Tot_f","",600,-100,150, 1000, 0, 1000);//
-  theCalibration    = new pedGainCalib(pCTcalibRootFile, pedMin, pedestals,-150., -151., wedgeLimit, wedgeLimit + openRange);  
 
 }
 //////////////////////////////////////////////////////////////////////
@@ -157,16 +159,13 @@ int pCTcalib::TVmapper() {
   //---------------------------------------------------------------------------
   // Source Position in U
   //---------------------------------------------------------------------------
-  // V source position
+  // T-V source position
   TH1D* Vsource = new TH1D("Vsource","", 900, -10000.,-1000.); //Between 1 and 10 m in 1cm precision
- 
-  // T source position
   TH1D* Tsource = new TH1D("Tsource","", 900, -10000.,-1000.);
-
 
   cout<<"File:"<<calFileNames[0]<<endl;
   theConfig->item_str["inputFileName"] = calFileNames[0];
-  //theCalibration.config = theConfig;
+
   theCalibration->ResetHist();
   theEvtRecon->ReadInputFile(theGeometry, theTVcorr,  theConfig->item_str["inputFileName"], theCalibration); // Pedestal are determined here
   theCalibration->WriteHist(); // For analysis
@@ -218,14 +217,9 @@ int pCTcalib::TVmapper() {
       if (fabs(Vcorr) > 40.0)  continue;
       int global = theTVcorr->TVcorrHist[0]->FindBin(Tcorr,Vcorr);
       pxHistADC[stage][global]->Fill(thisEvent.ADC[stage] - theEvtRecon->Peds[stage]);
-      //pxHistADC[stage][global]->Fill(thisEvent.ADC[stage]);
     }
-
-
     TalignementPos01->Fill(Tf[1]-Tf[0]);
     TalignementPos23->Fill(T[1]-T[0]);
-
-
     // Projected to the exit tracker
     float Tin12 = theGeometry->extrap2D(Uft,Tf, Ut[0]);
     float Vin12 = theGeometry->extrap2D(Ufv,Vf, Uv[0]);
@@ -355,7 +349,6 @@ int pCTcalib::TVmapper() {
 //////////////////////////////////////////////////////////////////////
 void pCTcalib::enrgDep() { // Calculate energy depositions in each stage and their sum using new TV maps, to check that calibration worked
   // Create Histogram  for each stage
-  
   for (int stage = 0; stage < nStage; ++stage) {
     string Title = "pCTcalib::enrgDep Energy of stage " + to_string((long long int)stage);
     if (theConfig->item_str["partType"] == "H") stgHistE[stage]  = new TH1D(Title.c_str(), Title.c_str(),  800, 15, 15 + 800*0.175); 
@@ -368,8 +361,7 @@ void pCTcalib::enrgDep() { // Calculate energy depositions in each stage and the
   // Create Histogram for each pixel
   for (int iPix = 0; iPix < nPix; iPix++) {
     for (int stage = 0; stage < nStage; ++stage) {
-      string Title = "pCTcalib::enrgDep Energy of stage " + to_string((long long int)stage) + " for pixel " +
-                     to_string((long long int)iPix);
+      string Title = "pCTcalib::enrgDep Energy of stage " + to_string((long long int)stage) + " for pixel " + to_string((long long int)iPix);
       if (theConfig->item_str["partType"] == "H") pxHistE[stage][iPix] = new TH1D(Title.c_str(), Title.c_str(), 200, 15., 15 +200*0.35);
       else pxHistE[stage][iPix] = new TH1D(Title.c_str(), Title.c_str(), 200, 60., 60 +200*1.4);
     }
@@ -449,7 +441,7 @@ void pCTcalib::enrgDep() { // Calculate energy depositions in each stage and the
 // Wcalib function
 //////////////////////////////////////////////////////////////////////
 int pCTcalib::Wcalib(){
-
+  theConfig->item_int["doGains"] = true;  
   cout << endl << "Entering pCTcalib::Wcalib to execute the WEPL calibration process" << endl;
   if (calFileNames.size() < 6) {
     cout << "Only " << calFileNames.size() << " calibration raw data file names found.  Need all 6 to include "
@@ -628,9 +620,10 @@ int pCTcalib::Wcalib(){
     int bin_cut = RESlice->FindBin(5); // MeV
     RESlice->GetXaxis()->SetRange(bin_cut,RESlice->GetNbinsX());
     Int_t NEntries= RESlice->GetEntries();
-    if(NEntries>200){
-      max   =  RESlice->GetMaximum();
-      xmax  =  RESlice->GetBinCenter(RESlice->GetMaximumBin());
+    max   =  RESlice->GetMaximum();
+    xmax  =  RESlice->GetBinCenter(RESlice->GetMaximumBin());    
+    float rngB = REhist_Tot->GetXaxis()->GetBinCenter(nrg);
+    if(NEntries>200 && rngB < 250){
       TF1 *f1 = new TF1("f1", "gaus", xmax-10, xmax+10);
       f1->SetParameter(0, max);
       f1->SetParameter(1, xmax);
@@ -645,7 +638,7 @@ int pCTcalib::Wcalib(){
     }
     else{Sadc  = 0;    xLow  = 0;  xHigh = 0;}
     delete RESlice;
-    float rngB = REhist_Tot->GetXaxis()->GetBinCenter(nrg);
+
     float Sst  = (xHigh - xLow) / 2.2;
     
     int N =  RangeVsEnergy_Tot->GetN();
@@ -704,7 +697,6 @@ void pCTcalib::writeCalibfile() {
 //////////////////////////////////////////////////////////////////////
 void pCTcalib::FilldEE(TH2D* dEEhist[nStage]) {
   cout<<"Fill dEE"<<endl;
-  theConfig->item_int["doGains"] = true;
   //theConfig->item_int["Nbricks"] = theConfig->item_int["Nbricks"];
 
   theCalibration->ResetHist();
@@ -743,8 +735,6 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
   // Routine passed to process the WEPL calibration.
   cout << "Entering procWEPLcal for Nbricks=" << theConfig->item_int["Nbricks"] << ".  The list of histograms to fill is" << endl;
   for(int stage = 0; stage < nStage; ++stage) cout << theConfig->item_int["Nbricks"] << " bricks, stage " << stage << ", title=  " << REhist[stage]->GetTitle() << endl;
-  theConfig->item_int["doGains"] = true;
-  theConfig->item_int["Nbricks"] = theConfig->item_int["Nbricks"];
 
   theCalibration->ResetHist();
   theEvtRecon->ReadInputFile(theGeometry, theTVcorr, theConfig->item_str["inputFileName"], theCalibration);
@@ -858,8 +848,8 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
     if (fabs(Vin) > maxV || fabs(Tin) > maxT) continue; // if track is outside of detector in T/V - skip it
 
     //Back of bricks
-    float Tout = theGeometry->extrap2D(Ut, T, Uout);//theGeometry->extrap2D(Uft, Tf, Uout); // theGeometry->extrap2D(Ut, T, Uout); 
-    float Vout = theGeometry->extrap2D(Uv, V, Uout);//theGeometry->extrap2D(Ufv, Vf, Uout); // theGeometry->extrap2D(Uv, V, Uout);
+    float Tout = theGeometry->extrap2D(Uft, Tf, Uout);//theGeometry->extrap2D(Ut, T, Uout); 
+    float Vout = theGeometry->extrap2D(Ufv, Vf, Uout);//theGeometry->extrap2D(Uv, V, Uout); 
     if (fabs(Vout) > maxV || fabs(Tout) > maxT) continue;  // if track is outside of detector in T/V- skip it
 
     float Uin    = Ust[0];
@@ -870,12 +860,14 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
 
     // Negative Slope
     else if (TinB >= Tw1 && Tin <= Tw2) {
-      if(!getLineIntersection(theEvtRecon->uhitT[0], thisEvent.Thit[0], theEvtRecon->uhitT[1], thisEvent.Thit[1],
-			      Uin + BrickThickness, Tw1, Uin, Tw2, Uin, Tin)) continue;
+      continue;
+      //if(!getLineIntersection(theEvtRecon->uhitT[0], thisEvent.Thit[0], theEvtRecon->uhitT[1], thisEvent.Thit[1],
+      //		      Uin + BrickThickness, Tw1, Uin, Tw2, Uin, Tin)) continue;
     }
     // Flat part of the wedge - No need to change Vin and Tin
     else if(Tin > Tw2 && Tin < Tw3){
-      Uin = Ust[0];
+      continue;
+      //Uin = Ust[0];
     }
     
     // Positive Slope
@@ -885,9 +877,10 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
     }
     // Past the positive slope 
     else if(TinB > Tw4 && TinB < tBrickEnd){
-      Uin = Ust[1];
-      Tin = TinB;
-      Vin = VinB;
+      continue;
+      //Uin = Ust[1];
+      //Tin = TinB;
+      //Vin = VinB;
     }
 
     // Past the end of the brick

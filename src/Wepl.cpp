@@ -56,10 +56,9 @@ Wepl::Wepl(TFile* calibFile){
   }
 }
 
-float Wepl::EtoWEPL(float Estage[5], Int_t &MaxTrans, Int_t &Threshold, Int_t &dEE) // Return calibrated WEPL from the wedge calibration
+float Wepl::EtoWEPL(float Estage[5], Int_t &MaxTrans, Int_t &Threshold, Int_t &dEE, float &E_tot) // Return calibrated WEPL from the wedge calibration
 {
-  double WET;
-  double E_tot;
+  float WET;
 
   if (Estage[4] > theConfig->item_float["thr4"] ) { // // if particle stop in Stage 4
     E_tot = Estage[0]+Estage[1]+Estage[2]+Estage[3]+ Estage[4];

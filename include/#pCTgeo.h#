@@ -9,8 +9,10 @@ using namespace std;
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include "pCTconfig.h"
 
 class pCTgeo {
+  pCTconfig* theConfig;
   int fpgaLyr[12];          // mapping from fpga number to layer
 
   float uPosV[4];          // u locations of each of the V layers
@@ -24,37 +26,32 @@ class pCTgeo {
   float Tpin[4];           // cassette alignment in T layers
   float Tdir[4];           // T-board orientation
   int TBoard[4];            // hardware identifier for each T layer
-  float firstStripT[7][4]; // offset of the first strip on each sensor of each
-                            // hardware T board
-  // relative to the alignment pin, as measured under a microscope by Forest
+  float firstStripT[7][4]; // offset of the first strip on each sensor of each hardware T board relative to the alignment pin, as measured under a microscope by Forest
 
   float tGap[3][4]; // gap locations for each T layer
-
   float stripPitch;
   std::vector<float> BeamVtxV; // approximate origin of the proton beam (the
                                 // lead foil in LLUMC runs)
   std::vector<float> BeamVtxT; // at CPC it is different in the V and T views
-  float uEdet;                 // approximate u coordinate of the front face of the energy
-                                // detector
-
+  float uEdet;                 // approximate u coordinate of the front face of the energy detector
   float TwedgeBreaks[4]; // Break points in the wedge phantom geometry
   float BrickThickness;  // Brick thickness; also the wedge thickness
 
   float StageThickness; // Thickness in u of each energy detector stage
 
-  float rotationSpeed; // Speed of the stage rotation in continuous scans, in
-                        // degrees/s
+  float rotationSpeed; // Speed of the stage rotation in continuous scans, in  degrees/s
   float timeStampRes;  // Hardware time-stamp resolution in seconds
-
 public:
-  pCTgeo(double tWedgeOffset = 0., double TpinOff[]={0},double VpinOff[]={0}) { // Most of this stuff needs to be kept in a database and read from there in this constructor
+  pCTgeo(double tWedgeOffset = 0.) { // Most of this stuff needs to be kept in a database and read from there in this constructor
+    theConfig = pCTconfig::GetInstance();
     
     ofstream geoLogFile;
     geoLogFile.open("pCTGeometry.log");
     geoLogFile << "pCTgeo.h: loading geometry constants for the real Phase-II pCT Scanner." << endl;
     geoLogFile << "pCTgeo.h: wegde offset is " << tWedgeOffset << endl;
-    cout << "pCTgeo.h: Tpin offsets are " << TpinOff[0] << " " << TpinOff[1] << " " << TpinOff[2] << " " << TpinOff[3] << endl;
+    cout << "pCTgeo.h: Tpin offsets are " << theConfig->TpinOff[0] << " " << TpinOff[1] << " " << TpinOff[2] << " " << TpinOff[3] << endl;
     cout << "pCTgeo.h: Vpin offsets are " << VpinOff[0] << " " << VpinOff[1] << " " << VpinOff[2] << " " << VpinOff[3] << endl;
+    cout<<__LINE__<<endl;
     fpgaLyr[0] = 0; // Translation from FPGA to layer
     fpgaLyr[1] = 1;
     fpgaLyr[2] = 2;
@@ -100,7 +97,7 @@ public:
     uPosT[1] = -161.4;
     uPosT[2] = 161.4;
     uPosT[3] = 211.4;
-
+    cout<<__LINE__<<endl;
     stripPitch = 0.228;
     geoLogFile << "pCTgeo.h: Silicon-strip detector strip pitch = " << stripPitch << endl;
     geoLogFile << "pCTgeo.h: u positions of the V and T tracker boards for tracker "
@@ -116,12 +113,12 @@ public:
     VBoard[1] = 4;
     VBoard[2] = 2;
     VBoard[3] = 1;
-
+    cout<<__LINE__<<endl;
     Vpin[0] = 0.001 + VpinOff[0]; // V board alignment pin locations, including offsets derived from data analysis
     Vpin[1] = 0.115 + VpinOff[1];
     Vpin[2] = 0.063 + VpinOff[2];
     Vpin[3] = 0.040 + VpinOff[3];
-
+    cout<<__LINE__<<endl;
     for (int i = 0; i < 4; i++) geoLogFile << "pCTgeo.h: V layer " << i << " is board " << VBoard[i] << " with alignment pin at v=" << Vpin[i] << " mm\n";
 
     float fSV[7][2] = // V board internal alignment from optical surveys of

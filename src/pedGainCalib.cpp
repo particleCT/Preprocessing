@@ -127,8 +127,7 @@ void pedGainCalib::FillGains(float Vedet, float Tedet, float Ene[5], int phSum[5
                                                                                       // outside of the phantom region
     if (fabs(Vedet) < 40.) { // not outside the detector
       for (int stage = 0; stage < 5; stage++) {
-        float stgEne = Ene[stage];
-        hEnrg[stage]->Fill(stgEne);
+        hEnrg[stage]->Fill(Ene[stage]);
         Esum += Ene[stage];
 	hPed_Out[stage]->Fill(phSum[stage]);
       }

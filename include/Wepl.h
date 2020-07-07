@@ -43,7 +43,7 @@ class Wepl {
   ~Wepl();
   // Set energy thresholds in stages
   // Convert energy in stages to WEPL (mm)
-  float EtoWEPL(float Estage[5], Int_t &, Int_t &, Int_t &);
+  float EtoWEPL(float Estage[5], Int_t &, Int_t &, Int_t &, float &);
  private:
   pCTconfig* theConfig;
   

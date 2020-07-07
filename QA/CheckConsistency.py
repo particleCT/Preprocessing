@@ -89,8 +89,8 @@ calibGraph = f.Get("calWEPL/NewRange_XY")
 ##Load the phasespace data
 tree   = f.Get("phase")
 array  = tree2array(tree,branches=['y0','y1','z0','z1','wepl','E','dEEFilter','ThresholdFilter','MaxEnergyTransFilter','PriorFilter',])
-#array = array[np.where( (array['dEEFilter']==1) & (array['MaxEnergyTransFilter']==1) & (array['ThresholdFilter']==1))]
-array = array[np.where( (array['PriorFilter']==1))]
+#array  = array[np.where( (array['dEEFilter']==1))]# & (array['MaxEnergyTransFilter']==1) & (array['ThresholdFilter']==1))]
+array  = array[np.where( (array['PriorFilter']==1))]
 WET    = array['wepl']
 y1     = array['y1']
 z1     = array['z1']

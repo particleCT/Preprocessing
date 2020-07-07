@@ -52,7 +52,6 @@ Preprocessing::Preprocessing(){
   pCTcalibRootFile = new TFile(theConfig->item_str["calib"].c_str());
   theTVcorr        = new TVcorrection(pCTcalibRootFile, 0);  
   projectionROOT   = new TFile(outputFile.c_str(),"recreate");
-
   theCuts          = new pCTcut();// Initialize the code for event selection
   theWEPL          = new Wepl(pCTcalibRootFile);
   
@@ -271,7 +270,6 @@ void Preprocessing::pCTevents(pCTgeo* Geometry, pCTraw rawEvt, pedGainCalib *the
         Tedet[stage] = Geometry->extrap2D(&Uhit[2], Tback, Geometry->energyDetectorU(stage));
         bool inBounds;
         Ene[stage] = ((float)ADC[stage] - thePedGainCalib->Ped[stage]) * theTVcorr->corrFactor(stage, Tedet[stage], Vedet[stage], inBounds);
-	//Ene[stage] = ((float)ADC[stage]) * theTVcorr->corrFactor(stage, Tedet[stage], Vedet[stage], inBounds);
 	if (inBounds) nGood++;
       }
       if(nGood==5) thePedGainCalib->FillGains(Vedet[0], Tphantom, Ene, ADC); // Accumulate histograms for gain recalibration 
@@ -416,6 +414,7 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
   float x1,y1,z1;
   float px0,py0,pz0;
   float px1,py1,pz1;
+  float E_tot;
   Int_t MaxEnergyTransFilter, ThresholdFilter, dEEFilter;
   unsigned int timeStamp;
   phase = new TTree("phase", "bin tree");
@@ -432,6 +431,7 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
       phase->Branch("ADC", &ADC, "ADC[5]/I");
       phase->Branch("timeStamp", &timeStamp, "timeStamp/I");
       phase->Branch("E", &Ene, "E[5]/F");
+      phase->Branch("E_tot", &E_tot, "E_tot/F");      
       
       phase->Branch("x0",&x0,"x0/F");
       phase->Branch("y0",&y0,"y0/F");
@@ -468,9 +468,6 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
     perror("Preprocessing.cpp: Failed to open the temporary file");
     exit(1);
   }
-
-
-
   int N=0;
   for (int EvtNum = 0; EvtNum < theCuts->nKeep; EvtNum++) { // Analyze data from the temporary file event by event    
     ret = fread(outBuff, sizeof(char), nBuffBytes, fptmp);
@@ -521,7 +518,7 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
       Ene[stage] = thePedGainCalib->GainFac[stage] * ((float)ADC[stage] - thePedGainCalib->Ped[stage]) * TVCorrFactor;
       if(inBounds) nGood++;
     }
-    Wet = theWEPL->EtoWEPL(Ene, MaxEnergyTransFilter, ThresholdFilter, dEEFilter); // Energy to WEPL conversion
+    Wet = theWEPL->EtoWEPL(Ene, MaxEnergyTransFilter, ThresholdFilter, dEEFilter,E_tot); // Energy to WEPL conversion
     if(!dEEFilter) ++ndEEFilter;
     if(!ThresholdFilter) ++nThreshold;
     if(!MaxEnergyTransFilter) ++nMaxTrans;

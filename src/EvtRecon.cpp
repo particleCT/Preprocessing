@@ -122,11 +122,9 @@ void EvtRecon::ReadInputFile(pCTgeo* Geometry, TVcorrection *const TVcorr , stri
 
         bool inBounds;
         Ene[stage] = ((float)thisEvent.ADC[stage] - Calibrate->Ped[stage]) * TVcorr->corrFactor(stage, Tedet[stage], Vedet[stage], inBounds);
-	//Ene[stage] = ((float)thisEvent.ADC[stage]) * TVcorr->corrFactor(stage, Tedet[stage], Vedet[stage], inBounds);
         if (inBounds) nGood++;
 
       }
-
       // set it at the entrance brick position
       float vPh = Geometry->extrap2D(UV, V, -76.2); 
       float tPh = Geometry->extrap2D(UT, T, -76.2);
