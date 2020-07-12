@@ -847,9 +847,13 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
 
     if (fabs(Vin) > maxV || fabs(Tin) > maxT) continue; // if track is outside of detector in T/V - skip it
 
-    //Back of bricks
-    float Tout = theGeometry->extrap2D(Uft, Tf, Uout);//theGeometry->extrap2D(Ut, T, Uout); 
-    float Vout = theGeometry->extrap2D(Ufv, Vf, Uout);//theGeometry->extrap2D(Uv, V, Uout); 
+    //Back of bricks -- front projection
+    //float Tout = theGeometry->extrap2D(Uft, Tf, Uout);//
+    //float Vout = theGeometry->extrap2D(Ufv, Vf, Uout);//
+    //Back of bricks -- back projection
+    float Tout = theGeometry->extrap2D(Ut, T, Uout);
+    float Vout = theGeometry->extrap2D(Uv, V, Uout); 
+
     if (fabs(Vout) > maxV || fabs(Tout) > maxT) continue;  // if track is outside of detector in T/V- skip it
 
     float Uin    = Ust[0];
@@ -862,7 +866,7 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
     else if (TinB >= Tw1 && Tin <= Tw2) {
       continue;
       //if(!getLineIntersection(theEvtRecon->uhitT[0], thisEvent.Thit[0], theEvtRecon->uhitT[1], thisEvent.Thit[1],
-      //		      Uin + BrickThickness, Tw1, Uin, Tw2, Uin, Tin)) continue;
+      //Uin + BrickThickness, Tw1, Uin, Tw2, Uin, Tin)) continue;
     }
     // Flat part of the wedge - No need to change Vin and Tin
     else if(Tin > Tw2 && Tin < Tw3){
@@ -871,16 +875,16 @@ void pCTcalib::procWEPLcal(TH2D* REhist[nStage], TH2D* dEEhist[nStage], TH2D* RE
     }
     
     // Positive Slope
-    else if (Tin >= Tw3 && TinB <= Tw4) {  // Verify the particle hasn't weirdly scattered
+    else if (Tin >= Tw3 && Tin<=Tw4 && TinB>= Tw3 && TinB <= Tw4) {  // Verify the particle hasn't weirdly scattered
       if (!getLineIntersection(theEvtRecon->uhitT[0], thisEvent.Thit[0], theEvtRecon->uhitT[1], thisEvent.Thit[1],
 			       Uin, Tw3 ,Uin + BrickThickness, Tw4, Uin, Tin)) continue;
     }
     // Past the positive slope 
     else if(TinB > Tw4 && TinB < tBrickEnd){
       continue;
-      //Uin = Ust[1];
-      //Tin = TinB;
-      //Vin = VinB;
+      Uin = Ust[1];
+      Tin = TinB;
+      Vin = VinB;
     }
 
     // Past the end of the brick

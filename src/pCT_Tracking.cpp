@@ -11,16 +11,10 @@
 // the vertex position.
 // 
 // Lenny June 2020 
-// 
-//
-//
-//
 //*****************************************************
 #include "pCT_Tracking.h"
 #include "pCTconfig.h" 
 #include "pCTcut.h"
-
-
 pCT_Tracking::pCT_Tracking(TkrHits &pCThits, pCTgeo* Geometry) { // This class constructor finds all the tracks
 
   theCuts = pCTcut::GetInstance();  
@@ -36,21 +30,13 @@ pCT_Tracking::pCT_Tracking(TkrHits &pCThits, pCTgeo* Geometry) { // This class c
     if (pCThits.Lyr[lyr].N[1] > 0)
       nTht++;
   }
-  if (nVht < 3 || nTht < 3)
-    return; // Abort if more than one layer is missing a hit in either view
-
+  if (nVht < 3 || nTht < 3) return; // Abort if more than one layer is missing a hit in either view
   VTracks = Tracking2D(0, pCThits, Geometry);
-
-  if (VTracks.size() == 0)
-    return; // Don't waste time with the T view if there is no track in V
-
+  if (VTracks.size() == 0) return; // Don't waste time with the T view if there is no track in V
   TTracks = Tracking2D(1, pCThits, Geometry);
-
-  if (TTracks.size() == 0)
-    return;
-
-  // Count up just the good tracks in V and T.  Bad tracks were rejected because they overlapped (shared hits with)
-  // superior tracks.
+  if (TTracks.size() == 0) return;
+    
+  // Count up just the good tracks in V and T.  Bad tracks were rejected because they overlapped (shared hits with) superior tracks.
   int nVtkrs = 0;
   int nTtkrs = 0;
   itkV = -1;
@@ -95,28 +81,22 @@ std::vector<Tkr2D> pCT_Tracking::Tracking2D(int Idx, TkrHits &pCThits, pCTgeo *G
 
 
 
-//Reprint from the TkrHits class for undertsanding
-/*
+  //Reprint from the TkrHits class for undertsanding
+  /*
     int N[2];                       // Number of hits in each of the V and T views for a given layer
     std::vector<float> Y[2], U[2]; // 0=V and 1=T
     std::vector<int> F[2];          // Track number; -1 if not use
-*/
-//End For Undertsanding only 
-
-
+  */
+  //End For Understanding only 
   // Create lists of all vectors in the front and back trackers, within the specified slope cuts
   std::vector<Tkr2D> tmp;
   std::vector<vct> front, back;
-  bool GoodTk = false; // See if there is any useable tracks, if there is any, the code terminates as soon as it is found (to avoid loosing good tracks by also looking for hit+gap tracks)
-
-
+  bool GoodTk = false;
+  // See if there is any useable tracks, if there is any, the code terminates as soon as it is found (to avoid loosing good tracks by also looking for hit+gap tracks)
   Y0_candidate,U0;
   Y1_candidate,U1;  
   Y2_candidate,U2;  
   Y3_candidate,U3;  
- 
-  
-   
 //-----------------------------------------------------------------------------
 // First list all possible front/rear vectors from the recorded hit clusters 
 //----------------------------------------------------------------------------
@@ -128,11 +108,7 @@ std::vector<Tkr2D> pCT_Tracking::Tracking2D(int Idx, TkrHits &pCThits, pCTgeo *G
 
       Y0_candidate = pCThits.Lyr[0].Y[Idx].at(i);
       Y1_candidate = pCThits.Lyr[1].Y[Idx].at(j);
-
- 
-      float slope = (Y1_candidate - Y0_candidate) /
-                     (U1 - U0);
-
+      float slope = (Y1_candidate - Y0_candidate) / (U1 - U0);
       if(theCuts->cutHitSlope(0,Idx,slope)) continue; // Check if the slope of the hits matches the expected maximum slope (front=0/back=1,Idx,slope)
 
       //save this entrance vector candidate
@@ -146,8 +122,6 @@ std::vector<Tkr2D> pCT_Tracking::Tracking2D(int Idx, TkrHits &pCThits, pCTgeo *G
       vctmp.I[1] = j; // Hit id
       vctmp.intercept = vctmp.Y[0] - slope * vctmp.U[0];
       front.push_back(vctmp);
-
-      
     }
   }
   for (int i = 0; i < pCThits.Lyr[2].N[Idx]; i++) {
@@ -160,13 +134,7 @@ std::vector<Tkr2D> pCT_Tracking::Tracking2D(int Idx, TkrHits &pCThits, pCTgeo *G
       //T or V view (Idx=0 = T)
       Y2_candidate = pCThits.Lyr[2].Y[Idx].at(i);
       Y3_candidate = pCThits.Lyr[3].Y[Idx].at(j);
-
-
-
-      float slope = (Y3_candidate - Y2_candidate) /
-                     (U3 - U2);
-
-
+      float slope = (Y3_candidate - Y2_candidate) / (U3 - U2);
       if(theCuts->cutHitSlope(1,Idx,slope)) continue;
     
       //save this exit vector candidate
@@ -187,16 +155,11 @@ std::vector<Tkr2D> pCT_Tracking::Tracking2D(int Idx, TkrHits &pCThits, pCTgeo *G
   // End grouping of hits for track assembling. Results are stored in back and front vectors. 
   //-----------------------------------------------------------------------------
 
-
   if (front.size() == 0 && back.size() == 0) return tmp; // No useful tracks front and back, skip the event!
-
   if(front.size()>1) theCuts->AddToPileUp(); 
-
   if(theConfig->item_int["MultiTrackReject"]){ //Added, Lenny June 2020
     if (front.size()>1 || back.size()>1) return tmp; //Test // If there is more than one reasonable track possible for either front or rear, skip this event.
   }
-
-
   //-----------------------------------------------------------------------------
   // Find any front/back vector combination from the hits
   //----------------------------------------------------------------------------
@@ -207,18 +170,13 @@ std::vector<Tkr2D> pCT_Tracking::Tracking2D(int Idx, TkrHits &pCThits, pCTgeo *G
 
 
       miss = front[i].intercept - back[j].intercept; // distance of forward/backprojected tracks at isocenter
-
       if(theCuts->cutTrackIsocenterIntercept(miss)) continue;
-
         // Check whether any of the hits have already been used. Do not allow hit sharing.
         if (tmp.size() > 0) { // Don't waste time if there are no tracks already (the usual situation)
-
           bool reject = false;
           std::vector<int> shareList;
-
           for (int k = 0; k < 2; k++) { // k goes over the layers
             int tk1 = pCThits.Lyr[k].F[Idx].at(front[i].I[k]); //Check for any track that used a hit of teh proposed track already
-
             if (tk1 >= 0) { // F is set down below if a track is found, else it is -1
               if (tmp[tk1].Good) { 
                 if (abs(miss) > abs(tmp[tk1].Miss)) { // Use the track with the best match
@@ -239,14 +197,11 @@ std::vector<Tkr2D> pCT_Tracking::Tracking2D(int Idx, TkrHits &pCThits, pCTgeo *G
               }
             }
           }
-
           if (reject) continue; // This track is worse than some tracks already found that shares hits, so skip this one. // FORMERLY break -> Pot. Bug
-
           for (int shr = 0; shr < shareList.size(); shr++) {
             tmp[shareList[shr]].Good = false; // Get rid of earlier inferior tracks sharing hits with this one
           }
         }
-
         Tkr2D tmpTk;
         tmpTk.X[0] = front[i].Y[0];
         tmpTk.U[0] = front[i].U[0]; 
@@ -268,7 +223,6 @@ std::vector<Tkr2D> pCT_Tracking::Tracking2D(int Idx, TkrHits &pCThits, pCTgeo *G
         tmpTk.Miss = miss;
         tmpTk.Q = 3;
         tmpTk.Good = true;
-
 	// Temporary track storage
         tmp.push_back(tmpTk);
 
@@ -283,17 +237,13 @@ std::vector<Tkr2D> pCT_Tracking::Tracking2D(int Idx, TkrHits &pCThits, pCTgeo *G
   //Check if there was any good track already. 
   //If there was, there is no need for dubious gap+hit or vertex plus hit tracks
   //Added by Lenny
-  if(GoodTk) return tmp;
-
-
+  //if(GoodTk) return tmp;
+  return tmp;
   //-----------------------------------------------------------------------------
   // if No good tracks could be made, make the tracks from gaps or vertex extrapolation
   //-----------------------------------------------------------------------------
-
   //No possible front tracks, but rear tracks
-  
   if(front.size()==0 && back.size()>0){
-
   //---------------------------------------------------------------------------
   // Try to make vectors in the front with an unused hit and a gap
   //---------------------------------------------------------------------------
@@ -308,13 +258,13 @@ std::vector<Tkr2D> pCT_Tracking::Tracking2D(int Idx, TkrHits &pCThits, pCTgeo *G
 
           for (int j = 0; j < pCThits.Lyr[lyr].N[Idx]; j++) { // number of Hits
 
-/*            int tk = pCThits.Lyr[lyr].F[Idx].at(j); // is there a track with any of these hits already?
-
-            if (tk >= 0) {
-              if (tmp[tk].Good)
-                continue; // if a possible track with a hit in this layer is good, don't look for further hit+"gap". //formerly break
-            }
-*///Can be skipped with condition introduced above
+	    /*            int tk = pCThits.Lyr[lyr].F[Idx].at(j); // is there a track with any of these hits already?
+			  
+			  if (tk >= 0) {
+			  if (tmp[tk].Good)
+			  continue; // if a possible track with a hit in this layer is good, don't look for further hit+"gap". //formerly break
+			  }
+	    *///Can be skipped with condition introduced above
 	    
             float t1 = pCThits.Lyr[lyr].Y[Idx].at(j);
             float u1 = pCThits.Lyr[lyr].U[Idx].at(j);
@@ -333,7 +283,6 @@ std::vector<Tkr2D> pCT_Tracking::Tracking2D(int Idx, TkrHits &pCThits, pCTgeo *G
 
               if (theCuts->cutTrackIsocenterIntercept(miss)) continue;
 	      
-
 	      Tkr2D tmpTk;
 	      tmpTk.X[lyr] = t1;
 	      tmpTk.U[lyr] = u1;
@@ -373,8 +322,7 @@ std::vector<Tkr2D> pCT_Tracking::Tracking2D(int Idx, TkrHits &pCThits, pCTgeo *G
   if(GoodTk) return tmp;  
 
   //-----------------------------------------------------------------------------
-  // Consider all possibile tracks using missing hits and the beam vertex
-  //-----------------------------------------------------------------------------
+  // Consider all possibile tracks using missing hits and the beam vertex  //-----------------------------------------------------------------------------
 
   // Now consider track candidates missing one hit in the front tracker.  Make a vector from the hit that
   // is present that points back to the putative beam origin (this works a bit better at LLUMC, using the
@@ -387,13 +335,13 @@ std::vector<Tkr2D> pCT_Tracking::Tracking2D(int Idx, TkrHits &pCThits, pCTgeo *G
 
       for (int lyr = 0; lyr < 2; lyr++) {
         for (int j = 0; j < pCThits.Lyr[lyr].N[Idx]; j++) {
-/*          int tk = pCThits.Lyr[lyr].F[Idx].at(j);
-          if (tk >= 0) {
-            if (tmp[tk].Good)
-              continue; // there was a track with that Hit already in combination //formerly break
+	  /*          int tk = pCThits.Lyr[lyr].F[Idx].at(j);
+		      if (tk >= 0) {
+		      if (tmp[tk].Good)
+		      continue; // there was a track with that Hit already in combination //formerly break
           }
-*/
-
+	  */
+	  
           float t1 = pCThits.Lyr[lyr].Y[Idx].at(j);
           float u1 = pCThits.Lyr[lyr].U[Idx].at(j);
           float u2;
@@ -453,12 +401,12 @@ std::vector<Tkr2D> pCT_Tracking::Tracking2D(int Idx, TkrHits &pCThits, pCTgeo *G
         for (int lyr = 2; lyr < 4; lyr++) {
           for (int j = 0; j < pCThits.Lyr[lyr].N[Idx]; j++) {
 
-/*            int tk = pCThits.Lyr[lyr].F[Idx].at(j); // Was there any track with the hit already? 
-            if (tk >= 0) {
-              if (tmp[tk].Good)
-                break; //continue; //If there was any good hit in this layer, no need to look into gaps // FORMERLY loop break!
-            }
-*///Can be skipped with above condition
+	    /*            int tk = pCThits.Lyr[lyr].F[Idx].at(j); // Was there any track with the hit already? 
+			  if (tk >= 0) {
+			  if (tmp[tk].Good)
+			  break; //continue; //If there was any good hit in this layer, no need to look into gaps // FORMERLY loop break!
+			  }
+	    *///Can be skipped with above condition
 
             float t1 = pCThits.Lyr[lyr].Y[Idx].at(j);
             float u1 = pCThits.Lyr[lyr].U[Idx].at(j);
@@ -506,7 +454,8 @@ std::vector<Tkr2D> pCT_Tracking::Tracking2D(int Idx, TkrHits &pCThits, pCTgeo *G
       ;
     }
   
-    if(GoodTk) return tmp; //Don't bother with anything more if a good track was found //same as above, this might be improved by forcing the track with the smallest isocenter distance.
+    if(GoodTk) return tmp;
+    //Don't bother with anything more if a good track was found //same as above, this might be improved by forcing the track with the smallest isocenter distance.
 
     // Finally, if there is an unused front vector but only one unused hit in the back, try to make a track by
     // extrapolation or interpolation
@@ -516,11 +465,11 @@ std::vector<Tkr2D> pCT_Tracking::Tracking2D(int Idx, TkrHits &pCThits, pCTgeo *G
         int otherLyr[4] = { 0, 0, 3, 2 };
         for (int lyr = 2; lyr < 4; lyr++) {
           for (int j = 0; j < pCThits.Lyr[lyr].N[Idx]; j++) {
-/*            int tk = pCThits.Lyr[lyr].F[Idx].at(j);
-            if (tk >= 0) {
-              if (tmp[tk].Good && tmp[tk].Q > 0)
-                break; // Skip hits already used on better tracks
-            }*/
+	    /*            int tk = pCThits.Lyr[lyr].F[Idx].at(j);
+			  if (tk >= 0) {
+			  if (tmp[tk].Good && tmp[tk].Q > 0)
+			  break; // Skip hits already used on better tracks
+			  }*/
             float t1 = front[i].Y[0];
             float u1 = front[i].U[0];
             float t2 = front[i].Y[1];
@@ -538,17 +487,17 @@ std::vector<Tkr2D> pCT_Tracking::Tracking2D(int Idx, TkrHits &pCThits, pCTgeo *G
             float intercept = t3 - slope * u3;
             miss = intercept - front[i].intercept;
             if (theCuts->cutTrackIsocenterIntercept(miss)) continue;
-
-/*                if (tk >= 0) {
-                  if (tmp[tk].Good) {
-                    if (abs(tmp[tk].Miss) > abs(miss)) {
-                      tmp[tk].Good = false; // This track is better than an existing track using the same hit
-                    } else {
-                      continue; // An existing track using this hit is better
+	    
+	    /*                if (tk >= 0) {
+			      if (tmp[tk].Good) {
+			      if (abs(tmp[tk].Miss) > abs(miss)) {
+			      tmp[tk].Good = false; // This track is better than an existing track using the same hit
+			      } else {
+			      continue; // An existing track using this hit is better
                     }
-                  }
-                }
-*/  
+		    }
+		    }
+	    */  
             Tkr2D tmpTk;
             tmpTk.X[0] = t1;
             tmpTk.U[0] = u1;

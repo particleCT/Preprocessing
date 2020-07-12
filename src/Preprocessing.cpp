@@ -263,7 +263,7 @@ int Preprocessing::ProcessFile(float fileFraction, int numbTkrFPGA, int numbEdet
     px1  = Uv[1]  -  Uv[0];   py1  = T[1]    -  T[1]; pz1  =  V[1]    -  V[0];
 
     Uhit[0] = Ufv[0]; Uhit[1] = Ufv[1]; Uhit[2] = Uv[0]; Uhit[3] = Uv[1];
-    Thit[0] = Tf[0];  Thit[1] = Tf[1];  Thit[2] = T[0];  Vhit[3] = T[1];
+    Thit[0] = Tf[0];  Thit[1] = Tf[1];  Thit[2] = T[0];  Thit[3] = T[1];
     Vhit[0] = Vf[0];  Vhit[1] = Vf[1];  Vhit[2] = V[0];  Vhit[3] = V[1];    
     float Length_0 = sqrt(px0*px0 + py0*py0 + pz0*pz0);
     float Length_1 = sqrt(px1*px1 + py1*py1 + pz1*pz1);
